@@ -23,6 +23,10 @@ scheduled or scoped yet — just a running list to pull from.
   again on sustained scroll/dwell (not just a page hit) so "Profile
   Views" on the Analytics screen becomes a real metric instead of the
   current derived placeholder.
+- **SSO login with Google or GitHub** — GitHub OAuth already works;
+  add a real Google sign-in option too (currently a disabled
+  placeholder button on the login screen) so candidates without a
+  GitHub-first workflow can still sign up.
 
 ## Additional ideas
 
