@@ -85,6 +85,25 @@ export type WorkExperienceInput = Omit<
   "id" | "githubId" | "createdAt" | "updatedAt"
 >;
 
+export interface Certification {
+  id: string;
+  githubId: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  expiryDate: string | null;
+  credentialId: string | null;
+  credentialUrl: string | null;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CertificationInput = Omit<
+  Certification,
+  "id" | "githubId" | "createdAt" | "updatedAt"
+>;
+
 export interface AnalyticsSnapshot {
   profileViews: number;
   profileViewsChangePct: number;

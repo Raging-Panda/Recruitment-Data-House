@@ -47,22 +47,24 @@ cp apps/mobile/.env.example apps/mobile/.env
   ID only — never the secret), `EXPO_PUBLIC_AUTH_BACKEND_URL` pointing at the
   running `apps/web` instance.
 
-## Work history (Supabase)
+## Work history & certifications (Supabase)
 
-Unlike Skills/Projects, work history isn't sourced from GitHub — candidates
-enter it themselves, so it needs real storage. The `ipskill` Supabase
-project holds a single `work_experience` table (company, role, location,
-dates, description), keyed by the candidate's GitHub numeric ID (stable
-across username changes, unlike the login string).
+Unlike Skills/Projects, work history and certifications aren't sourced from
+GitHub — candidates enter them themselves, so they need real storage. The
+`ipskill` Supabase project holds `work_experience` (company, role, location,
+dates, description) and `certifications` (name, issuer, issue/expiry dates,
+credential ID/URL, description) tables, both keyed by the candidate's GitHub
+numeric ID (stable across username changes, unlike the login string).
 
 There's no Supabase Auth involved — auth is still GitHub OAuth via NextAuth.
-The table has Row Level Security enabled with **no policies**, so the only
-way to read or write it is the service-role key, and that key is only ever
-used server-side (`apps/web/src/lib/supabase.ts`, guarded by the
-`server-only` import). Every `/api/experience` route re-derives the
-candidate's identity from the authenticated NextAuth session before
-querying — a request can never read or write another candidate's rows by
-passing a different ID, since the ID isn't taken from the request at all.
+Both tables have Row Level Security enabled with **no policies**, so the
+only way to read or write them is the service-role key, and that key is
+only ever used server-side (`apps/web/src/lib/supabase.ts`, guarded by the
+`server-only` import). Every `/api/experience` and `/api/certifications`
+route re-derives the candidate's identity from the authenticated NextAuth
+session before querying — a request can never read or write another
+candidate's rows by passing a different ID, since the ID isn't taken from
+the request at all.
 
 Grab `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard (Project
 Settings → API → service_role) — it's a secret and isn't obtainable through
@@ -87,13 +89,13 @@ pnpm dev:mobile   # Expo dev server
 - **Real**: GitHub OAuth login (web + mobile), live GitHub data (repos,
   languages, PRs, issues, recent commit activity), skill fingerprint derived
   from that data.
-- **Also real**: Work history (Experience page) — full CRUD backed by
-  Supabase, scoped per-candidate via the authenticated session.
+- **Also real**: Work history (Experience page) and Certifications — both
+  full CRUD backed by Supabase, scoped per-candidate via the authenticated
+  session.
 - **Placeholder**: Profile Views / Search Appearances / Connection Requests
   on the Analytics screen are derived from account signals, not real
   platform event tracking (GitHub doesn't expose that data, and IPSkill
-  doesn't have its own analytics pipeline yet). Certifications,
-  Achievements, Settings, Resume upload, and the Home/Search/Messages tabs
-  are still unbuilt stubs.
+  doesn't have its own analytics pipeline yet). Achievements, Settings,
+  Resume upload, and the Home/Search/Messages tabs are still unbuilt stubs.
 - **Not started**: the candidate verification layer and core ATS/CRM from
   `PLAN.md` — this repo currently covers the Developer Hub only.
