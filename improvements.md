@@ -126,6 +126,15 @@ scheduled or scoped yet — just a running list to pull from.
 - **Role/job matching module** — connect candidate profiles to open
   client roles from the core ATS/CRM (once built) and surface match
   scores based on the skill fingerprint.
+- **Free vs. Premium tiers** — define what's actually gated behind
+  the "Upgrade to Pro" button already sitting in the web sidebar
+  (currently just UI, not wired to anything). Needs: a concrete
+  feature split (e.g. free = basic profile + GitHub skill
+  fingerprint; premium = skill tests, PDF export, Growth Olympics
+  eligibility, priority placement in the recruiter directory),
+  subscription billing (Stripe is already available as a connector
+  but not yet authorized in this environment), and a `plan` field on
+  the user/profile model that every gated feature checks against.
 - **Growth Olympics** — a monthly competition among premium users:
   whoever shows the biggest skill-fingerprint/activity growth over
   the month wins a prize (e.g. a R1000 Takealot voucher). Needs
