@@ -5,9 +5,13 @@ scheduled or scoped yet — just a running list to pull from.
 
 ## Requested
 
-- **Skill tests** — short, timed coding/knowledge assessments per
-  language or stack, scored and folded into the skill fingerprint
-  alongside the passive GitHub-derived signals.
+- **Skill tests** — ✅ shipped as a lightweight, in-house MCQ version
+  (see the Verified Skills panel on the Skills page): timed
+  multiple-choice tests per stack, scored server-side, shown as a
+  separate signal alongside — not blended into — the GitHub-derived
+  fingerprint. Deliberately not a real coding/execution sandbox; the
+  plan is to migrate to a third-party assessment vendor (see below)
+  once the app is earning revenue to justify the per-candidate cost.
 - **Recent project history with GitHub** — a timeline view of recent
   commits/PRs/releases per repo, not just the current snapshot, so
   recruiters can see trajectory (ramping up, going quiet, switching
@@ -182,3 +186,10 @@ scheduled or scoped yet — just a running list to pull from.
 - **Public API for enterprise clients** — a scoped, authenticated API
   so larger clients can pull verified candidate/profile data into
   their own ATS instead of using the IPSkill UI directly.
+- **Migrate skill tests to a third-party vendor** — once the app is
+  earning revenue, replace/extend the in-house MCQ tests with a real
+  proctored coding-assessment provider (CodeSignal, HackerRank for
+  Work, Coderbyte) — actual code execution, larger question banks,
+  anti-cheating. Design it as a provider interface behind the
+  existing `/api/skill-tests` routes so the in-house tests and a
+  vendor can coexist during the transition, rather than a rip-and-replace.

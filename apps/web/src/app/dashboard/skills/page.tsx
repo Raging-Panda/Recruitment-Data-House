@@ -2,12 +2,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
+import { VerifiedSkillsPanel } from "@/components/verified-skills-panel";
 
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
   const { profile, skillFingerprint, activity } = await loadDeveloperHubData(
     session!.accessToken!
   );
+
+  const supabase = getSupabaseAdmin();
+  const [{ data: templateRows }, { data: attemptRows }] = await Promise.all([
+    supabase.from("skill_test_templates").select("*, skill_test_questions(count)").eq("is_active", true).order("stack"),
+    supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),
+  ]);
+
+  const templates = (templateRows as TemplateRow[] | null)?.map(rowToTemplate) ?? [];
+  const summaries = summarizeAttempts((attemptRows as AttemptRow[]) ?? []);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -48,6 +60,15 @@ export default async function SkillsPage() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-white">Verified Skills</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Short, proctored-free knowledge checks — a separate signal from the GitHub-derived
+          fingerprint above, not blended into it.
+        </p>
+        <VerifiedSkillsPanel templates={templates} summaries={Object.fromEntries(summaries)} />
       </div>
     </div>
   );

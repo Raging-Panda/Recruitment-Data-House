@@ -104,6 +104,60 @@ export type CertificationInput = Omit<
   "id" | "githubId" | "createdAt" | "updatedAt"
 >;
 
+export interface SkillTestTemplate {
+  id: string;
+  slug: string;
+  title: string;
+  stack: string;
+  description: string;
+  timeLimitSeconds: number;
+  questionCount: number;
+}
+
+/** Deliberately has no correct-answer field — this is the shape served to candidates. */
+export interface SkillTestQuestion {
+  id: string;
+  questionText: string;
+  choices: string[];
+}
+
+export type SkillTestAttemptStatus = "in_progress" | "completed" | "expired";
+
+export interface SkillTestAttempt {
+  id: string;
+  templateId: string;
+  status: SkillTestAttemptStatus;
+  score: number | null;
+  maxScore: number | null;
+  percentage: number | null;
+  startedAt: string;
+  submittedAt: string | null;
+}
+
+/** One row per template, summarizing a candidate's best/latest attempt for the Skills page list. */
+export interface SkillTestAttemptSummary {
+  templateId: string;
+  status: SkillTestAttemptStatus | "not_started";
+  bestPercentage: number | null;
+  latestAttemptId: string | null;
+  completedAt: string | null;
+}
+
+export interface SkillTestStartResponse {
+  attemptId: string;
+  timeLimitSeconds: number;
+  startedAt: string;
+  questions: SkillTestQuestion[];
+}
+
+export interface SkillTestSubmitResult {
+  attemptId: string;
+  status: SkillTestAttemptStatus;
+  score: number;
+  maxScore: number;
+  percentage: number;
+}
+
 export interface AnalyticsSnapshot {
   profileViews: number;
   profileViewsChangePct: number;
