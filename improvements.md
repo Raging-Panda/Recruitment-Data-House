@@ -143,3 +143,10 @@ scheduled or scoped yet — just a running list to pull from.
   (which is fairest — overall score delta? weighted by category?),
   anti-gaming safeguards (e.g. against padding commit counts), and a
   way to actually fulfil the prize each month.
+- **Referral program** — give existing users a personal referral
+  link/code; when a referred candidate signs up (and maybe hits a
+  milestone, like completing verification or connecting GitHub), both
+  sides get a reward — e.g. free months of premium, or entries toward
+  Growth Olympics. Needs referral attribution tracking, fraud/abuse
+  limits (self-referrals, throwaway accounts), and a rewards ledger
+  per user.
