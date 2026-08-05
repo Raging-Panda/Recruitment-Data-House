@@ -56,3 +56,73 @@ scheduled or scoped yet — just a running list to pull from.
   the candidate's own Analytics screen: which of a recruiter's
   shortlisted/contacted candidates are most engaged, response rates,
   time-to-first-view after shortlisting, etc.
+
+## Visual & UI polish
+
+- **Loading states** — real skeleton screens (profile card, radar
+  chart, project list shapes) while GitHub data loads, instead of a
+  blank page (web) or a bare spinner (mobile). Includes a branded
+  splash/loading screen on mobile app cold start.
+- **Real icon set** — swap the emoji placeholders (🔔 🏠 🔍 💬 👤 📊 in
+  the sidebar/tab bar/topbar) for a proper icon library that matches
+  the fingerprint line-art of the IPSkill logo, with consistent
+  sizing and active/inactive states.
+- **Empty states with illustration + copy** — "No projects yet",
+  "No language data yet" etc. are currently plain text; give them a
+  small illustration and a clear next action (e.g. "Push a commit to
+  see this fill in").
+- **Functional light mode** — the Dark Mode toggle in the web sidebar
+  currently just flips visually without restyling anything; either
+  wire up a real light theme or remove the toggle until it does.
+- **Toasts/inline feedback** — confirm actions (login success, sign
+  out, save) with toasts/snackbars instead of silent state changes.
+- **Animated skill radar** — animate the radar chart filling in on
+  first load and transitioning when the underlying data refreshes,
+  rather than snapping straight to final values.
+- **Design token audit** — the web (Tailwind config) and mobile
+  (theme/index.ts) color/spacing tokens are hand-duplicated from
+  `packages/shared`'s theme values; tighten this so both platforms
+  visibly drift less over time as the palette evolves.
+
+## Performance
+
+- **Fewer GitHub round-trips** — move from sequential REST calls
+  (languages per repo, separate search calls for PRs/issues) to
+  GitHub's GraphQL API to pull profile + repos + languages + PR/issue
+  counts in one or two requests instead of the current N+1 pattern.
+- **Client-side data caching (mobile)** — replace the ad hoc
+  `useEffect` fetch in `use-developer-hub-data.ts` with React
+  Query/SWR so data is cached, revalidated in the background, and
+  doesn't re-fetch from scratch on every screen focus.
+- **Streaming/suspense on web** — use Next.js streaming so the
+  dashboard shell (sidebar, topbar) renders immediately while GitHub
+  data for the page body streams in, instead of blocking the whole
+  route on `loadDeveloperHubData`.
+- **Trim the skills bundle** — `recharts` alone accounts for ~94KB of
+  the Skills page's first-load JS; either code-split it behind a
+  dynamic import or swap it for a lighter/custom radar renderer like
+  the one already built for mobile.
+- **Virtualize long lists** — the web Projects page and the eventual
+  developer directory should virtualize rows once candidate/repo
+  counts grow past a page or two (mobile's `FlatList` already does
+  this).
+
+## New features
+
+- **Real in-app messaging** — build out the Messages tab (currently a
+  stub) so recruiters and candidates can actually talk without
+  leaving the platform.
+- **Push notifications (mobile)** — notify candidates on profile
+  views, shortlist activity, and messages via Expo push
+  notifications.
+- **Candidate comparison view** — side-by-side skill fingerprints and
+  stats for a recruiter's shortlisted candidates.
+- **Real two-factor authentication** — the Account Security card
+  currently shows "Two-Factor Authentication: Enabled" as static
+  copy; wire up an actual TOTP/authenticator flow.
+- **Export profile as PDF** — generate a client-shareable PDF summary
+  of a candidate's verified profile and skill fingerprint (pairs well
+  with the shareable-link idea above).
+- **Role/job matching module** — connect candidate profiles to open
+  client roles from the core ATS/CRM (once built) and surface match
+  scores based on the skill fingerprint.
