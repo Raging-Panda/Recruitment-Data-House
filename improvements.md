@@ -126,3 +126,11 @@ scheduled or scoped yet — just a running list to pull from.
 - **Role/job matching module** — connect candidate profiles to open
   client roles from the core ATS/CRM (once built) and surface match
   scores based on the skill fingerprint.
+- **Growth Olympics** — a monthly competition among premium users:
+  whoever shows the biggest skill-fingerprint/activity growth over
+  the month wins a prize (e.g. a R1000 Takealot voucher). Needs
+  month-over-month snapshotting of each user's fingerprint/activity
+  so "growth" is measurable, a leaderboard, a defined growth metric
+  (which is fairest — overall score delta? weighted by category?),
+  anti-gaming safeguards (e.g. against padding commit counts), and a
+  way to actually fulfil the prize each month.
