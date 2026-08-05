@@ -56,6 +56,16 @@ scheduled or scoped yet — just a running list to pull from.
   the candidate's own Analytics screen: which of a recruiter's
   shortlisted/contacted candidates are most engaged, response rates,
   time-to-first-view after shortlisting, etc.
+- **Skill freshness indicator** — flag when a listed skill hasn't
+  shown up in recent activity (e.g. "Python — last used 2019") so the
+  fingerprint reflects current ability, not just historical totals.
+- **Verification badges on the public profile** — once the
+  candidate-verification layer from `PLAN.md` exists, surface exactly
+  which checks passed (ID, qualification, employment history) as
+  visible badges, not just an internal status field.
+- **Admin/moderation dashboard** — internal tooling for the IPSkill
+  team to review flagged profiles, manage verification statuses, and
+  handle reported abuse (referral fraud, duplicate accounts, etc.).
 
 ## Visual & UI polish
 
@@ -83,6 +93,10 @@ scheduled or scoped yet — just a running list to pull from.
   (theme/index.ts) color/spacing tokens are hand-duplicated from
   `packages/shared`'s theme values; tighten this so both platforms
   visibly drift less over time as the palette evolves.
+- **Actionable onboarding checklist** — turn the Profile Completion
+  ring into a real checklist ("Connect GitHub ✓", "Add a bio",
+  "Run a skill test") with links straight to the missing step, like
+  LinkedIn's profile-completion nudges.
 
 ## Performance
 
@@ -150,3 +164,21 @@ scheduled or scoped yet — just a running list to pull from.
   Growth Olympics. Needs referral attribution tracking, fraud/abuse
   limits (self-referrals, throwaway accounts), and a rewards ledger
   per user.
+- **AI-generated candidate summary** — auto-generate a short,
+  natural-language blurb from a candidate's GitHub signals ("Backend
+  developer, 5 years active, strong in Go and Postgres, consistent
+  weekly contributor") so recruiters can skim faster than reading raw
+  stats.
+- **Async video intro** — let candidates attach a short (60–90s)
+  self-recorded intro video to their profile, giving recruiters a
+  sense of communication style and personality alongside the
+  code-derived signals.
+- **Interview scheduling / calendar sync** — let recruiters send a
+  booking link (Google Calendar/Outlook sync) so screening calls can
+  be scheduled directly from a candidate's profile.
+- **Salary/market-rate insights** — show a rough market rate range
+  for a candidate's skill level and region, sourced from aggregated
+  placement data over time, to help both sides set expectations early.
+- **Public API for enterprise clients** — a scoped, authenticated API
+  so larger clients can pull verified candidate/profile data into
+  their own ATS instead of using the IPSkill UI directly.
