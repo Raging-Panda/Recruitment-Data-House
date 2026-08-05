@@ -66,6 +66,25 @@ export interface DeveloperActivitySummary {
   followers: number;
 }
 
+export interface WorkExperience {
+  id: string;
+  githubId: string;
+  company: string;
+  role: string;
+  location: string | null;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WorkExperienceInput = Omit<
+  WorkExperience,
+  "id" | "githubId" | "createdAt" | "updatedAt"
+>;
+
 export interface AnalyticsSnapshot {
   profileViews: number;
   profileViewsChangePct: number;

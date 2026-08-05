@@ -40,10 +40,33 @@ cp apps/mobile/.env.example apps/mobile/.env
 - `apps/web/.env.local`: `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` (web app),
   `GITHUB_MOBILE_CLIENT_ID`/`GITHUB_MOBILE_CLIENT_SECRET` (mobile app — the
   secret is only ever used server-side in `apps/web`'s token-exchange route),
-  `NEXTAUTH_SECRET` (`openssl rand -base64 32`), `NEXTAUTH_URL`.
+  `NEXTAUTH_SECRET` (`openssl rand -base64 32`), `NEXTAUTH_URL`,
+  `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` (work history storage — see
+  below).
 - `apps/mobile/.env`: `EXPO_PUBLIC_GITHUB_CLIENT_ID` (the mobile app's client
   ID only — never the secret), `EXPO_PUBLIC_AUTH_BACKEND_URL` pointing at the
   running `apps/web` instance.
+
+## Work history (Supabase)
+
+Unlike Skills/Projects, work history isn't sourced from GitHub — candidates
+enter it themselves, so it needs real storage. The `ipskill` Supabase
+project holds a single `work_experience` table (company, role, location,
+dates, description), keyed by the candidate's GitHub numeric ID (stable
+across username changes, unlike the login string).
+
+There's no Supabase Auth involved — auth is still GitHub OAuth via NextAuth.
+The table has Row Level Security enabled with **no policies**, so the only
+way to read or write it is the service-role key, and that key is only ever
+used server-side (`apps/web/src/lib/supabase.ts`, guarded by the
+`server-only` import). Every `/api/experience` route re-derives the
+candidate's identity from the authenticated NextAuth session before
+querying — a request can never read or write another candidate's rows by
+passing a different ID, since the ID isn't taken from the request at all.
+
+Grab `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard (Project
+Settings → API → service_role) — it's a secret and isn't obtainable through
+tooling, by design.
 
 The mobile app can't hold an OAuth client secret, so it exchanges its GitHub
 authorization code for an access token via `apps/web`'s
@@ -64,11 +87,13 @@ pnpm dev:mobile   # Expo dev server
 - **Real**: GitHub OAuth login (web + mobile), live GitHub data (repos,
   languages, PRs, issues, recent commit activity), skill fingerprint derived
   from that data.
+- **Also real**: Work history (Experience page) — full CRUD backed by
+  Supabase, scoped per-candidate via the authenticated session.
 - **Placeholder**: Profile Views / Search Appearances / Connection Requests
   on the Analytics screen are derived from account signals, not real
   platform event tracking (GitHub doesn't expose that data, and IPSkill
-  doesn't have its own analytics pipeline yet). Experience, Certifications,
+  doesn't have its own analytics pipeline yet). Certifications,
   Achievements, Settings, Resume upload, and the Home/Search/Messages tabs
-  are unbuilt stubs.
+  are still unbuilt stubs.
 - **Not started**: the candidate verification layer and core ATS/CRM from
   `PLAN.md` — this repo currently covers the Developer Hub only.

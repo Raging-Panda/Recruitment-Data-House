@@ -17,12 +17,15 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account }) {
       if (account?.access_token) {
         token.accessToken = account.access_token;
-        token.githubLogin = account.providerAccountId;
+        // GitHub's numeric account ID — stable even if the user renames
+        // their GitHub username, unlike the login string.
+        token.githubId = account.providerAccountId;
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string | undefined;
+      session.githubId = token.githubId as string | undefined;
       return session;
     },
   },
