@@ -1,0 +1,85 @@
+import { getServerSession } from "next-auth";
+import Image from "next/image";
+import { authOptions } from "@/lib/auth";
+import { loadDeveloperHubData } from "@/lib/developer-data";
+import { InfoCard } from "@/components/info-card";
+import { ScoreRing } from "@/components/score-ring";
+
+export default async function ProfilePage() {
+  const session = await getServerSession(authOptions);
+  const { profile, activity } = await loadDeveloperHubData(session!.accessToken!);
+
+  return (
+    <div className="mx-auto max-w-5xl">
+      <h1 className="text-2xl font-bold text-white">My Profile</h1>
+      <p className="mt-1 text-sm text-text-secondary">
+        Your developer profile, sourced live from GitHub.
+      </p>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 rounded-2xl border border-surface-border bg-background-elevated p-6 md:grid-cols-[auto_1fr_auto]">
+        <Image
+          src={profile.avatarUrl}
+          alt={profile.name}
+          width={88}
+          height={88}
+          className="rounded-full"
+        />
+        <div>
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+            {profile.name} <span className="text-primary">✓</span>
+          </h2>
+          <p className="text-sm text-text-secondary">{profile.headline}</p>
+          {profile.location && (
+            <p className="mt-1 text-xs text-text-muted">📍 {profile.location}</p>
+          )}
+          <p className="mt-3 max-w-md text-sm text-text-secondary">
+            {profile.about ?? "No bio provided on GitHub yet."}
+          </p>
+        </div>
+        <ScoreRing score={profile.overallScore} label="Profile Completion" />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <InfoCard title="Personal Information">
+          <Row label="Full Name" value={profile.name} />
+          <Row label="Location" value={profile.location ?? "Not set on GitHub"} />
+          <Row label="GitHub" value={`@${profile.githubLogin}`} />
+        </InfoCard>
+
+        <InfoCard title="Professional Information">
+          <Row label="Headline" value={profile.headline} />
+          <Row label="Public Repos" value={String(activity.publicRepoCount)} />
+          <Row label="Followers" value={String(activity.followers)} />
+          <Row
+            label="Availability"
+            value={profile.availableForOpportunities ? "Open to Opportunities" : "Not available"}
+          />
+        </InfoCard>
+
+        <InfoCard title="Account Security">
+          <Row label="Auth Method" value="GitHub OAuth" />
+          <Row label="Account Status" value="Verified via GitHub ✓" />
+        </InfoCard>
+
+        <InfoCard title="Social Profiles">
+          <Row label="GitHub" value={`github.com/${profile.githubLogin}`} />
+        </InfoCard>
+
+        <InfoCard title="Resume/CV">
+          <p className="text-sm text-text-muted">
+            Resume upload isn&apos;t wired up yet — coming in a later milestone.
+          </p>
+        </InfoCard>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-1.5 text-sm">
+      <span className="text-text-secondary">{label}</span>
+      <span className="text-white">{value}</span>
+    </div>
+  );
+}

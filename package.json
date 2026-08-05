@@ -1,0 +1,14 @@
+{
+  "name": "ipskill",
+  "private": true,
+  "description": "IPSkill — Developer Hub for the Recruitment Data House platform",
+  "scripts": {
+    "dev:web": "pnpm --filter @ipskill/web dev",
+    "build:web": "pnpm --filter @ipskill/web build",
+    "dev:mobile": "pnpm --filter @ipskill/mobile start",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
