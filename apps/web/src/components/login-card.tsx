@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { IPSkillLogo } from "./ipskill-logo";
+import { ArrowRightIcon } from "./icons";
 
 export function LoginCard() {
   const [testLoginAvailable, setTestLoginAvailable] = useState(false);
@@ -27,29 +28,29 @@ export function LoginCard() {
       <div className="mt-8 flex flex-col gap-3">
         <button
           onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="rounded-xl bg-primary-gradient px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+          className="flex items-center justify-center gap-2 rounded-full bg-primary-gradient px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
-          Get Started
+          Get Started <ArrowRightIcon size={16} />
         </button>
 
         <button
           disabled
           title="Google sign-in is not wired up yet — use GitHub for now"
-          className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-400 opacity-50"
+          className="flex items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-gray-400 opacity-50"
         >
           Continue with Google
         </button>
 
         <button
           onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
+          className="flex items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GithubMark /> Continue with GitHub
         </button>
 
         <button
           onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="rounded-xl border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-white"
+          className="rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-white"
         >
           Log in
         </button>
@@ -57,7 +58,7 @@ export function LoginCard() {
         {testLoginAvailable && (
           <button
             onClick={() => signIn("test-account", { callbackUrl: "/dashboard/profile" })}
-            className="rounded-xl border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
+            className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
           >
             Continue as Test User (dev only)
           </button>
