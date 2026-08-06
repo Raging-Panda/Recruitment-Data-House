@@ -100,7 +100,8 @@ pnpm dev:mobile   # Expo dev server
 
 - **Real**: GitHub OAuth login (web + mobile), live GitHub data (repos,
   languages, PRs, issues, recent commit activity), skill fingerprint derived
-  from that data.
+  from that data, and a Recent Activity timeline (commits/PRs/releases
+  across the top 6 most active repos) on the Projects page.
 - **Also real**: Work history (Experience page), Certifications, and Skill
   tests (Verified Skills panel on the Skills page) — all backed by
   Supabase, scoped per-candidate via the authenticated session.

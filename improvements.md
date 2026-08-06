@@ -12,10 +12,12 @@ scheduled or scoped yet — just a running list to pull from.
   fingerprint. Deliberately not a real coding/execution sandbox; the
   plan is to migrate to a third-party assessment vendor (see below)
   once the app is earning revenue to justify the per-candidate cost.
-- **Recent project history with GitHub** — a timeline view of recent
-  commits/PRs/releases per repo, not just the current snapshot, so
-  recruiters can see trajectory (ramping up, going quiet, switching
-  stacks) rather than a single point-in-time score.
+- **Recent project history with GitHub** — ✅ shipped: a "Recent
+  Activity" timeline on the Projects page merging commits/PRs/releases
+  across the top 6 most active repos into one chronological feed, so
+  it shows trajectory (ramping up, going quiet, switching stacks)
+  rather than just the static snapshot the project list gives on its
+  own.
 - **Next position suggestions** — given a candidate's skill
   fingerprint and activity trend, surface role types/seniority levels
   they're likely a good fit for (e.g. "Senior Backend — Go/Postgres").
