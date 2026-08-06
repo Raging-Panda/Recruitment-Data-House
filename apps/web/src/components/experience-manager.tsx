@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { WorkExperience } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
+import { EmptyState } from "@/components/empty-state";
+import { LayersIcon } from "@/components/icons";
 
 interface FormState {
   company: string;
@@ -122,9 +124,11 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
   return (
     <div className="mt-6">
       {entries.length === 0 && editingId === null && (
-        <div className="rounded-2xl border border-dashed border-surface-border bg-background-elevated p-10 text-center">
-          <p className="text-sm text-text-secondary">No work history added yet.</p>
-        </div>
+        <EmptyState
+          icon={LayersIcon}
+          title="No work history added yet"
+          description="Add your first role to start building your experience timeline."
+        />
       )}
 
       <div className="flex flex-col gap-3">

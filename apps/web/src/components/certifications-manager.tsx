@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { Certification } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
+import { EmptyState } from "@/components/empty-state";
+import { ShieldCheckIcon } from "@/components/icons";
 
 const INPUT_CLASS =
   "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-white focus:border-primary focus:outline-none";
@@ -121,9 +123,11 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
   return (
     <div className="mt-6">
       {entries.length === 0 && editingId === null && (
-        <div className="rounded-2xl border border-dashed border-surface-border bg-background-elevated p-10 text-center">
-          <p className="text-sm text-text-secondary">No certifications added yet.</p>
-        </div>
+        <EmptyState
+          icon={ShieldCheckIcon}
+          title="No certifications added yet"
+          description="Add a certification to show off verified credentials on your profile."
+        />
       )}
 
       <div className="flex flex-col gap-3">

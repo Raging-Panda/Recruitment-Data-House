@@ -2,7 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData, loadProjectActivityTimeline } from "@/lib/developer-data";
 import { ActivityTimeline } from "@/components/activity-timeline";
-import { StarIcon, EyeIcon } from "@/components/icons";
+import { StarIcon, EyeIcon, BriefcaseIcon } from "@/components/icons";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions);
@@ -55,7 +56,11 @@ export default async function ProjectsPage() {
           </a>
         ))}
         {projects.length === 0 && (
-          <p className="text-sm text-text-muted">No public repositories found yet.</p>
+          <EmptyState
+            icon={BriefcaseIcon}
+            title="No projects yet"
+            description="Push a commit to a public GitHub repo and it'll show up here automatically."
+          />
         )}
       </div>
 

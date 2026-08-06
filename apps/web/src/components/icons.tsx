@@ -121,6 +121,23 @@ export function BellIcon(props: IconProps) {
   );
 }
 
+export function TagIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M11.5 4H5a1 1 0 0 0-1 1v6.5a1 1 0 0 0 .3.7l8.5 8.5a1 1 0 0 0 1.4 0l6.5-6.5a1 1 0 0 0 0-1.4l-8.5-8.5a1 1 0 0 0-.7-.3Z" />
+      <circle cx="8.5" cy="8.5" r="1.25" />
+    </Base>
+  );
+}
+
+export function ActivityIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3 12h4l2.5-7L14 19l2.5-7H21" />
+    </Base>
+  );
+}
+
 export function ArrowRightIcon(props: IconProps) {
   return (
     <Base {...props}>

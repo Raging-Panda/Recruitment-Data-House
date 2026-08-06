@@ -1,9 +1,11 @@
 import type { RepoActivityEvent } from "@ipskill/shared";
+import { EmptyState } from "@/components/empty-state";
+import { ActivityIcon, TagIcon } from "@/components/icons";
 
-const TYPE_ICON: Record<RepoActivityEvent["type"], string> = {
+const TYPE_ICON: Record<RepoActivityEvent["type"], string | null> = {
   commit: "●",
   pull_request: "⇄",
-  release: "🏷",
+  release: null,
 };
 
 const TYPE_LABEL: Record<RepoActivityEvent["type"], string> = {
@@ -28,9 +30,12 @@ function formatRelativeTime(dateString: string): string {
 export function ActivityTimeline({ events }: { events: RepoActivityEvent[] }) {
   if (events.length === 0) {
     return (
-      <p className="mt-4 text-sm text-text-muted">
-        No recent commits, PRs, or releases found across your repos.
-      </p>
+      <EmptyState
+        className="mt-4"
+        icon={ActivityIcon}
+        title="No recent activity yet"
+        description="Commits, PRs, and releases across your repos will show up here."
+      />
     );
   }
 
@@ -39,7 +44,7 @@ export function ActivityTimeline({ events }: { events: RepoActivityEvent[] }) {
       {events.map((event) => (
         <li key={event.id} className="relative">
           <span className="absolute -left-[1.65rem] top-1 text-xs text-primary">
-            {TYPE_ICON[event.type]}
+            {TYPE_ICON[event.type] ?? <TagIcon size={12} />}
           </span>
           <a
             href={event.url}

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { SkillTestAttemptSummary, SkillTestTemplate } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
+import { EmptyState } from "@/components/empty-state";
+import { ShieldCheckIcon } from "@/components/icons";
 
 function badgeFor(summary: SkillTestAttemptSummary | undefined) {
   if (!summary || summary.status === "not_started") {
@@ -65,7 +67,11 @@ export function VerifiedSkillsPanel({
         );
       })}
       {templates.length === 0 && (
-        <p className="text-sm text-text-muted">No skill tests available yet.</p>
+        <EmptyState
+          icon={ShieldCheckIcon}
+          title="No skill tests available yet"
+          description="We're adding more stacks — check back soon."
+        />
       )}
     </div>
   );

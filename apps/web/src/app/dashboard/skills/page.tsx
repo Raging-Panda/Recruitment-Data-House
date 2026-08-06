@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
 import type { SkillTestTemplate, SkillTestAttemptSummary } from "@ipskill/shared";
 import { VerifiedSkillsPanel } from "@/components/verified-skills-panel";
+import { CodeIcon } from "@/components/icons";
 
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
@@ -63,9 +64,13 @@ export default async function SkillsPage() {
               </div>
             ))}
             {activity.languageBreakdown.length === 0 && (
-              <p className="text-sm text-text-muted">
-                No language data yet — push some code to your public repos.
-              </p>
+              <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-surface-border py-8 text-center">
+                <CodeIcon size={20} />
+                <p className="text-sm font-medium text-white">No language data yet</p>
+                <p className="max-w-[220px] text-xs text-text-muted">
+                  Push some code to a public repo to see this fill in.
+                </p>
+              </div>
             )}
           </div>
         </div>
