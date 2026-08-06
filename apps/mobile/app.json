@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "IPSkill",
+    "slug": "ipskill",
+    "scheme": "ipskill",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0B1D",
+    "splash": {
+      "backgroundColor": "#0B0B1D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ipskill.app"
+    },
+    "android": {
+      "package": "com.ipskill.app"
+    }
+  }
+}
