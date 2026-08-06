@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { WorkExperience } from "@ipskill/shared";
+import { buttonClass } from "@/lib/button-styles";
 
 interface FormState {
   company: string;
@@ -12,6 +13,9 @@ interface FormState {
   isCurrent: boolean;
   description: string;
 }
+
+const INPUT_CLASS =
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-white focus:border-primary focus:outline-none";
 
 const EMPTY_FORM: FormState = {
   company: "",
@@ -152,7 +156,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="text-accent-pink hover:underline"
+                  className="text-accent-red hover:underline"
                 >
                   Delete
                 </button>
@@ -163,10 +167,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
       </div>
 
       {editingId === null && (
-        <button
-          onClick={startAdd}
-          className="mt-4 rounded-xl bg-primary-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-        >
+        <button onClick={startAdd} className={buttonClass("primary", "md", "mt-4")}>
           + Add Experience
         </button>
       )}
@@ -181,7 +182,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
               <input
                 value={form.company}
                 onChange={(e) => setForm({ ...form, company: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -189,7 +190,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
               <input
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -197,7 +198,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
               <input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
             <Field label="Start date">
@@ -205,7 +206,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                 type="month"
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -215,7 +216,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                 value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                 disabled={form.isCurrent}
-                className="input disabled:opacity-40"
+                className={`${INPUT_CLASS} disabled:opacity-40`}
               />
             </Field>
             <label className="flex items-center gap-2 self-end pb-2 text-sm text-text-secondary">
@@ -232,42 +233,22 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input min-h-20"
+              className={`${INPUT_CLASS} min-h-20`}
             />
           </Field>
 
-          {error && <p className="text-sm text-accent-pink">{error}</p>}
+          {error && <p className="text-sm text-accent-red">{error}</p>}
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-primary-gradient px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
+            <button type="submit" disabled={isSaving} className={buttonClass("primary")}>
               {isSaving ? "Saving…" : "Save"}
             </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="rounded-lg border border-surface-border px-4 py-2 text-sm text-text-secondary"
-            >
+            <button type="button" onClick={cancelEdit} className={buttonClass("ghost")}>
               Cancel
             </button>
           </div>
         </form>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border-radius: 0.5rem;
-          border: 1px solid #2a2a4a;
-          background-color: #1a1a35;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }

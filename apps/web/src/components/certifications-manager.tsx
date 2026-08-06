@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import type { Certification } from "@ipskill/shared";
+import { buttonClass } from "@/lib/button-styles";
+
+const INPUT_CLASS =
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-white focus:border-primary focus:outline-none";
 
 interface FormState {
   name: string;
@@ -162,7 +166,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="text-accent-pink hover:underline"
+                  className="text-accent-red hover:underline"
                 >
                   Delete
                 </button>
@@ -173,10 +177,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
       </div>
 
       {editingId === null && (
-        <button
-          onClick={startAdd}
-          className="mt-4 rounded-xl bg-primary-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-        >
+        <button onClick={startAdd} className={buttonClass("primary", "md", "mt-4")}>
           + Add Certification
         </button>
       )}
@@ -191,7 +192,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -199,7 +200,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
               <input
                 value={form.issuer}
                 onChange={(e) => setForm({ ...form, issuer: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -208,7 +209,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 type="month"
                 value={form.issueDate}
                 onChange={(e) => setForm({ ...form, issueDate: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -217,14 +218,14 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 type="month"
                 value={form.expiryDate}
                 onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
             <Field label="Credential ID (optional)">
               <input
                 value={form.credentialId}
                 onChange={(e) => setForm({ ...form, credentialId: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
             <Field label="Credential URL (optional)">
@@ -232,7 +233,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 type="url"
                 value={form.credentialUrl}
                 onChange={(e) => setForm({ ...form, credentialUrl: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
           </div>
@@ -241,42 +242,22 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input min-h-20"
+              className={`${INPUT_CLASS} min-h-20`}
             />
           </Field>
 
-          {error && <p className="text-sm text-accent-pink">{error}</p>}
+          {error && <p className="text-sm text-accent-red">{error}</p>}
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-primary-gradient px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
+            <button type="submit" disabled={isSaving} className={buttonClass("primary")}>
               {isSaving ? "Saving…" : "Save"}
             </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="rounded-lg border border-surface-border px-4 py-2 text-sm text-text-secondary"
-            >
+            <button type="button" onClick={cancelEdit} className={buttonClass("ghost")}>
               Cancel
             </button>
           </div>
         </form>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border-radius: 0.5rem;
-          border: 1px solid #2a2a4a;
-          background-color: #1a1a35;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }
