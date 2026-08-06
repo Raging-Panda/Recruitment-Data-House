@@ -79,6 +79,12 @@ export interface DeveloperActivitySummary {
   followers: number;
 }
 
+export interface CandidateProfileOverride {
+  githubId: string;
+  displayName: string;
+  updatedAt: string;
+}
+
 export interface WorkExperience {
   id: string;
   githubId: string;
