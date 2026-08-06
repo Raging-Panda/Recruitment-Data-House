@@ -1,4 +1,5 @@
 import {
+  buildActivityTimeline,
   buildLanguageBreakdown,
   computeSkillFingerprint,
   deriveAnalyticsSnapshot,
@@ -83,4 +84,14 @@ export async function loadDeveloperHubData(accessToken: string): Promise<Develop
       publicRepoCount: user.public_repos,
     }),
   };
+}
+
+/**
+ * Separate from loadDeveloperHubData: this adds several more GitHub API
+ * calls (commits/PRs/releases per repo), so it's only paid for on the
+ * Projects page rather than on every dashboard page load.
+ */
+export async function loadProjectActivityTimeline(accessToken: string) {
+  const repos = await fetchGithubRepos(accessToken);
+  return buildActivityTimeline(accessToken, repos);
 }
