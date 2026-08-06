@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { IPSkillLogo } from "@/components/IPSkillLogo";
+import { ArrowRightIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { theme } from "@/theme";
 
@@ -16,6 +17,7 @@ export function LoginScreen() {
       <View style={styles.buttons}>
         <TouchableOpacity style={styles.primaryButton} onPress={signInWithGithub}>
           <Text style={styles.primaryButtonText}>Get Started</Text>
+          <ArrowRightIcon size={16} color={theme.colors.white} />
         </TouchableOpacity>
 
         <View style={[styles.secondaryButton, styles.disabled]}>
@@ -65,9 +67,12 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 14,
+    borderRadius: 999,
     paddingVertical: 16,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
   primaryButtonText: {
     color: theme.colors.white,
@@ -76,7 +81,7 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: theme.colors.white,
-    borderRadius: 14,
+    borderRadius: 999,
     paddingVertical: 16,
     alignItems: "center",
   },
@@ -94,7 +99,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   ghostButton: {
-    borderRadius: 14,
+    borderRadius: 999,
     paddingVertical: 16,
     alignItems: "center",
     backgroundColor: theme.colors.surface,

@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { PlaceholderScreen } from "@/screens/PlaceholderScreen";
 import { ProfileStackNavigator } from "./ProfileStackNavigator";
 import { theme } from "@/theme";
+import { HomeIcon, SearchIcon, MessageIcon, PersonIcon } from "@/components/icons";
 import type { RootTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -21,12 +22,12 @@ function MessagesScreen() {
   return <PlaceholderScreen title="Messages" />;
 }
 
-const ICONS: Record<keyof RootTabParamList, string> = {
-  Home: "🏠",
-  Search: "🔍",
-  Add: "+",
-  Messages: "💬",
-  ProfileTab: "👤",
+const ICONS: Record<keyof RootTabParamList, typeof HomeIcon> = {
+  Home: HomeIcon,
+  Search: SearchIcon,
+  Add: HomeIcon,
+  Messages: MessageIcon,
+  ProfileTab: PersonIcon,
 };
 
 export function RootTabNavigator() {
@@ -38,14 +39,17 @@ export function RootTabNavigator() {
         tabBarShowLabel: true,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
-        tabBarIcon: () =>
-          route.name === "Add" ? (
-            <View style={styles.addButton}>
-              <Text style={styles.addButtonText}>+</Text>
-            </View>
-          ) : (
-            <Text style={{ fontSize: 18 }}>{ICONS[route.name]}</Text>
-          ),
+        tabBarIcon: ({ color }) => {
+          if (route.name === "Add") {
+            return (
+              <View style={styles.addButton}>
+                <Text style={styles.addButtonText}>+</Text>
+              </View>
+            );
+          }
+          const Icon = ICONS[route.name];
+          return <Icon size={20} color={color} />;
+        },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

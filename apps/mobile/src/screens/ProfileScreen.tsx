@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SkillRadarChart } from "@/components/SkillRadarChart";
+import { BarChartIcon } from "@/components/icons";
 import { useDeveloperHubData } from "@/lib/use-developer-hub-data";
 import { theme } from "@/theme";
 import type { ProfileStackParamList } from "@/navigation/types";
@@ -39,7 +40,7 @@ export function ProfileScreen({ navigation }: Props) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Skills</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Analytics")}>
-          <Text style={styles.headerIcon}>📊</Text>
+          <BarChartIcon size={20} color={theme.colors.white} />
         </TouchableOpacity>
       </View>
 
@@ -120,7 +121,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   headerTitle: { color: theme.colors.white, fontSize: 18, fontWeight: "700" },
-  headerIcon: { fontSize: 18 },
   topTabs: { flexDirection: "row", gap: 24, marginTop: 16 },
   topTab: { color: theme.colors.textSecondary, fontSize: 14, paddingBottom: 8 },
   topTabActive: {
