@@ -1,10 +1,14 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { loadDeveloperHubData } from "@/lib/developer-data";
+import { loadDeveloperHubData, loadProjectActivityTimeline } from "@/lib/developer-data";
+import { ActivityTimeline } from "@/components/activity-timeline";
 
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions);
-  const { projects } = await loadDeveloperHubData(session!.accessToken!);
+  const [{ projects }, timeline] = await Promise.all([
+    loadDeveloperHubData(session!.accessToken!),
+    loadProjectActivityTimeline(session!.accessToken!),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -48,6 +52,15 @@ export default async function ProjectsPage() {
         {projects.length === 0 && (
           <p className="text-sm text-text-muted">No public repositories found yet.</p>
         )}
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Commits, PRs, and releases across your most active repos — trajectory, not just a
+          snapshot.
+        </p>
+        <ActivityTimeline events={timeline} />
       </div>
     </div>
   );
