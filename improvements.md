@@ -79,10 +79,12 @@ scheduled or scoped yet — just a running list to pull from.
   chart, project list shapes) while GitHub data loads, instead of a
   blank page (web) or a bare spinner (mobile). Includes a branded
   splash/loading screen on mobile app cold start.
-- **Real icon set** — swap the emoji placeholders (🔔 🏠 🔍 💬 👤 📊 in
-  the sidebar/tab bar/topbar) for a proper icon library that matches
-  the fingerprint line-art of the IPSkill logo, with consistent
-  sizing and active/inactive states.
+- **Real icon set** — ✅ shipped: a shared line-icon set (outline style,
+  matching the IPSkill brand's design system) now covers the web
+  sidebar/topbar/nav and the mobile tab bar, replacing the emoji
+  placeholders (🔔 🏠 🔍 💬 👤 📊) that used to be there. Still open:
+  consistent active/inactive icon *states* beyond color (e.g. filled
+  vs. outline variants), which the current set doesn't do yet.
 - **Empty states with illustration + copy** — "No projects yet",
   "No language data yet" etc. are currently plain text; give them a
   small illustration and a clear next action (e.g. "Push a commit to
