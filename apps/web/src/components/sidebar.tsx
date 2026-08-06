@@ -5,17 +5,29 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import { IPSkillLogo } from "./ipskill-logo";
+import {
+  HomeIcon,
+  PersonIcon,
+  CodeIcon,
+  BriefcaseIcon,
+  LayersIcon,
+  ShieldCheckIcon,
+  StarIcon,
+  BarChartIcon,
+  GearIcon,
+  ArrowRightIcon,
+} from "./icons";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/profile", label: "Profile" },
-  { href: "/dashboard/skills", label: "Skills" },
-  { href: "/dashboard/projects", label: "Projects" },
-  { href: "/dashboard/experience", label: "Experience" },
-  { href: "/dashboard/certifications", label: "Certifications" },
-  { href: "/dashboard/achievements", label: "Achievements" },
-  { href: "/dashboard/analytics", label: "Analytics" },
-  { href: "/dashboard/settings", label: "Settings" },
+  { href: "/dashboard", label: "Dashboard", icon: HomeIcon },
+  { href: "/dashboard/profile", label: "Profile", icon: PersonIcon },
+  { href: "/dashboard/skills", label: "Skills", icon: CodeIcon },
+  { href: "/dashboard/projects", label: "Projects", icon: BriefcaseIcon },
+  { href: "/dashboard/experience", label: "Experience", icon: LayersIcon },
+  { href: "/dashboard/certifications", label: "Certifications", icon: ShieldCheckIcon },
+  { href: "/dashboard/achievements", label: "Achievements", icon: StarIcon },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChartIcon },
+  { href: "/dashboard/settings", label: "Settings", icon: GearIcon },
 ];
 
 export function Sidebar({ userName }: { userName: string }) {
@@ -38,16 +50,18 @@ export function Sidebar({ userName }: { userName: string }) {
         <nav className="mt-8 flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-lg px-3 py-2 text-sm transition ${
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
                   active
                     ? "bg-primary-gradient font-semibold text-white"
                     : "text-text-secondary hover:bg-surface hover:text-white"
                 }`}
               >
+                <Icon size={17} />
                 {item.label}
               </Link>
             );
@@ -59,8 +73,8 @@ export function Sidebar({ userName }: { userName: string }) {
         <div className="rounded-xl border border-surface-border bg-surface p-4">
           <p className="text-sm font-semibold text-white">Upgrade to Pro</p>
           <p className="mt-1 text-xs text-text-secondary">Unlock more features.</p>
-          <button className="mt-3 w-full rounded-lg bg-primary-gradient py-2 text-xs font-semibold text-white">
-            Upgrade Now
+          <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white transition hover:opacity-90">
+            Upgrade Now <ArrowRightIcon size={14} />
           </button>
         </div>
 
