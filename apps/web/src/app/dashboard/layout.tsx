@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { getCandidateProfileOverride } from "@/lib/candidate-profile";
+import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 
@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/login");
   }
 
-  const override = await getCandidateProfileOverride(session.githubId!);
+  const override = await getCandidateProfileOverrideSafe(session.githubId!);
   const userName = override?.displayName ?? session.user?.name ?? "Developer";
 
   return (

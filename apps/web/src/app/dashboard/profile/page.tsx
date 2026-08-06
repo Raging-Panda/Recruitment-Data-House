@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import Image from "next/image";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
-import { getCandidateProfileOverride } from "@/lib/candidate-profile";
+import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
 import { DisplayNameEditor } from "@/components/display-name-editor";
@@ -11,7 +11,7 @@ export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   const [{ profile, activity }, override] = await Promise.all([
     loadDeveloperHubData(session!.accessToken!),
-    getCandidateProfileOverride(session!.githubId!),
+    getCandidateProfileOverrideSafe(session!.githubId!),
   ]);
   const displayName = override?.displayName ?? profile.name;
 

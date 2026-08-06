@@ -4,6 +4,7 @@ import { loadDeveloperHubData } from "@/lib/developer-data";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
+import type { SkillTestTemplate, SkillTestAttemptSummary } from "@ipskill/shared";
 import { VerifiedSkillsPanel } from "@/components/verified-skills-panel";
 
 export default async function SkillsPage() {
@@ -12,14 +13,22 @@ export default async function SkillsPage() {
     session!.accessToken!
   );
 
-  const supabase = getSupabaseAdmin();
-  const [{ data: templateRows }, { data: attemptRows }] = await Promise.all([
-    supabase.from("skill_test_templates").select("*, skill_test_questions(count)").eq("is_active", true).order("stack"),
-    supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),
-  ]);
-
-  const templates = (templateRows as TemplateRow[] | null)?.map(rowToTemplate) ?? [];
-  const summaries = summarizeAttempts((attemptRows as AttemptRow[]) ?? []);
+  // Verified Skills is a layer on top of the GitHub-derived fingerprint
+  // above, not what this page exists for — a Supabase hiccup shouldn't
+  // take down the radar chart and language breakdown with it.
+  let templates: SkillTestTemplate[] = [];
+  let summaries = new Map<string, SkillTestAttemptSummary>();
+  try {
+    const supabase = getSupabaseAdmin();
+    const [{ data: templateRows }, { data: attemptRows }] = await Promise.all([
+      supabase.from("skill_test_templates").select("*, skill_test_questions(count)").eq("is_active", true).order("stack"),
+      supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),
+    ]);
+    templates = (templateRows as TemplateRow[] | null)?.map(rowToTemplate) ?? [];
+    summaries = summarizeAttempts((attemptRows as AttemptRow[]) ?? []);
+  } catch {
+    // leave templates/summaries empty — VerifiedSkillsPanel handles zero templates
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
