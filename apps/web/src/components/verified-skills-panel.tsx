@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { SkillTestAttemptSummary, SkillTestTemplate } from "@ipskill/shared";
+import { buttonClass } from "@/lib/button-styles";
 
 function badgeFor(summary: SkillTestAttemptSummary | undefined) {
   if (!summary || summary.status === "not_started") {
@@ -11,7 +12,7 @@ function badgeFor(summary: SkillTestAttemptSummary | undefined) {
     return { label: "In progress", className: "bg-primary/20 text-primary" };
   }
   if (summary.status === "expired" && summary.bestPercentage === null) {
-    return { label: "Expired", className: "bg-accent-pink/20 text-accent-pink" };
+    return { label: "Expired", className: "bg-accent-amber/20 text-accent-amber" };
   }
   return {
     label: `${summary.bestPercentage}%`,
@@ -56,7 +57,7 @@ export function VerifiedSkillsPanel({
             </div>
             <Link
               href={`/dashboard/skills/tests/${template.slug}`}
-              className="whitespace-nowrap rounded-lg bg-primary-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              className={buttonClass("primary", "md", "whitespace-nowrap")}
             >
               {buttonLabel(summary)}
             </Link>
