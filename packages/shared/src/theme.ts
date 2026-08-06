@@ -1,16 +1,22 @@
 export const colors = {
-  background: "#0A1445",
-  backgroundElevated: "#121C53",
-  surface: "#19235D",
-  surfaceBorder: "#293372",
-  primary: "#6D28D9",
-  primaryGradientFrom: "#4F00E6",
-  primaryGradientTo: "#6D28D9",
-  navy: "#0A1445",
-  purple: "#6D28D9",
-  violet: "#4F00E6",
+  background: "#081C5A",
+  backgroundElevated: "#0F245F",
+  surface: "#152C6B",
+  surfaceBorder: "#2A3F82",
+  primary: "#5A18D6",
+  primaryGradientFrom: "#5A18D6",
+  primaryGradientTo: "#4020C4",
+  navy: "#081C5A",
+  purple: "#5A18D6",
+  violet: "#4020C4",
+  indigo: "#4020C4",
+  midnightBlue: "#081C5A",
+  deepNavy: "#1E293B",
   accentPink: "#EC4899",
-  accentGreen: "#22C55E",
+  accentGreen: "#10B981",
+  accentAmber: "#F59E0B",
+  accentRed: "#EF4444",
+  lightGray: "#F5F7FA",
   textPrimary: "#F5F5FA",
   textSecondary: "#9797B5",
   textMuted: "#5E5E80",
@@ -18,7 +24,7 @@ export const colors = {
 } as const;
 
 export const gradients = {
-  primaryButton: `linear-gradient(90deg, ${colors.primaryGradientFrom} 0%, ${colors.primaryGradientTo} 100%)`,
+  primaryButton: `linear-gradient(135deg, ${colors.primaryGradientFrom} 0%, ${colors.primaryGradientTo} 100%)`,
 } as const;
 
 export const radii = {
