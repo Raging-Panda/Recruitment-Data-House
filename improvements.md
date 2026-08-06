@@ -89,10 +89,12 @@ scheduled or scoped yet — just a running list to pull from.
   placeholders (🔔 🏠 🔍 💬 👤 📊) that used to be there. Still open:
   consistent active/inactive icon *states* beyond color (e.g. filled
   vs. outline variants), which the current set doesn't do yet.
-- **Empty states with illustration + copy** — "No projects yet",
-  "No language data yet" etc. are currently plain text; give them a
-  small illustration and a clear next action (e.g. "Push a commit to
-  see this fill in").
+- **Empty states with illustration + copy** — ✅ shipped: a shared
+  EmptyState component (icon badge + title + actionable copy) now
+  covers Projects, Skills' language breakdown, Verified Skills,
+  Experience, Certifications, Recent Activity, and the
+  Achievements/Settings stubs — replacing the old plain "No X yet"
+  text.
 - **Functional light mode** — the Dark Mode toggle in the web sidebar
   currently just flips visually without restyling anything; either
   wire up a real light theme or remove the toggle until it does.
