@@ -96,6 +96,23 @@ pnpm dev:web      # http://localhost:3000
 pnpm dev:mobile   # Expo dev server
 ```
 
+### Test login (no GitHub OAuth needed)
+
+Set `ALLOW_TEST_LOGIN=true` in `apps/web/.env.local` to register an extra
+"test-account" NextAuth provider and show a "Continue as Test User" button
+on the login page. It logs straight into a fixture developer profile with
+realistic GitHub-shaped data (repos, languages, skill fingerprint, commit
+history) — no real OAuth round trip, no GitHub access token needed — so
+every GitHub-derived page (Profile, Skills, Projects, Analytics) can be
+exercised end to end. Supabase-backed features (Experience, Certifications,
+Verified Skills, the display-name override) still need a real
+`SUPABASE_SERVICE_ROLE_KEY` to read/write data, since those aren't mocked.
+
+Never set `ALLOW_TEST_LOGIN` on a real deployment — it's deliberately not
+gated by `NODE_ENV` (Vercel builds preview deployments with
+`NODE_ENV=production` too), so leaving it unset is what keeps the bypass
+from existing at all outside your own machine.
+
 ## What's real vs. placeholder
 
 - **Real**: GitHub OAuth login (web + mobile), live GitHub data (repos,
