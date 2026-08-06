@@ -1,8 +1,8 @@
 export const colors = {
-  background: "#081C5A",
-  backgroundElevated: "#0F245F",
-  surface: "#152C6B",
-  surfaceBorder: "#2A3F82",
+  background: "#05080F",
+  backgroundElevated: "#0A1120",
+  surface: "#111A2E",
+  surfaceBorder: "#1E2A44",
   primary: "#5A18D6",
   primaryGradientFrom: "#5A18D6",
   primaryGradientTo: "#4020C4",
