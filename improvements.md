@@ -75,10 +75,14 @@ scheduled or scoped yet — just a running list to pull from.
 
 ## Visual & UI polish
 
-- **Loading states** — real skeleton screens (profile card, radar
-  chart, project list shapes) while GitHub data loads, instead of a
-  blank page (web) or a bare spinner (mobile). Includes a branded
-  splash/loading screen on mobile app cold start.
+- **Loading states** — ✅ shipped on web: every data-fetching dashboard
+  page (Profile, Skills, Projects, Analytics, Experience,
+  Certifications) has a `loading.tsx` skeleton shaped like its real
+  layout, via Next.js's automatic Suspense-boundary convention — the
+  sidebar/topbar stay live, only the content area shows placeholders.
+  Still open on mobile: a bare `ActivityIndicator` spinner is still
+  what shows while GitHub data loads, plus a branded splash/loading
+  screen on cold start.
 - **Real icon set** — ✅ shipped: a shared line-icon set (outline style,
   matching the IPSkill brand's design system) now covers the web
   sidebar/topbar/nav and the mobile tab bar, replacing the emoji
