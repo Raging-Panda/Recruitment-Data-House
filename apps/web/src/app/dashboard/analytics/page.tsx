@@ -1,12 +1,26 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
+import { splitStrengthsAndGaps, sortedSkillEntries, computeLearningMomentum } from "@/lib/analysis";
+import { SkillRadarChart } from "@/components/skill-radar-chart";
+import { CommitTrendChart } from "@/components/commit-trend-chart";
+import { StatTile } from "@/components/stat-tile";
+import { BentoPlaceholder } from "@/components/bento-placeholder";
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
-  const { analytics } = await loadDeveloperHubData(session!.accessToken!);
+  const { profile, skillFingerprint, activity, analytics } = await loadDeveloperHubData(
+    session!.accessToken!
+  );
 
-  const stats = [
+  const { strengths, improvementAreas } = splitStrengthsAndGaps(skillFingerprint);
+  const categoryBreakdown = sortedSkillEntries(skillFingerprint);
+  const learningMomentum = computeLearningMomentum(activity.commitActivity);
+  const careerReadiness = Math.round(
+    (profile.overallScore + Math.max(0, 100 - profile.percentileRank)) / 2
+  );
+
+  const engagementStats = [
     {
       label: "Profile Views",
       value: analytics.profileViews.toLocaleString(),
@@ -25,28 +39,157 @@ export default async function AnalyticsPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <h1 className="text-2xl font-bold text-white">Analytics</h1>
-      <p className="mt-1 text-xs text-text-muted">
-        Engagement metrics are estimated from account signals until platform-native tracking
-        ships.
+    <div className="mx-auto max-w-6xl">
+      <h1 className="text-2xl font-bold text-white">My Analysis</h1>
+      <p className="mt-1 text-sm text-text-secondary">
+        Deep insights into your skills, growth, and career potential — derived from your GitHub
+        activity.
       </p>
 
-      <div className="mt-6 flex flex-col gap-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-surface-border bg-background-elevated p-5"
-          >
-            <p className="text-sm text-text-secondary">{stat.label}</p>
-            <div className="mt-1 flex items-baseline gap-3">
-              <span className="text-2xl font-bold text-white">{stat.value}</span>
-              <span className="text-sm text-accent-green">↑ {stat.change}% vs last month</span>
+      <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+        <StatTile
+          label="Overall Analysis Score"
+          value={`${profile.overallScore}%`}
+          sublabel={profile.overallScore >= 70 ? "Excellent" : "Building up"}
+          sublabelClassName="text-accent-green"
+        />
+        <StatTile
+          label="Skills Strength"
+          value={String(strengths.length)}
+          sublabel="Strong Skills"
+        />
+        <StatTile
+          label="Improvement Areas"
+          value={String(improvementAreas.length)}
+          sublabel="Focus Areas"
+        />
+        <StatTile
+          label="Career Readiness"
+          value={`${careerReadiness}%`}
+          sublabel={careerReadiness >= 70 ? "Highly Ready" : "In Progress"}
+          sublabelClassName="text-accent-green"
+        />
+        <StatTile
+          label="Learning Momentum"
+          value={`${learningMomentum >= 0 ? "↑" : "↓"} ${Math.abs(learningMomentum)}%`}
+          sublabel="vs prior 4 weeks"
+          sublabelClassName={learningMomentum >= 0 ? "text-accent-green" : "text-accent-pink"}
+        />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
+          <h3 className="text-sm font-semibold text-white">Skill Radar Analysis</h3>
+          <p className="mt-1 text-xs text-text-secondary">
+            Your proficiency across key skill domains
+          </p>
+          <SkillRadarChart fingerprint={skillFingerprint} />
+        </div>
+
+        <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
+          <h3 className="text-sm font-semibold text-white">Skill Category Breakdown</h3>
+          <div className="mt-4 flex flex-col gap-3">
+            {categoryBreakdown.map(([category, score]) => (
+              <div key={category}>
+                <div className="flex justify-between text-xs text-text-secondary">
+                  <span>{category}</span>
+                  <span>{score}%</span>
+                </div>
+                <div className="mt-1 h-2 rounded-full bg-surface">
+                  <div
+                    className="h-2 rounded-full bg-primary-gradient"
+                    style={{ width: `${Math.min(100, score)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h3 className="text-sm font-semibold text-white">Strengths</h3>
+            <div className="mt-3 flex flex-col gap-3">
+              {strengths.slice(0, 4).map(([category, score]) => (
+                <div key={category} className="flex items-start gap-2 text-sm">
+                  <span className="mt-0.5 text-accent-green">✓</span>
+                  <div>
+                    <p className="text-white">{category}</p>
+                    <p className="text-xs text-text-muted">{score}% proficiency</p>
+                  </div>
+                </div>
+              ))}
+              {strengths.length === 0 && (
+                <p className="text-sm text-text-muted">
+                  Keep shipping — no category has crossed the strength threshold yet.
+                </p>
+              )}
             </div>
           </div>
-        ))}
 
-        <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h3 className="text-sm font-semibold text-white">Improvement Areas</h3>
+            <div className="mt-3 flex flex-col gap-3">
+              {improvementAreas.slice(0, 4).map(([category, score]) => (
+                <div key={category} className="flex items-start gap-2 text-sm">
+                  <span className="mt-0.5 text-accent-pink">●</span>
+                  <div>
+                    <p className="text-white">{category}</p>
+                    <p className="text-xs text-text-muted">{score}% — focus area</p>
+                  </div>
+                </div>
+              ))}
+              {improvementAreas.length === 0 && (
+                <p className="text-sm text-text-muted">
+                  Every category is above the strength threshold. Nice work.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
+          <h3 className="text-sm font-semibold text-white">Growth Trend</h3>
+          <p className="mt-1 text-xs text-text-secondary">
+            Public commit activity, last {Math.min(activity.commitActivity.length, 12)} weeks
+          </p>
+          <CommitTrendChart commitActivity={activity.commitActivity} />
+        </div>
+
+        <BentoPlaceholder
+          title="Skill Gap Analysis"
+          description="Benchmarking your skills against live market demand needs a jobs/salary data source we haven't wired up yet."
+        />
+      </div>
+
+      <div className="mt-6">
+        <BentoPlaceholder
+          title="AI Career Recommendations"
+          badge="Beta"
+          description="Personalized role suggestions from your skill fingerprint and goals — planned once an AI recommendation pass is wired up."
+        />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold text-white">Engagement</h2>
+        <p className="mt-1 text-xs text-text-muted">
+          Estimated from account signals until platform-native tracking ships.
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {engagementStats.map((stat) => (
+            <StatTile
+              key={stat.label}
+              label={stat.label}
+              value={stat.value}
+              sublabel={`↑ ${stat.change}% vs last month`}
+              sublabelClassName="text-accent-green"
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-surface-border bg-background-elevated p-5">
           <p className="text-sm font-semibold text-white">Top Countries</p>
           <div className="mt-3 flex flex-col gap-2">
             {analytics.topCountries.map((c) => (
