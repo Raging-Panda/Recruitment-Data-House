@@ -1,25 +1,55 @@
 import type { NextAuthOptions } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { isTestModeEnabled, TEST_ACCESS_TOKEN, TEST_GITHUB_ID } from "./test-mode";
+
+const providers: NextAuthOptions["providers"] = [
+  GitHubProvider({
+    clientId: process.env.GITHUB_CLIENT_ID ?? "",
+    clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+    authorization: {
+      params: {
+        scope: "read:user user:email repo",
+      },
+    },
+  }),
+];
+
+// Dev-only bypass so the app can be exercised without a real GitHub OAuth
+// round trip — see test-mode.ts for the ALLOW_TEST_LOGIN gate. Never
+// registered unless that env var is explicitly set, so it can't appear
+// (or be signed into) on a deployment where it wasn't deliberately enabled.
+if (isTestModeEnabled()) {
+  providers.push(
+    CredentialsProvider({
+      id: "test-account",
+      name: "Test Account",
+      credentials: {},
+      async authorize() {
+        return {
+          id: TEST_GITHUB_ID,
+          name: "Test Developer",
+          email: "test-developer@ipskill.dev",
+          image: "https://avatars.githubusercontent.com/u/9919?s=200&v=4",
+        };
+      },
+    })
+  );
+}
 
 export const authOptions: NextAuthOptions = {
-  providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID ?? "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
-      authorization: {
-        params: {
-          scope: "read:user user:email repo",
-        },
-      },
-    }),
-  ],
+  providers,
   callbacks: {
     async jwt({ token, account }) {
-      if (account?.access_token) {
+      if (account?.provider === "github" && account.access_token) {
         token.accessToken = account.access_token;
         // GitHub's numeric account ID — stable even if the user renames
         // their GitHub username, unlike the login string.
         token.githubId = account.providerAccountId;
+      }
+      if (account?.provider === "test-account") {
+        token.accessToken = TEST_ACCESS_TOKEN;
+        token.githubId = TEST_GITHUB_ID;
       }
       return token;
     },

@@ -14,6 +14,8 @@ import {
   type DeveloperProject,
   type SkillFingerprint,
 } from "@ipskill/shared";
+import { TEST_ACCESS_TOKEN } from "./test-mode";
+import { buildMockDeveloperHubData, buildMockActivityTimeline } from "./mock-developer-data";
 
 export interface DeveloperHubData {
   profile: DeveloperProfile;
@@ -24,6 +26,8 @@ export interface DeveloperHubData {
 }
 
 export async function loadDeveloperHubData(accessToken: string): Promise<DeveloperHubData> {
+  if (accessToken === TEST_ACCESS_TOKEN) return buildMockDeveloperHubData();
+
   const [user, repos] = await Promise.all([
     fetchGithubUser(accessToken),
     fetchGithubRepos(accessToken),
@@ -92,6 +96,8 @@ export async function loadDeveloperHubData(accessToken: string): Promise<Develop
  * Projects page rather than on every dashboard page load.
  */
 export async function loadProjectActivityTimeline(accessToken: string) {
+  if (accessToken === TEST_ACCESS_TOKEN) return buildMockActivityTimeline();
+
   const repos = await fetchGithubRepos(accessToken);
   return buildActivityTimeline(accessToken, repos);
 }

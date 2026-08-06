@@ -1,9 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { IPSkillLogo } from "./ipskill-logo";
 
 export function LoginCard() {
+  const [testLoginAvailable, setTestLoginAvailable] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((res) => res.json())
+      .then((providers) => setTestLoginAvailable(Boolean(providers?.["test-account"])))
+      .catch(() => setTestLoginAvailable(false));
+  }, []);
+
   return (
     <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-background-elevated p-8 text-center">
       <div className="flex justify-center">
@@ -43,6 +53,15 @@ export function LoginCard() {
         >
           Log in
         </button>
+
+        {testLoginAvailable && (
+          <button
+            onClick={() => signIn("test-account", { callbackUrl: "/dashboard/profile" })}
+            className="rounded-xl border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
+          >
+            Continue as Test User (dev only)
+          </button>
+        )}
       </div>
     </div>
   );
