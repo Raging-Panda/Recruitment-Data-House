@@ -77,8 +77,8 @@ export default async function AnalyticsPage() {
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div className="rounded-2xl border border-surface-border bg-background-elevated p-6 md:col-span-2">
           <h3 className="text-sm font-semibold text-white">Skill Radar Analysis</h3>
           <p className="mt-1 text-xs text-text-secondary">
             Your proficiency across key skill domains
