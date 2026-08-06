@@ -73,7 +73,7 @@ export default async function AnalyticsPage() {
           label="Learning Momentum"
           value={`${learningMomentum >= 0 ? "↑" : "↓"} ${Math.abs(learningMomentum)}%`}
           sublabel="vs prior 4 weeks"
-          sublabelClassName={learningMomentum >= 0 ? "text-accent-green" : "text-accent-pink"}
+          sublabelClassName={learningMomentum >= 0 ? "text-accent-green" : "text-accent-red"}
         />
       </div>
 
@@ -132,7 +132,7 @@ export default async function AnalyticsPage() {
             <div className="mt-3 flex flex-col gap-3">
               {improvementAreas.slice(0, 4).map(([category, score]) => (
                 <div key={category} className="flex items-start gap-2 text-sm">
-                  <span className="mt-0.5 text-accent-pink">●</span>
+                  <span className="mt-0.5 text-accent-amber">●</span>
                   <div>
                     <p className="text-white">{category}</p>
                     <p className="text-xs text-text-muted">{score}% — focus area</p>

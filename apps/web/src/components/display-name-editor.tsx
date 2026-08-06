@@ -61,7 +61,7 @@ export function DisplayNameEditor({ initialName }: { initialName: string }) {
         >
           {isSaving ? "Saving…" : "Save"}
         </button>
-        {error && <span className="text-xs text-accent-pink">{error}</span>}
+        {error && <span className="text-xs text-accent-red">{error}</span>}
       </div>
     );
   }
