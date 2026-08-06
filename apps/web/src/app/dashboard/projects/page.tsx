@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData, loadProjectActivityTimeline } from "@/lib/developer-data";
 import { ActivityTimeline } from "@/components/activity-timeline";
+import { StarIcon, EyeIcon } from "@/components/icons";
 
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions);
@@ -41,8 +42,12 @@ export default async function ProjectsPage() {
               )}
             </div>
             <div className="flex items-center gap-4 text-sm text-text-secondary">
-              <span>⭐ {project.stars}</span>
-              <span>👁 {project.watchers}</span>
+              <span className="flex items-center gap-1">
+                <StarIcon size={14} /> {project.stars}
+              </span>
+              <span className="flex items-center gap-1">
+                <EyeIcon size={14} /> {project.watchers}
+              </span>
               <span className="text-xs text-text-muted">
                 {new Date(project.updatedAt).getFullYear()}
               </span>
