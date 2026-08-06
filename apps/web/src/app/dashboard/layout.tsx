@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import { getCandidateProfileOverride } from "@/lib/candidate-profile";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 
@@ -10,14 +11,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/login");
   }
 
+  const override = await getCandidateProfileOverride(session.githubId!);
+  const userName = override?.displayName ?? session.user?.name ?? "Developer";
+
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar userName={session.user?.name ?? "Developer"} />
+      <Sidebar userName={userName} />
       <div className="flex flex-1 flex-col">
-        <Topbar
-          userName={session.user?.name ?? "Developer"}
-          userImage={session.user?.image ?? undefined}
-        />
+        <Topbar userName={userName} userImage={session.user?.image ?? undefined} />
         <main className="flex-1 p-8">{children}</main>
       </div>
     </div>

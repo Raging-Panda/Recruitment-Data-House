@@ -2,12 +2,18 @@ import { getServerSession } from "next-auth";
 import Image from "next/image";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
+import { getCandidateProfileOverride } from "@/lib/candidate-profile";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
+import { DisplayNameEditor } from "@/components/display-name-editor";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
-  const { profile, activity } = await loadDeveloperHubData(session!.accessToken!);
+  const [{ profile, activity }, override] = await Promise.all([
+    loadDeveloperHubData(session!.accessToken!),
+    getCandidateProfileOverride(session!.githubId!),
+  ]);
+  const displayName = override?.displayName ?? profile.name;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -19,15 +25,13 @@ export default async function ProfilePage() {
       <div className="mt-6 grid grid-cols-1 gap-6 rounded-2xl border border-surface-border bg-background-elevated p-6 md:grid-cols-[auto_1fr_auto]">
         <Image
           src={profile.avatarUrl}
-          alt={profile.name}
+          alt={displayName}
           width={88}
           height={88}
           className="rounded-full"
         />
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-            {profile.name} <span className="text-primary">✓</span>
-          </h2>
+          <DisplayNameEditor initialName={displayName} />
           <p className="text-sm text-text-secondary">{profile.headline}</p>
           {profile.location && (
             <p className="mt-1 text-xs text-text-muted">📍 {profile.location}</p>
@@ -35,15 +39,15 @@ export default async function ProfilePage() {
           <p className="mt-3 max-w-md text-sm text-text-secondary">
             {profile.about ?? "No bio provided on GitHub yet."}
           </p>
+          <p className="mt-3 text-xs text-text-muted">@{profile.githubLogin}</p>
         </div>
         <ScoreRing score={profile.overallScore} label="Profile Completion" />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
         <InfoCard title="Personal Information">
-          <Row label="Full Name" value={profile.name} />
+          <Row label="Full Name" value={displayName} />
           <Row label="Location" value={profile.location ?? "Not set on GitHub"} />
-          <Row label="GitHub" value={`@${profile.githubLogin}`} />
         </InfoCard>
 
         <InfoCard title="Professional Information">
