@@ -95,9 +95,13 @@ scheduled or scoped yet — just a running list to pull from.
   Experience, Certifications, Recent Activity, and the
   Achievements/Settings stubs — replacing the old plain "No X yet"
   text.
-- **Functional light mode** — the Dark Mode toggle in the web sidebar
-  currently just flips visually without restyling anything; either
-  wire up a real light theme or remove the toggle until it does.
+- **Functional light mode** — ✅ shipped: the Dark Mode toggle actually
+  restyles the app now. Structural tokens (background, surfaces,
+  borders, text) flip via CSS variables + a `[data-theme]` attribute;
+  brand/accent colors stay constant across both themes by design.
+  Persists to localStorage with a before-hydration script to avoid a
+  flash of the wrong theme. Mobile doesn't have a theme toggle at all
+  yet — still dark-only.
 - **Toasts/inline feedback** — confirm actions (login success, sign
   out, save) with toasts/snackbars instead of silent state changes.
 - **Animated skill radar** — animate the radar chart filling in on
