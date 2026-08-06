@@ -2,6 +2,7 @@ import type {
   DeveloperActivitySummary,
   DeveloperProject,
   LanguageBreakdownEntry,
+  RepoActivityEvent,
   SkillFingerprint,
 } from "./types";
 
@@ -266,4 +267,127 @@ export function computeSkillFingerprint(
     Communication: Math.round(Math.min(100, activity.codeReviews * 8)) || 20,
     Leadership: Math.round(Math.min(100, testAdoption * 100)) || 15,
   };
+}
+
+interface GithubCommit {
+  sha: string;
+  html_url: string;
+  commit: {
+    message: string;
+    author: { date: string } | null;
+    committer: { date: string } | null;
+  };
+}
+
+interface GithubPullRequest {
+  number: number;
+  title: string;
+  html_url: string;
+  state: "open" | "closed";
+  merged_at: string | null;
+  updated_at: string;
+}
+
+interface GithubRelease {
+  id: number;
+  tag_name: string;
+  name: string | null;
+  html_url: string;
+  published_at: string | null;
+  created_at: string;
+}
+
+/**
+ * Recent commits/PRs/releases for one repo, as a unified event shape. Capped
+ * per event type per repo (5/5/3) to keep this cheap enough to call across
+ * several repos on a single page load.
+ */
+export async function fetchRepoTimelineEvents(
+  token: string,
+  owner: string,
+  repo: string,
+  repoUrl: string
+): Promise<RepoActivityEvent[]> {
+  const [commits, pulls, releases] = await Promise.all([
+    githubFetch<GithubCommit[]>(token, `/repos/${owner}/${repo}/commits?per_page=5`).catch(
+      () => [] as GithubCommit[]
+    ),
+    githubFetch<GithubPullRequest[]>(
+      token,
+      `/repos/${owner}/${repo}/pulls?state=all&sort=updated&direction=desc&per_page=5`
+    ).catch(() => [] as GithubPullRequest[]),
+    githubFetch<GithubRelease[]>(token, `/repos/${owner}/${repo}/releases?per_page=3`).catch(
+      () => [] as GithubRelease[]
+    ),
+  ]);
+
+  const events: RepoActivityEvent[] = [];
+
+  for (const c of commits) {
+    const date = c.commit.author?.date ?? c.commit.committer?.date;
+    if (!date) continue;
+    events.push({
+      id: `commit-${c.sha}`,
+      repoName: repo,
+      repoUrl,
+      type: "commit",
+      title: c.commit.message.split("\n")[0],
+      url: c.html_url,
+      occurredAt: date,
+    });
+  }
+
+  for (const p of pulls) {
+    events.push({
+      id: `pr-${repo}-${p.number}`,
+      repoName: repo,
+      repoUrl,
+      type: "pull_request",
+      title: p.title,
+      url: p.html_url,
+      occurredAt: p.merged_at ?? p.updated_at,
+      state: p.merged_at ? "merged" : p.state,
+    });
+  }
+
+  for (const r of releases) {
+    events.push({
+      id: `release-${r.id}`,
+      repoName: repo,
+      repoUrl,
+      type: "release",
+      title: r.name ?? r.tag_name,
+      url: r.html_url,
+      occurredAt: r.published_at ?? r.created_at,
+    });
+  }
+
+  return events;
+}
+
+/**
+ * Merges recent commits/PRs/releases across a candidate's most active repos
+ * into one chronological feed — a trajectory view (ramping up, going quiet,
+ * switching stacks) rather than the single point-in-time snapshot the
+ * Projects list gives on its own.
+ */
+export async function buildActivityTimeline(
+  token: string,
+  repos: GithubRepo[],
+  maxRepos = 6,
+  maxEvents = 30
+): Promise<RepoActivityEvent[]> {
+  const topRepos = repos
+    .filter((r) => !r.fork)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, maxRepos);
+
+  const perRepoEvents = await Promise.all(
+    topRepos.map((r) => fetchRepoTimelineEvents(token, r.owner.login, r.name, r.html_url))
+  );
+
+  return perRepoEvents
+    .flat()
+    .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+    .slice(0, maxEvents);
 }

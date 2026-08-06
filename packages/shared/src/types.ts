@@ -43,6 +43,19 @@ export interface DeveloperProject {
   category: "Featured" | "Personal" | "Collaboration";
 }
 
+export type RepoActivityEventType = "commit" | "pull_request" | "release";
+
+export interface RepoActivityEvent {
+  id: string;
+  repoName: string;
+  repoUrl: string;
+  type: RepoActivityEventType;
+  title: string;
+  url: string;
+  occurredAt: string;
+  state?: "open" | "closed" | "merged";
+}
+
 export interface LanguageBreakdownEntry {
   language: string;
   bytes: number;
