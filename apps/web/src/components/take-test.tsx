@@ -100,7 +100,7 @@ export function TakeTest({ template }: { template: SkillTestTemplate }) {
     return (
       <div className="rounded-2xl border border-surface-border bg-background-elevated p-8 text-center">
         <p className="text-sm text-text-secondary">{template.title}</p>
-        <p className="mt-2 text-4xl font-bold text-white">{result.percentage}%</p>
+        <p className="mt-2 text-4xl font-bold text-heading">{result.percentage}%</p>
         <p className="mt-1 text-sm text-text-secondary">
           {result.score} / {result.maxScore} correct
           {result.status === "expired" ? " · submitted after time ran out" : ""}
@@ -117,7 +117,7 @@ export function TakeTest({ template }: { template: SkillTestTemplate }) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">{template.title}</h1>
+        <h1 className="text-xl font-bold text-heading">{template.title}</h1>
         <span
           className={`font-mono text-sm ${secondsLeft <= 30 ? "text-accent-red" : "text-text-secondary"}`}
         >
@@ -134,7 +134,7 @@ export function TakeTest({ template }: { template: SkillTestTemplate }) {
             key={q.id}
             className="rounded-2xl border border-surface-border bg-background-elevated p-5"
           >
-            <legend className="px-1 text-sm font-medium text-white">
+            <legend className="px-1 text-sm font-medium text-heading">
               {i + 1}. {q.questionText}
             </legend>
             <div className="mt-3 flex flex-col gap-2">

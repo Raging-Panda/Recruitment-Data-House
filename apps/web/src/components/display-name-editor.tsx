@@ -52,7 +52,7 @@ export function DisplayNameEditor({ initialName }: { initialName: string }) {
               setIsEditing(false);
             }
           }}
-          className="rounded-lg border border-surface-border bg-surface px-2 py-1 text-lg font-semibold text-white focus:outline-none"
+          className="rounded-lg border border-surface-border bg-surface px-2 py-1 text-lg font-semibold text-heading focus:outline-none"
         />
         <button
           onClick={save}
@@ -67,7 +67,7 @@ export function DisplayNameEditor({ initialName }: { initialName: string }) {
   }
 
   return (
-    <h2 className="group flex items-center gap-2 text-lg font-semibold text-white">
+    <h2 className="group flex items-center gap-2 text-lg font-semibold text-heading">
       {name} <span className="text-primary">✓</span>
       <button
         onClick={() => {
@@ -75,7 +75,7 @@ export function DisplayNameEditor({ initialName }: { initialName: string }) {
           setIsEditing(true);
         }}
         aria-label="Edit name"
-        className="text-xs text-text-muted opacity-0 transition group-hover:opacity-100 hover:text-white"
+        className="text-xs text-text-muted opacity-0 transition group-hover:opacity-100 hover:text-heading"
       >
         ✎ Edit
       </button>

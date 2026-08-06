@@ -19,7 +19,7 @@ export default async function CertificationsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold text-white">Certifications</h1>
+      <h1 className="text-2xl font-bold text-heading">Certifications</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Credentials and certifications — entered manually, same as work history.
       </p>

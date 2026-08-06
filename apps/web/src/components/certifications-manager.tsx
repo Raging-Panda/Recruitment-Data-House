@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ShieldCheckIcon } from "@/components/icons";
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-white focus:border-primary focus:outline-none";
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
 
 interface FormState {
   name: string;
@@ -138,7 +138,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-semibold text-white">{entry.name}</h3>
+                <h3 className="font-semibold text-heading">{entry.name}</h3>
                 <p className="text-sm text-text-secondary">{entry.issuer}</p>
                 <p className="mt-1 text-xs text-text-muted">
                   Issued {formatMonth(entry.issueDate)}

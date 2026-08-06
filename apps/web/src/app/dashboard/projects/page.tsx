@@ -14,7 +14,7 @@ export default async function ProjectsPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-bold text-white">Projects</h1>
+      <h1 className="text-2xl font-bold text-heading">Projects</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Your non-fork GitHub repositories, most recently updated first.
       </p>
@@ -30,7 +30,7 @@ export default async function ProjectsPage() {
           >
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white">{project.name}</h3>
+                <h3 className="font-semibold text-heading">{project.name}</h3>
                 <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] uppercase text-text-secondary">
                   {project.category}
                 </span>
@@ -65,7 +65,7 @@ export default async function ProjectsPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+        <h2 className="text-lg font-semibold text-heading">Recent Activity</h2>
         <p className="mt-1 text-sm text-text-secondary">
           Commits, PRs, and releases across your most active repos — trajectory, not just a
           snapshot.

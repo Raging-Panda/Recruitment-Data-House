@@ -65,7 +65,7 @@ export function ActivityTimeline({ events }: { events: RepoActivityEvent[] }) {
               <span>·</span>
               <span>{formatRelativeTime(event.occurredAt)}</span>
             </div>
-            <p className="mt-0.5 text-sm text-white">{event.title}</p>
+            <p className="mt-0.5 text-sm text-heading">{event.title}</p>
           </a>
         </li>
       ))}

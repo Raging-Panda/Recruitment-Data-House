@@ -20,7 +20,7 @@ export function LoginCard() {
       <div className="flex justify-center">
         <IPSkillLogo size={96} />
       </div>
-      <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-white">IPSkill</h1>
+      <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-heading">IPSkill</h1>
       <p className="mt-1 text-xs uppercase tracking-widest text-text-secondary">
         Unique Skills, Perfect Match.
       </p>
@@ -36,21 +36,21 @@ export function LoginCard() {
         <button
           disabled
           title="Google sign-in is not wired up yet — use GitHub for now"
-          className="flex items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-gray-400 opacity-50"
+          className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-400 opacity-50"
         >
           Continue with Google
         </button>
 
         <button
           onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="flex items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
+          className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GithubMark /> Continue with GitHub
         </button>
 
         <button
           onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-white"
+          className="rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
         >
           Log in
         </button>

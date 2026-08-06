@@ -33,21 +33,21 @@ export default async function SkillsPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-bold text-white">Skills</h1>
+      <h1 className="text-2xl font-bold text-heading">Skills</h1>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
           <div className="flex items-center gap-3">
-            <span className="text-lg font-semibold text-white">{profile.overallScore}%</span>
+            <span className="text-lg font-semibold text-heading">{profile.overallScore}%</span>
             <span className="text-sm text-text-secondary">Overall Score</span>
           </div>
           <p className="mt-1 text-sm text-text-secondary">Top {profile.percentileRank}%</p>
-          <h2 className="mt-4 text-sm font-semibold text-white">Skill Fingerprint</h2>
+          <h2 className="mt-4 text-sm font-semibold text-heading">Skill Fingerprint</h2>
           <SkillRadarChart fingerprint={skillFingerprint} />
         </div>
 
         <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
-          <h2 className="text-sm font-semibold text-white">Language Breakdown</h2>
+          <h2 className="text-sm font-semibold text-heading">Language Breakdown</h2>
           <div className="mt-4 flex flex-col gap-3">
             {activity.languageBreakdown.slice(0, 8).map((lang) => (
               <div key={lang.language}>
@@ -66,7 +66,7 @@ export default async function SkillsPage() {
             {activity.languageBreakdown.length === 0 && (
               <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-surface-border py-8 text-center">
                 <CodeIcon size={20} />
-                <p className="text-sm font-medium text-white">No language data yet</p>
+                <p className="text-sm font-medium text-heading">No language data yet</p>
                 <p className="max-w-[220px] text-xs text-text-muted">
                   Push some code to a public repo to see this fill in.
                 </p>
@@ -77,7 +77,7 @@ export default async function SkillsPage() {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-lg font-semibold text-white">Verified Skills</h2>
+        <h2 className="text-lg font-semibold text-heading">Verified Skills</h2>
         <p className="mt-1 text-sm text-text-secondary">
           Short, proctored-free knowledge checks — a separate signal from the GitHub-derived
           fingerprint above, not blended into it.

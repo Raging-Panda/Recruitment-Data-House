@@ -6,10 +6,10 @@ const BASE =
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-primary-gradient text-white hover:opacity-90",
-  white: "bg-white text-gray-900 hover:bg-gray-100",
-  ghost: "border border-surface-border bg-surface/60 text-text-secondary hover:text-white",
+  white: "border border-gray-200 bg-white text-gray-900 hover:bg-gray-100",
+  ghost: "border border-surface-border bg-surface/60 text-text-secondary hover:text-heading",
   danger: "bg-accent-red/15 text-accent-red hover:bg-accent-red/25",
-  subtle: "bg-surface text-text-secondary hover:text-white",
+  subtle: "bg-surface text-text-secondary hover:text-heading",
 };
 
 const SIZES: Record<ButtonSize, string> = {

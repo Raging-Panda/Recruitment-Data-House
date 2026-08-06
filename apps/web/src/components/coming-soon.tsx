@@ -10,7 +10,7 @@ export function ComingSoon({
 }) {
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold text-white">{title}</h1>
+      <h1 className="text-2xl font-bold text-heading">{title}</h1>
       <EmptyState
         className="mt-6 py-14"
         icon={icon}

@@ -19,7 +19,7 @@ export default async function ExperiencePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold text-white">Experience</h1>
+      <h1 className="text-2xl font-bold text-heading">Experience</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Your work history — entered manually, since this isn&apos;t something GitHub can tell us.
       </p>

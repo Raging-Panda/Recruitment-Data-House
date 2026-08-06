@@ -2,8 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-background: 5 8 15;
+  --color-background-elevated: 10 17 32;
+  --color-surface: 17 26 46;
+  --color-surface-border: 30 42 68;
+  --color-text-secondary: 151 151 181;
+  --color-text-muted: 94 94 128;
+  --color-heading: 245 245 250;
+}
+
+[data-theme="light"] {
+  --color-background: 245 247 250;
+  --color-background-elevated: 255 255 255;
+  --color-surface: 233 236 241;
+  --color-surface-border: 221 226 234;
+  --color-text-secondary: 91 100 114;
+  --color-text-muted: 139 147 161;
+  --color-heading: 30 41 59;
+}
+
 body {
-  background-color: theme("colors.background");
-  color: #f5f5fa;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-heading));
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
 }

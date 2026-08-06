@@ -3,6 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import type { CommitActivityPoint } from "@ipskill/shared";
 import { colors } from "@ipskill/shared";
+import { themeColor } from "@/lib/theme-colors";
 
 export function CommitTrendChart({ commitActivity }: { commitActivity: CommitActivityPoint[] }) {
   const data = commitActivity.slice(-12).map((point) => ({
@@ -21,16 +22,16 @@ export function CommitTrendChart({ commitActivity }: { commitActivity: CommitAct
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-        <XAxis dataKey="week" tick={{ fill: colors.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: colors.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+        <XAxis dataKey="week" tick={{ fill: themeColor.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: themeColor.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip
           contentStyle={{
-            background: colors.surface,
-            border: `1px solid ${colors.surfaceBorder}`,
+            background: themeColor.surface,
+            border: `1px solid ${themeColor.surfaceBorder}`,
             borderRadius: 8,
             fontSize: 12,
           }}
-          labelStyle={{ color: colors.textSecondary }}
+          labelStyle={{ color: themeColor.textSecondary }}
         />
         <Line
           type="monotone"

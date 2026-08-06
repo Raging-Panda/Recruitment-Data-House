@@ -17,7 +17,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-bold text-white">My Profile</h1>
+      <h1 className="text-2xl font-bold text-heading">My Profile</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Your developer profile, sourced live from GitHub.
       </p>
@@ -83,7 +83,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 text-sm">
       <span className="text-text-secondary">{label}</span>
-      <span className="text-white">{value}</span>
+      <span className="text-heading">{value}</span>
     </div>
   );
 }

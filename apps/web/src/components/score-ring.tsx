@@ -1,4 +1,5 @@
 import { colors } from "@ipskill/shared";
+import { themeColor } from "@/lib/theme-colors";
 
 export function ScoreRing({ score, label }: { score: number; label: string }) {
   const radius = 34;
@@ -8,7 +9,7 @@ export function ScoreRing({ score, label }: { score: number; label: string }) {
   return (
     <div className="flex flex-col items-center justify-center text-center">
       <svg width="88" height="88" viewBox="0 0 88 88">
-        <circle cx="44" cy="44" r={radius} stroke={colors.surfaceBorder} strokeWidth="8" fill="none" />
+        <circle cx="44" cy="44" r={radius} stroke={themeColor.surfaceBorder} strokeWidth="8" fill="none" />
         <circle
           cx="44"
           cy="44"
@@ -21,7 +22,7 @@ export function ScoreRing({ score, label }: { score: number; label: string }) {
           strokeLinecap="round"
           transform="rotate(-90 44 44)"
         />
-        <text x="44" y="49" textAnchor="middle" fontSize="18" fontWeight={700} fill="#F5F5FA">
+        <text x="44" y="49" textAnchor="middle" fontSize="18" fontWeight={700} fill={themeColor.heading}>
           {score}%
         </text>
       </svg>

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
 import { IPSkillLogo } from "./ipskill-logo";
+import { useTheme } from "./theme-provider";
 import {
   HomeIcon,
   PersonIcon,
@@ -32,7 +32,8 @@ const NAV_ITEMS = [
 
 export function Sidebar({ userName }: { userName: string }) {
   const pathname = usePathname();
-  const [darkMode, setDarkMode] = useState(true);
+  const { theme, toggleTheme } = useTheme();
+  const darkMode = theme === "dark";
 
   return (
     <aside className="flex w-64 flex-col justify-between border-r border-surface-border bg-background-elevated px-4 py-6">
@@ -40,7 +41,7 @@ export function Sidebar({ userName }: { userName: string }) {
         <div className="flex items-center gap-2 px-2">
           <IPSkillLogo size={32} />
           <div>
-            <div className="text-sm font-extrabold leading-none text-white">IPSkill</div>
+            <div className="text-sm font-extrabold leading-none text-heading">IPSkill</div>
             <div className="text-[9px] uppercase tracking-wider text-text-muted">
               Unique Skills. Perfect Match.
             </div>
@@ -58,7 +59,7 @@ export function Sidebar({ userName }: { userName: string }) {
                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
                   active
                     ? "bg-primary-gradient font-semibold text-white"
-                    : "text-text-secondary hover:bg-surface hover:text-white"
+                    : "text-text-secondary hover:bg-surface hover:text-heading"
                 }`}
               >
                 <Icon size={17} />
@@ -71,7 +72,7 @@ export function Sidebar({ userName }: { userName: string }) {
 
       <div className="flex flex-col gap-4">
         <div className="rounded-xl border border-surface-border bg-surface p-4">
-          <p className="text-sm font-semibold text-white">Upgrade to Pro</p>
+          <p className="text-sm font-semibold text-heading">Upgrade to Pro</p>
           <p className="mt-1 text-xs text-text-secondary">Unlock more features.</p>
           <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white transition hover:opacity-90">
             Upgrade Now <ArrowRightIcon size={14} />
@@ -79,7 +80,7 @@ export function Sidebar({ userName }: { userName: string }) {
         </div>
 
         <button
-          onClick={() => setDarkMode((v) => !v)}
+          onClick={toggleTheme}
           className="flex items-center justify-between px-2 text-sm text-text-secondary"
         >
           Dark Mode
@@ -96,7 +97,7 @@ export function Sidebar({ userName }: { userName: string }) {
 
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="px-2 text-left text-sm text-text-secondary hover:text-white"
+          className="px-2 text-left text-sm text-text-secondary hover:text-heading"
         >
           Log out — {userName}
         </button>

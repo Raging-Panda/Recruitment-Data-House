@@ -17,7 +17,7 @@ interface FormState {
 }
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-white focus:border-primary focus:outline-none";
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
 
 const EMPTY_FORM: FormState = {
   company: "",
@@ -139,7 +139,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-semibold text-white">{entry.role}</h3>
+                <h3 className="font-semibold text-heading">{entry.role}</h3>
                 <p className="text-sm text-text-secondary">
                   {entry.company}
                   {entry.location ? ` · ${entry.location}` : ""}

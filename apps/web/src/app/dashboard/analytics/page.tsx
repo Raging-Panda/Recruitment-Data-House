@@ -40,7 +40,7 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <h1 className="text-2xl font-bold text-white">My Analysis</h1>
+      <h1 className="text-2xl font-bold text-heading">My Analysis</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Deep insights into your skills, growth, and career potential — derived from your GitHub
         activity.
@@ -79,7 +79,7 @@ export default async function AnalyticsPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4">
         <div className="rounded-2xl border border-surface-border bg-background-elevated p-6 md:col-span-2">
-          <h3 className="text-sm font-semibold text-white">Skill Radar Analysis</h3>
+          <h3 className="text-sm font-semibold text-heading">Skill Radar Analysis</h3>
           <p className="mt-1 text-xs text-text-secondary">
             Your proficiency across key skill domains
           </p>
@@ -87,7 +87,7 @@ export default async function AnalyticsPage() {
         </div>
 
         <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
-          <h3 className="text-sm font-semibold text-white">Skill Category Breakdown</h3>
+          <h3 className="text-sm font-semibold text-heading">Skill Category Breakdown</h3>
           <div className="mt-4 flex flex-col gap-3">
             {categoryBreakdown.map(([category, score]) => (
               <div key={category}>
@@ -108,13 +108,13 @@ export default async function AnalyticsPage() {
 
         <div className="flex flex-col gap-6">
           <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
-            <h3 className="text-sm font-semibold text-white">Strengths</h3>
+            <h3 className="text-sm font-semibold text-heading">Strengths</h3>
             <div className="mt-3 flex flex-col gap-3">
               {strengths.slice(0, 4).map(([category, score]) => (
                 <div key={category} className="flex items-start gap-2 text-sm">
                   <span className="mt-0.5 text-accent-green">✓</span>
                   <div>
-                    <p className="text-white">{category}</p>
+                    <p className="text-heading">{category}</p>
                     <p className="text-xs text-text-muted">{score}% proficiency</p>
                   </div>
                 </div>
@@ -128,13 +128,13 @@ export default async function AnalyticsPage() {
           </div>
 
           <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
-            <h3 className="text-sm font-semibold text-white">Improvement Areas</h3>
+            <h3 className="text-sm font-semibold text-heading">Improvement Areas</h3>
             <div className="mt-3 flex flex-col gap-3">
               {improvementAreas.slice(0, 4).map(([category, score]) => (
                 <div key={category} className="flex items-start gap-2 text-sm">
                   <span className="mt-0.5 text-accent-amber">●</span>
                   <div>
-                    <p className="text-white">{category}</p>
+                    <p className="text-heading">{category}</p>
                     <p className="text-xs text-text-muted">{score}% — focus area</p>
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export default async function AnalyticsPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
-          <h3 className="text-sm font-semibold text-white">Growth Trend</h3>
+          <h3 className="text-sm font-semibold text-heading">Growth Trend</h3>
           <p className="mt-1 text-xs text-text-secondary">
             Public commit activity, last {Math.min(activity.commitActivity.length, 12)} weeks
           </p>
@@ -173,7 +173,7 @@ export default async function AnalyticsPage() {
       </div>
 
       <div className="mt-6">
-        <h2 className="text-lg font-semibold text-white">Engagement</h2>
+        <h2 className="text-lg font-semibold text-heading">Engagement</h2>
         <p className="mt-1 text-xs text-text-muted">
           Estimated from account signals until platform-native tracking ships.
         </p>
@@ -190,7 +190,7 @@ export default async function AnalyticsPage() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-surface-border bg-background-elevated p-5">
-          <p className="text-sm font-semibold text-white">Top Countries</p>
+          <p className="text-sm font-semibold text-heading">Top Countries</p>
           <div className="mt-3 flex flex-col gap-2">
             {analytics.topCountries.map((c) => (
               <div key={c.country} className="flex items-center gap-3 text-sm">

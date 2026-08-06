@@ -10,7 +10,7 @@ export function BentoPlaceholder({
   return (
     <div className="flex h-full flex-col rounded-2xl border border-dashed border-surface-border bg-background-elevated p-5">
       <div className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        <h3 className="text-sm font-semibold text-heading">{title}</h3>
         {badge && (
           <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] uppercase text-text-secondary">
             {badge}
