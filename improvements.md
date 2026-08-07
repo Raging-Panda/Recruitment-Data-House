@@ -181,9 +181,21 @@ scheduled or scoped yet — just a running list to pull from.
   offered) is still a separate open item below. Demo account shows a
   read-only canned link; verified via Playwright that Regenerate/Revoke
   are genuinely disabled for it, and that an invalid token 404s.
-- **Contribution activity heatmap** — GitHub-style calendar heatmap
-  on the profile, giving an at-a-glance consistency signal that's
-  easier to scan than the weekly commit-count chart.
+- **Contribution activity heatmap** — ✅ shipped: a GitHub-style
+  calendar grid (`ContributionHeatmap`) on the Profile page, five
+  intensity levels + a "Less/More" legend, matching GitHub's own
+  weeks-as-columns layout. Required a new data source — GitHub's
+  per-day contribution calendar isn't exposed by the REST events
+  endpoint at all, only by the GraphQL API's
+  `contributionsCollection.contributionCalendar` field
+  (`fetchContributionCalendar` in `packages/shared`), the one GraphQL
+  call in an otherwise all-REST client. Cached like the rest of the
+  GitHub data (`lib/github-cache.ts`, a 6-hour TTL since a day's square
+  only changes once a day anyway) and loaded separately from
+  `loadDeveloperHubData` — like the Projects timeline, it's an extra
+  GitHub call only the Profile page needs, not every dashboard page.
+  Verified via Playwright against the demo account's fixture (365 day
+  cells rendered, correct tooltip text, correct total).
 - **GitHub data caching/refresh layer** — ✅ shipped: `loadDeveloperHubData`
   and `loadProjectActivityTimeline` are now read-through cached in a
   new `github_data_cache` table (`lib/github-cache.ts`), keyed by
