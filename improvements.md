@@ -21,14 +21,24 @@ scheduled or scoped yet — just a running list to pull from.
 - **Next position suggestions** — given a candidate's skill
   fingerprint and activity trend, surface role types/seniority levels
   they're likely a good fit for (e.g. "Senior Backend — Go/Postgres").
-- **Developer directory with filters** — searchable list of devs,
-  filterable by region, primary language, skill level, availability,
-  and verification status. This is the recruiter-facing counterpart
-  to the candidate-facing profile screens already built.
-- **Profile view counter** — increment when a profile is opened, and
-  again on sustained scroll/dwell (not just a page hit) so "Profile
-  Views" on the Analytics screen becomes a real metric instead of the
-  current derived placeholder.
+- **Developer directory with filters** — ✅ shipped: a searchable
+  Developer Directory (location, primary language, minimum skill
+  score, availability) any signed-in dev can browse, with a read-only
+  detail view per developer — the recruiter-facing counterpart to the
+  candidate-facing profile screens. Entries are a cached snapshot
+  (`directory_profiles`, refreshed whenever a candidate visits their
+  own Profile page), not a live GitHub fetch, since we only ever hold
+  the signed-in user's own access token. Still open: no verification-
+  status filter yet (waiting on the candidate-verification layer from
+  `PLAN.md`), and no recruiter-only gating — right now any dev can
+  browse the directory, not just recruiters.
+- **Profile view counter** — ✅ shipped (page-hit version): opening a
+  developer's directory entry records a real `profile_views` row
+  (self-views excluded), and the Analytics screen's "Profile Views"
+  stat now reads actual counts and a genuine month-over-month change%
+  instead of the derived placeholder. Still open: the sustained
+  scroll/dwell signal — this only counts a view on page open, not
+  engaged reading time.
 - **SSO login with Google or GitHub** — GitHub OAuth already works;
   add a real Google sign-in option too (currently a disabled
   placeholder button on the login screen) so candidates without a
