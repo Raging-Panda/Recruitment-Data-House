@@ -1,5 +1,6 @@
 import type { DeveloperProfile, DeveloperActivitySummary, DirectoryEntry } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { notifySavedSearchMatches } from "@/lib/saved-searches";
 
 export interface DirectoryRow {
   github_id: string;
@@ -45,19 +46,33 @@ export async function syncDirectoryProfile(
 ): Promise<void> {
   try {
     const topLanguages = activity.languageBreakdown.slice(0, 3).map((l) => l.language);
-    await getSupabaseAdmin().from("directory_profiles").upsert({
-      github_id: githubId,
-      github_login: profile.githubLogin,
-      display_name: displayName,
-      avatar_url: profile.avatarUrl,
+    const entry: DirectoryEntry = {
+      githubId,
+      githubLogin: profile.githubLogin,
+      displayName,
+      avatarUrl: profile.avatarUrl,
       headline: profile.headline,
       location: profile.location,
-      overall_score: profile.overallScore,
-      top_languages: topLanguages,
-      available_for_opportunities: profile.availableForOpportunities,
+      overallScore: profile.overallScore,
+      topLanguages,
+      availableForOpportunities: profile.availableForOpportunities,
       about: profile.about,
-      last_active_at: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
+    };
+    await getSupabaseAdmin().from("directory_profiles").upsert({
+      github_id: entry.githubId,
+      github_login: entry.githubLogin,
+      display_name: entry.displayName,
+      avatar_url: entry.avatarUrl,
+      headline: entry.headline,
+      location: entry.location,
+      overall_score: entry.overallScore,
+      top_languages: entry.topLanguages,
+      available_for_opportunities: entry.availableForOpportunities,
+      about: entry.about,
+      last_active_at: entry.lastActiveAt,
     });
+    void notifySavedSearchMatches(entry);
   } catch {
     // directory freshness is a nice-to-have side effect, not worth failing the profile page over
   }

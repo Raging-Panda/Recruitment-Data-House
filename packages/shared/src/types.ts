@@ -211,7 +211,8 @@ export type NotificationType =
   | "experience_added"
   | "certification_added"
   | "skill_test_completed"
-  | "welcome";
+  | "welcome"
+  | "saved_search_match";
 
 export interface NotificationItem {
   id: string;
@@ -248,6 +249,35 @@ export interface ProfileViewStats {
   total: number;
   last30Days: number;
   changePct: number | null;
+}
+
+/** Mirrors the Directory browser's filter controls — shared so a saved
+ * search can be matched against newly-synced candidates with the exact
+ * same logic the browser uses to filter the live list. */
+export interface DirectoryFilters {
+  search: string;
+  location: string;
+  language: string;
+  minScore: number;
+  availableOnly: boolean;
+}
+
+export interface Shortlist {
+  id: string;
+  name: string;
+  createdAt: string;
+  candidateCount: number;
+}
+
+export interface ShortlistWithCandidates extends Shortlist {
+  candidates: DirectoryEntry[];
+}
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  filters: DirectoryFilters;
+  createdAt: string;
 }
 
 export interface AnalyticsSnapshot {

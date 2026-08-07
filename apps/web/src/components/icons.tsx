@@ -297,3 +297,20 @@ export function CircleIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function BookmarkIcon({ filled, ...props }: IconProps) {
+  return (
+    <Base {...props} fill={filled ? "currentColor" : "none"}>
+      <path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1Z" />
+    </Base>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m20 20-4.35-4.35" />
+    </Base>
+  );
+}

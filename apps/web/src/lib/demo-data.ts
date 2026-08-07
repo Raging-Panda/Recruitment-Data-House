@@ -11,8 +11,12 @@ import type {
   CandidateProfileOverride,
   NotificationItem,
   DirectoryEntry,
+  Shortlist,
+  ShortlistWithCandidates,
+  SavedSearch,
 } from "@ipskill/shared";
 import { DEMO_GITHUB_ID } from "./demo-mode";
+import { DEFAULT_DIRECTORY_FILTERS } from "./directory-filters";
 
 const NOW = Date.now();
 const DAY = 24 * 60 * 60 * 1000;
@@ -471,5 +475,52 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     availableForOpportunities: true,
     about: "Backend engineer specializing in payments and ledger systems.",
     lastActiveAt: new Date(NOW - 12 * DAY).toISOString(),
+  },
+];
+
+const DEMO_SHORTLIST_SENIOR_BACKEND_IDS = ["seed-2", "seed-5"];
+const DEMO_SHORTLIST_FRONTEND_IDS = ["seed-1", "seed-4"];
+
+export const DEMO_SHORTLISTS_WITH_CANDIDATES: ShortlistWithCandidates[] = [
+  {
+    id: "demo-shortlist-1",
+    name: "Senior Backend — Q3 hiring",
+    createdAt: new Date(NOW - 5 * DAY).toISOString(),
+    candidateCount: DEMO_SHORTLIST_SENIOR_BACKEND_IDS.length,
+    candidates: DEMO_DIRECTORY_ENTRIES.filter((e) =>
+      DEMO_SHORTLIST_SENIOR_BACKEND_IDS.includes(e.githubId)
+    ),
+  },
+  {
+    id: "demo-shortlist-2",
+    name: "Frontend bench",
+    createdAt: new Date(NOW - 10 * DAY).toISOString(),
+    candidateCount: DEMO_SHORTLIST_FRONTEND_IDS.length,
+    candidates: DEMO_DIRECTORY_ENTRIES.filter((e) => DEMO_SHORTLIST_FRONTEND_IDS.includes(e.githubId)),
+  },
+];
+
+export const DEMO_SHORTLISTS: Shortlist[] = DEMO_SHORTLISTS_WITH_CANDIDATES.map(
+  ({ candidates: _candidates, ...rest }) => rest
+);
+
+export const DEMO_SAVED_SEARCHES: SavedSearch[] = [
+  {
+    id: "demo-search-1",
+    name: "Go engineers, Cape Town",
+    filters: {
+      ...DEFAULT_DIRECTORY_FILTERS,
+      location: "Cape Town, South Africa",
+      language: "Go",
+      minScore: 70,
+      availableOnly: true,
+    },
+    createdAt: new Date(NOW - 3 * DAY).toISOString(),
+  },
+  {
+    id: "demo-search-2",
+    name: "Any senior, 80%+",
+    filters: { ...DEFAULT_DIRECTORY_FILTERS, minScore: 80 },
+    createdAt: new Date(NOW - 7 * DAY).toISOString(),
   },
 ];

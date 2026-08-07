@@ -19,12 +19,14 @@ import {
   ArrowRightIcon,
   CloseIcon,
   UsersIcon,
+  BookmarkIcon,
 } from "./icons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: HomeIcon },
   { href: "/dashboard/profile", label: "Profile", icon: PersonIcon },
   { href: "/dashboard/directory", label: "Directory", icon: UsersIcon },
+  { href: "/dashboard/shortlists", label: "Shortlists", icon: BookmarkIcon },
   { href: "/dashboard/skills", label: "Skills", icon: CodeIcon },
   { href: "/dashboard/projects", label: "Projects", icon: BriefcaseIcon },
   { href: "/dashboard/experience", label: "Experience", icon: LayersIcon },
