@@ -1,4 +1,4 @@
-import { deriveAnalyticsSnapshot, type RepoActivityEvent } from "@ipskill/shared";
+import { deriveAnalyticsSnapshot, type ContributionDay, type RepoActivityEvent } from "@ipskill/shared";
 import type { DeveloperHubData } from "./developer-data";
 import { TEST_GITHUB_ID } from "./test-mode";
 
@@ -160,4 +160,20 @@ export function buildMockActivityTimeline(): RepoActivityEvent[] {
       state: "open",
     },
   ];
+}
+
+/** Deterministic (seeded by day-of-year offset, not Math.random) so the
+ * fixture doesn't flicker between requests — a full year, weekdays busier
+ * than weekends, with quiet stretches like a real contribution graph. */
+export function buildMockContributionCalendar(): ContributionDay[] {
+  const days: ContributionDay[] = [];
+  for (let i = 364; i >= 0; i--) {
+    const date = new Date(NOW - i * DAY);
+    const isWeekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
+    const seed = Math.sin(i * 12.9898) * 43758.5453;
+    const rand = seed - Math.floor(seed);
+    const count = rand > 0.2 ? Math.round(rand * (isWeekend ? 4 : 9)) : 0;
+    days.push({ date: date.toISOString().slice(0, 10), count });
+  }
+  return days;
 }

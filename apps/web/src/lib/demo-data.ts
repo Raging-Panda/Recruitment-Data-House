@@ -15,6 +15,7 @@ import type {
   ShortlistWithCandidates,
   SavedSearch,
   Endorsement,
+  ContributionDay,
 } from "@ipskill/shared";
 import { DEMO_GITHUB_ID } from "./demo-mode";
 import { DEFAULT_DIRECTORY_FILTERS } from "./directory-filters";
@@ -692,3 +693,20 @@ export const DEMO_PUBLIC_LINK_STATUS: PublicProfileLinkStatus = {
   isRevoked: false,
   viewCount: 12,
 };
+
+/** Deterministic (seeded by day-of-year offset, not Math.random) so the
+ * fixture doesn't flicker between requests — a full year, weekdays busier
+ * than weekends, matching a senior engineer's steady-but-not-frantic
+ * activity level. */
+export function buildDemoContributionCalendar(): ContributionDay[] {
+  const days: ContributionDay[] = [];
+  for (let i = 364; i >= 0; i--) {
+    const date = new Date(NOW - i * DAY);
+    const isWeekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
+    const seed = Math.sin(i * 78.233) * 91731.3247;
+    const rand = seed - Math.floor(seed);
+    const count = rand > 0.15 ? Math.round(rand * (isWeekend ? 5 : 11)) : 0;
+    days.push({ date: date.toISOString().slice(0, 10), count });
+  }
+  return days;
+}

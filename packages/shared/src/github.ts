@@ -1,4 +1,5 @@
 import type {
+  ContributionDay,
   DeveloperActivitySummary,
   DeveloperProject,
   LanguageBreakdownEntry,
@@ -7,6 +8,7 @@ import type {
 } from "./types";
 
 const GITHUB_API = "https://api.github.com";
+const GITHUB_GRAPHQL_API = "https://api.github.com/graphql";
 
 async function githubFetch<T>(token: string, path: string): Promise<T> {
   const res = await fetch(`${GITHUB_API}${path}`, {
@@ -397,4 +399,71 @@ export async function buildActivityTimeline(
     .flat()
     .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
     .slice(0, maxEvents);
+}
+
+const CONTRIBUTION_CALENDAR_QUERY = `
+  query($login: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $login) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          weeks {
+            contributionDays {
+              date
+              contributionCount
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+interface GraphqlContributionResponse {
+  data?: {
+    user?: {
+      contributionsCollection?: {
+        contributionCalendar?: {
+          weeks: { contributionDays: { date: string; contributionCount: number }[] }[];
+        };
+      };
+    };
+  };
+  errors?: { message: string }[];
+}
+
+/**
+ * GitHub's contribution calendar (the squares grid on a profile) isn't
+ * exposed by the REST events endpoint — it only lives behind the GraphQL
+ * API's contributionsCollection field. This is the one GraphQL call in an
+ * otherwise all-REST client, used just for this.
+ */
+export async function fetchContributionCalendar(token: string, login: string): Promise<ContributionDay[]> {
+  const to = new Date();
+  const from = new Date(to.getTime() - 364 * 24 * 60 * 60 * 1000);
+
+  const res = await fetch(GITHUB_GRAPHQL_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: CONTRIBUTION_CALENDAR_QUERY,
+      variables: { login, from: from.toISOString(), to: to.toISOString() },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`GitHub GraphQL contribution calendar failed: ${res.status} ${res.statusText}`);
+  }
+
+  const json = (await res.json()) as GraphqlContributionResponse;
+  if (json.errors?.length) {
+    throw new Error(`GitHub GraphQL contribution calendar failed: ${json.errors[0].message}`);
+  }
+
+  const weeks = json.data?.user?.contributionsCollection?.contributionCalendar?.weeks ?? [];
+  return weeks.flatMap((week) =>
+    week.contributionDays.map((day) => ({ date: day.date, count: day.contributionCount }))
+  );
 }

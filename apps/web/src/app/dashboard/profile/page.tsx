@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import { authOptions } from "@/lib/auth";
-import { loadDeveloperHubData } from "@/lib/developer-data";
+import { loadDeveloperHubData, loadContributionCalendar } from "@/lib/developer-data";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { getOnboardingChecklist } from "@/lib/onboarding";
 import { syncDirectoryProfile } from "@/lib/directory";
@@ -16,8 +16,9 @@ import { DisplayNameEditor } from "@/components/display-name-editor";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { EndorsementList } from "@/components/endorsement-list";
 import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
+import { ContributionHeatmap } from "@/components/contribution-heatmap";
 import { buttonClass } from "@/lib/button-styles";
-import type { Endorsement } from "@ipskill/shared";
+import type { ContributionDay, Endorsement } from "@ipskill/shared";
 
 const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
   token: null,
@@ -56,6 +57,17 @@ export default async function ProfilePage() {
     } catch {
       linkStatus = EMPTY_LINK_STATUS;
     }
+  }
+
+  let contributionDays: ContributionDay[] = [];
+  try {
+    contributionDays = await loadContributionCalendar(
+      session!.accessToken!,
+      session!.githubId!,
+      profile.githubLogin
+    );
+  } catch {
+    contributionDays = [];
   }
 
   return (
@@ -135,6 +147,17 @@ export default async function ProfilePage() {
             Download PDF
           </a>
         </InfoCard>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+        <h2 className="text-sm font-semibold text-heading">Contribution Activity</h2>
+        <p className="mt-1 text-xs text-text-secondary">
+          A consistency signal at a glance — easier to scan than the weekly commit trend on
+          Analytics.
+        </p>
+        <div className="mt-4">
+          <ContributionHeatmap days={contributionDays} />
+        </div>
       </div>
 
       <div className="mt-6">

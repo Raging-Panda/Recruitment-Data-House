@@ -3,12 +3,14 @@ import {
   buildLanguageBreakdown,
   computeSkillFingerprint,
   deriveAnalyticsSnapshot,
+  fetchContributionCalendar,
   fetchGithubRepos,
   fetchGithubUser,
   fetchIssueStats,
   fetchPullRequestStats,
   fetchRecentCommitActivity,
   reposToProjects,
+  type ContributionDay,
   type DeveloperActivitySummary,
   type DeveloperProfile,
   type DeveloperProject,
@@ -16,9 +18,9 @@ import {
   type SkillFingerprint,
 } from "@ipskill/shared";
 import { TEST_ACCESS_TOKEN } from "./test-mode";
-import { buildMockDeveloperHubData, buildMockActivityTimeline } from "./mock-developer-data";
+import { buildMockDeveloperHubData, buildMockActivityTimeline, buildMockContributionCalendar } from "./mock-developer-data";
 import { DEMO_ACCESS_TOKEN } from "./demo-mode";
-import { buildDemoDeveloperHubData, buildDemoActivityTimeline } from "./demo-data";
+import { buildDemoDeveloperHubData, buildDemoActivityTimeline, buildDemoContributionCalendar } from "./demo-data";
 import { readGithubCache, writeGithubCache } from "./github-cache";
 
 // Hub summary (profile/skills/analytics) feels stale faster than raw repo
@@ -26,6 +28,9 @@ import { readGithubCache, writeGithubCache } from "./github-cache";
 // GitHub API calls (up to 6 repos x 3 endpoints) to rebuild.
 const HUB_CACHE_TTL_MS = 10 * 60 * 1000;
 const TIMELINE_CACHE_TTL_MS = 30 * 60 * 1000;
+// A contribution calendar changes at most once a day per square, so this
+// can sit far longer than the hub summary without feeling stale.
+const HEATMAP_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 export interface DeveloperHubData {
   profile: DeveloperProfile;
@@ -133,4 +138,27 @@ export async function loadProjectActivityTimeline(
   const timeline = await buildActivityTimeline(accessToken, repos);
   await writeGithubCache(githubId, "timeline", timeline);
   return timeline;
+}
+
+/**
+ * Separate from loadDeveloperHubData for the same reason as the timeline
+ * above: it's an extra GitHub call (GraphQL, not REST) only the Profile
+ * page needs, not every dashboard page. Takes login rather than
+ * re-fetching /user, since the caller already has it from
+ * loadDeveloperHubData's result.
+ */
+export async function loadContributionCalendar(
+  accessToken: string,
+  githubId: string,
+  login: string
+): Promise<ContributionDay[]> {
+  if (accessToken === TEST_ACCESS_TOKEN) return buildMockContributionCalendar();
+  if (accessToken === DEMO_ACCESS_TOKEN) return buildDemoContributionCalendar();
+
+  const cached = await readGithubCache<ContributionDay[]>(githubId, "heatmap", HEATMAP_CACHE_TTL_MS);
+  if (cached) return cached;
+
+  const days = await fetchContributionCalendar(accessToken, login);
+  await writeGithubCache(githubId, "heatmap", days);
+  return days;
 }

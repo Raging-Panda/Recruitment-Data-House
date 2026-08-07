@@ -71,6 +71,14 @@ export interface CommitActivityPoint {
   commitCount: number;
 }
 
+/** One day of GitHub's contribution calendar (commits, PRs, issues, reviews
+ * — whatever GitHub itself counts), sourced via the GraphQL API since the
+ * REST events endpoint doesn't expose this. */
+export interface ContributionDay {
+  date: string;
+  count: number;
+}
+
 export interface DeveloperActivitySummary {
   languageBreakdown: LanguageBreakdownEntry[];
   commitActivity: CommitActivityPoint[];
