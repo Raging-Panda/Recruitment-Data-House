@@ -5,6 +5,7 @@ import type { Certification } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
 import { EmptyState } from "@/components/empty-state";
 import { ShieldCheckIcon } from "@/components/icons";
+import { useToast } from "@/components/toast-provider";
 
 const INPUT_CLASS =
   "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
@@ -45,6 +46,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showToast = useToast();
 
   function startAdd() {
     setForm(EMPTY_FORM);
@@ -106,8 +108,11 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
         return prev.map((e) => (e.id === data.entry.id ? data.entry : e));
       });
       setEditingId(null);
+      showToast(isNew ? "Certification added" : "Certification updated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      const message = err instanceof Error ? err.message : "Failed to save";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSaving(false);
     }
@@ -117,6 +122,9 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
     const res = await fetch(`/api/certifications/${id}`, { method: "DELETE" });
     if (res.ok) {
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      showToast("Certification deleted");
+    } else {
+      showToast("Failed to delete certification", "error");
     }
   }
 

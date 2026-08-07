@@ -5,6 +5,7 @@ import type { WorkExperience } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
 import { EmptyState } from "@/components/empty-state";
 import { LayersIcon } from "@/components/icons";
+import { useToast } from "@/components/toast-provider";
 
 interface FormState {
   company: string;
@@ -46,6 +47,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showToast = useToast();
 
   function startAdd() {
     setForm(EMPTY_FORM);
@@ -107,8 +109,11 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
         return prev.map((e) => (e.id === data.entry.id ? data.entry : e));
       });
       setEditingId(null);
+      showToast(isNew ? "Experience added" : "Experience updated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      const message = err instanceof Error ? err.message : "Failed to save";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSaving(false);
     }
@@ -118,6 +123,9 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
     const res = await fetch(`/api/experience/${id}`, { method: "DELETE" });
     if (res.ok) {
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      showToast("Experience deleted");
+    } else {
+      showToast("Failed to delete experience", "error");
     }
   }
 

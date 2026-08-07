@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/toast-provider";
 
 export function DisplayNameEditor({ initialName }: { initialName: string }) {
   const router = useRouter();
+  const showToast = useToast();
   const [name, setName] = useState(initialName);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(initialName);
@@ -31,8 +33,11 @@ export function DisplayNameEditor({ initialName }: { initialName: string }) {
       setName(trimmed);
       setIsEditing(false);
       router.refresh();
+      showToast("Name updated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      const message = err instanceof Error ? err.message : "Failed to save";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSaving(false);
     }

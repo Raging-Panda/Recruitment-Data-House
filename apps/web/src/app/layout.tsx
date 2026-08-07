@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/session-provider-wrapper";
 import { ThemeProvider, ThemeFlashGuard } from "@/components/theme-provider";
+import { ToastProvider } from "@/components/toast-provider";
 
 export const metadata: Metadata = {
   title: "IPSkill — Unique Skills, Perfect Match.",
@@ -16,7 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>
-          <SessionProviderWrapper>{children}</SessionProviderWrapper>
+          <ToastProvider>
+            <SessionProviderWrapper>{children}</SessionProviderWrapper>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
