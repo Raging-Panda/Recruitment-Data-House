@@ -12,6 +12,7 @@ const TYPE_ICON: Record<NotificationType, ComponentType<{ size?: number }>> = {
   skill_test_completed: StarIcon,
   welcome: CheckCircleIcon,
   saved_search_match: BookmarkIcon,
+  endorsement_received: StarIcon,
 };
 
 export function NotificationsPanel() {

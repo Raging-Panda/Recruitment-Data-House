@@ -5,12 +5,16 @@ import { loadDeveloperHubData } from "@/lib/developer-data";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { getOnboardingChecklist } from "@/lib/onboarding";
 import { syncDirectoryProfile } from "@/lib/directory";
+import { getEndorsementsFor } from "@/lib/endorsements";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
+import { DEMO_ENDORSEMENTS } from "@/lib/demo-data";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
 import { DisplayNameEditor } from "@/components/display-name-editor";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
+import { EndorsementList } from "@/components/endorsement-list";
+import type { Endorsement } from "@ipskill/shared";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -21,8 +25,16 @@ export default async function ProfilePage() {
   const displayName = override?.displayName ?? profile.name;
   const checklist = await getOnboardingChecklist(session!.githubId!, profile, Boolean(override));
 
-  if (!isDemoAccount(session!.githubId) && !isTestAccount(session!.githubId)) {
+  let endorsements: Endorsement[] = [];
+  if (isDemoAccount(session!.githubId)) {
+    endorsements = DEMO_ENDORSEMENTS[session!.githubId!] ?? [];
+  } else if (!isTestAccount(session!.githubId)) {
     void syncDirectoryProfile(session!.githubId!, displayName, profile, activity, skillFingerprint);
+    try {
+      endorsements = await getEndorsementsFor(session!.githubId!);
+    } catch {
+      endorsements = [];
+    }
   }
 
   return (
@@ -86,6 +98,17 @@ export default async function ProfilePage() {
             Resume upload isn&apos;t wired up yet — coming in a later milestone.
           </p>
         </InfoCard>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
+        <p className="mt-1 text-xs text-text-muted">
+          A human signal from other developers on the platform, alongside your GitHub-derived
+          fingerprint. Given by other devs from your Directory profile.
+        </p>
+        <div className="mt-4">
+          <EndorsementList endorsements={endorsements} />
+        </div>
       </div>
     </div>
   );

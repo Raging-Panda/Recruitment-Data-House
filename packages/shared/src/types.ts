@@ -60,6 +60,10 @@ export interface LanguageBreakdownEntry {
   language: string;
   bytes: number;
   percentage: number;
+  /** Most recent `updated_at` among repos containing this language — a
+   * repo-level proxy for "when was this skill last used" (GitHub doesn't
+   * expose per-language commit dates cheaply). Null when unknown. */
+  lastUsedAt: string | null;
 }
 
 export interface CommitActivityPoint {
@@ -212,7 +216,8 @@ export type NotificationType =
   | "certification_added"
   | "skill_test_completed"
   | "welcome"
-  | "saved_search_match";
+  | "saved_search_match"
+  | "endorsement_received";
 
 export interface NotificationItem {
   id: string;
@@ -280,6 +285,21 @@ export interface SavedSearch {
   id: string;
   name: string;
   filters: DirectoryFilters;
+  createdAt: string;
+}
+
+/** A peer endorsement of one skill category, with the endorser's display
+ * info resolved from their own directory snapshot (best-effort — see
+ * lib/endorsements.ts). "Verified" here means "another real signed-in
+ * account", not ID-checked; a proper verification layer is still a
+ * PLAN.md item. */
+export interface Endorsement {
+  id: string;
+  endorserGithubId: string;
+  endorserName: string;
+  endorserAvatarUrl: string | null;
+  skillCategory: SkillCategory;
+  comment: string | null;
   createdAt: string;
 }
 

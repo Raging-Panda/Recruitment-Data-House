@@ -14,9 +14,11 @@ import type {
   Shortlist,
   ShortlistWithCandidates,
   SavedSearch,
+  Endorsement,
 } from "@ipskill/shared";
 import { DEMO_GITHUB_ID } from "./demo-mode";
 import { DEFAULT_DIRECTORY_FILTERS } from "./directory-filters";
+import type { RecruiterEngagementSummary } from "./recruiter-engagement";
 
 const NOW = Date.now();
 const DAY = 24 * 60 * 60 * 1000;
@@ -39,12 +41,14 @@ export const DEMO_PROFILE_OVERRIDE: CandidateProfileOverride = {
  */
 export function buildDemoDeveloperHubData(): DeveloperHubData {
   const languageBreakdown = [
-    { language: "Go", bytes: 480_000, percentage: 34 },
-    { language: "TypeScript", bytes: 380_000, percentage: 27 },
-    { language: "Python", bytes: 240_000, percentage: 17 },
-    { language: "SQL", bytes: 140_000, percentage: 10 },
-    { language: "Terraform", bytes: 90_000, percentage: 6 },
-    { language: "CSS", bytes: 80_000, percentage: 6 },
+    { language: "Go", bytes: 480_000, percentage: 34, lastUsedAt: new Date(NOW - 2 * DAY).toISOString() },
+    { language: "TypeScript", bytes: 380_000, percentage: 27, lastUsedAt: new Date(NOW - 5 * DAY).toISOString() },
+    { language: "Python", bytes: 240_000, percentage: 17, lastUsedAt: new Date(NOW - 60 * DAY).toISOString() },
+    { language: "SQL", bytes: 140_000, percentage: 10, lastUsedAt: new Date(NOW - 90 * DAY).toISOString() },
+    // Deliberately stale (>12 months) — an old Terraform module nobody's
+    // touched, giving the freshness indicator something to flag.
+    { language: "Terraform", bytes: 90_000, percentage: 6, lastUsedAt: new Date(NOW - 600 * DAY).toISOString() },
+    { language: "CSS", bytes: 80_000, percentage: 6, lastUsedAt: new Date(NOW - 30 * DAY).toISOString() },
   ];
 
   const commitActivity = Array.from({ length: 12 }, (_, i) => ({
@@ -584,3 +588,93 @@ export const DEMO_SAVED_SEARCHES: SavedSearch[] = [
     createdAt: new Date(NOW - 7 * DAY).toISOString(),
   },
 ];
+
+/** Keyed by endorsee githubId — covers the demo persona herself (shown on
+ * her own Profile page) plus one seed candidate (shown on that candidate's
+ * Directory detail page), so both surfaces have something to render. */
+export const DEMO_ENDORSEMENTS: Record<string, Endorsement[]> = {
+  [DEMO_GITHUB_ID]: [
+    {
+      id: "demo-endorsement-1",
+      endorserGithubId: "seed-2",
+      endorserName: "Lerato Dube",
+      endorserAvatarUrl: "https://i.pravatar.cc/300?img=45",
+      skillCategory: "Backend",
+      comment: "Naledi redesigned our payments retry logic — rock solid under load.",
+      createdAt: new Date(NOW - 6 * DAY).toISOString(),
+    },
+    {
+      id: "demo-endorsement-2",
+      endorserGithubId: "seed-5",
+      endorserName: "Jaco Bester",
+      endorserAvatarUrl: "https://i.pravatar.cc/300?img=53",
+      skillCategory: "Leadership",
+      comment: "Great at unblocking the team during incidents.",
+      createdAt: new Date(NOW - 15 * DAY).toISOString(),
+    },
+  ],
+  "seed-2": [
+    {
+      id: "demo-endorsement-3",
+      endorserGithubId: DEMO_GITHUB_ID,
+      endorserName: DEMO_DISPLAY_NAME,
+      endorserAvatarUrl: "https://i.pravatar.cc/300?img=47",
+      skillCategory: "DevOps",
+      comment: "Lerato's Kubernetes rollout playbooks saved us during a bad deploy.",
+      createdAt: new Date(NOW - 3 * DAY).toISOString(),
+    },
+  ],
+};
+
+export const DEMO_RECRUITER_ENGAGEMENT: RecruiterEngagementSummary = {
+  totalShortlisted: 4,
+  viewedCount: 3,
+  viewedPct: 75,
+  avgTimeToFirstViewHours: 11,
+  candidates: [
+    {
+      githubId: "seed-2",
+      displayName: "Lerato Dube",
+      avatarUrl: "https://i.pravatar.cc/300?img=45",
+      shortlistNames: ["Senior Backend — Q3 hiring"],
+      addedAt: new Date(NOW - 5 * DAY).toISOString(),
+      viewCount: 5,
+      firstViewedAt: new Date(NOW - 5 * DAY + 3 * 60 * 60 * 1000).toISOString(),
+      lastViewedAt: new Date(NOW - 1 * DAY).toISOString(),
+      timeToFirstViewHours: 3,
+    },
+    {
+      githubId: "seed-5",
+      displayName: "Jaco Bester",
+      avatarUrl: "https://i.pravatar.cc/300?img=53",
+      shortlistNames: ["Senior Backend — Q3 hiring"],
+      addedAt: new Date(NOW - 5 * DAY).toISOString(),
+      viewCount: 2,
+      firstViewedAt: new Date(NOW - 5 * DAY + 20 * 60 * 60 * 1000).toISOString(),
+      lastViewedAt: new Date(NOW - 3 * DAY).toISOString(),
+      timeToFirstViewHours: 20,
+    },
+    {
+      githubId: "seed-1",
+      displayName: "Thabo Mokoena",
+      avatarUrl: "https://i.pravatar.cc/300?img=12",
+      shortlistNames: ["Frontend bench"],
+      addedAt: new Date(NOW - 10 * DAY).toISOString(),
+      viewCount: 1,
+      firstViewedAt: new Date(NOW - 10 * DAY + 10 * 60 * 60 * 1000).toISOString(),
+      lastViewedAt: new Date(NOW - 10 * DAY + 10 * 60 * 60 * 1000).toISOString(),
+      timeToFirstViewHours: 10,
+    },
+    {
+      githubId: "seed-4",
+      displayName: "Amahle Vilakazi",
+      avatarUrl: "https://i.pravatar.cc/300?img=25",
+      shortlistNames: ["Frontend bench"],
+      addedAt: new Date(NOW - 10 * DAY).toISOString(),
+      viewCount: 0,
+      firstViewedAt: null,
+      lastViewedAt: null,
+      timeToFirstViewHours: null,
+    },
+  ],
+};

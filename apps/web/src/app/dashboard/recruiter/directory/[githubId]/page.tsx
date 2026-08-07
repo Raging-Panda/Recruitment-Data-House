@@ -5,11 +5,14 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { getDirectoryEntry } from "@/lib/directory";
 import { recordProfileView } from "@/lib/profile-views";
+import { getEndorsementsFor } from "@/lib/endorsements";
 import { isDemoAccount } from "@/lib/demo-mode";
-import { DEMO_DIRECTORY_ENTRIES } from "@/lib/demo-data";
+import { DEMO_DIRECTORY_ENTRIES, DEMO_ENDORSEMENTS } from "@/lib/demo-data";
 import { ScoreRing } from "@/components/score-ring";
 import { ArrowRightIcon } from "@/components/icons";
-import type { DirectoryEntry } from "@ipskill/shared";
+import { EndorsementList } from "@/components/endorsement-list";
+import { EndorsementForm } from "@/components/endorsement-form";
+import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
 
 export default async function DirectoryProfilePage({
   params,
@@ -18,10 +21,13 @@ export default async function DirectoryProfilePage({
 }) {
   const session = await getServerSession(authOptions);
   const viewerGithubId = session!.githubId!;
+  const isDemo = isDemoAccount(viewerGithubId);
 
   let entry: DirectoryEntry | null;
-  if (isDemoAccount(viewerGithubId)) {
+  let endorsements: Endorsement[] = [];
+  if (isDemo) {
     entry = DEMO_DIRECTORY_ENTRIES.find((e) => e.githubId === params.githubId) ?? null;
+    endorsements = DEMO_ENDORSEMENTS[params.githubId] ?? [];
   } else {
     try {
       entry = await getDirectoryEntry(params.githubId);
@@ -30,6 +36,11 @@ export default async function DirectoryProfilePage({
     }
     if (entry) {
       void recordProfileView(params.githubId, viewerGithubId);
+      try {
+        endorsements = await getEndorsementsFor(params.githubId);
+      } catch {
+        endorsements = [];
+      }
     }
   }
 
@@ -96,6 +107,20 @@ export default async function DirectoryProfilePage({
               : "Not currently available"}
           </p>
         </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+        <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
+        <p className="mt-1 text-xs text-text-secondary">
+          A human signal from other developers on the platform, alongside the GitHub-derived
+          fingerprint.
+        </p>
+        <div className="mt-3">
+          <EndorsementList endorsements={endorsements} />
+        </div>
+        {!isDemo && viewerGithubId !== entry.githubId && (
+          <EndorsementForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-dashed border-surface-border bg-background-elevated p-5 text-center">

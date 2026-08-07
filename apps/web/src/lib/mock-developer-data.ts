@@ -13,11 +13,13 @@ const WEEK = 7 * DAY;
  */
 export function buildMockDeveloperHubData(): DeveloperHubData {
   const languageBreakdown = [
-    { language: "TypeScript", bytes: 420_000, percentage: 42 },
-    { language: "Python", bytes: 260_000, percentage: 26 },
-    { language: "Go", bytes: 150_000, percentage: 15 },
-    { language: "SQL", bytes: 90_000, percentage: 9 },
-    { language: "CSS", bytes: 80_000, percentage: 8 },
+    { language: "TypeScript", bytes: 420_000, percentage: 42, lastUsedAt: new Date(NOW - 3 * DAY).toISOString() },
+    { language: "Python", bytes: 260_000, percentage: 26, lastUsedAt: new Date(NOW - 20 * DAY).toISOString() },
+    { language: "Go", bytes: 150_000, percentage: 15, lastUsedAt: new Date(NOW - 45 * DAY).toISOString() },
+    // Deliberately stale (>12 months) so the freshness indicator has
+    // something to flag when testing/demoing this account.
+    { language: "SQL", bytes: 90_000, percentage: 9, lastUsedAt: new Date(NOW - 540 * DAY).toISOString() },
+    { language: "CSS", bytes: 80_000, percentage: 8, lastUsedAt: new Date(NOW - 400 * DAY).toISOString() },
   ];
 
   const commitActivity = Array.from({ length: 12 }, (_, i) => ({

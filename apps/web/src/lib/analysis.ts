@@ -1,6 +1,37 @@
 import type { SkillCategory, SkillFingerprint, CommitActivityPoint } from "@ipskill/shared";
 
 const STRONG_THRESHOLD = 60;
+const STALE_THRESHOLD_DAYS = 365;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export interface SkillFreshness {
+  label: string;
+  isStale: boolean;
+}
+
+/**
+ * "Last used" is a repo-level proxy (see buildLanguageBreakdown's
+ * lastUsedAt), not a per-commit language date — GitHub doesn't expose that
+ * cheaply. Anything older than a year is flagged so the fingerprint reads
+ * as current ability, not just historical totals.
+ */
+export function describeSkillFreshness(lastUsedAt: string | null): SkillFreshness | null {
+  if (!lastUsedAt) return null;
+  const daysSince = Math.floor((Date.now() - new Date(lastUsedAt).getTime()) / DAY_MS);
+  const isStale = daysSince >= STALE_THRESHOLD_DAYS;
+
+  if (daysSince < 30) return { label: "Used this month", isStale: false };
+  if (!isStale) {
+    const months = Math.round(daysSince / 30);
+    return { label: `Last used ${months} month${months === 1 ? "" : "s"} ago`, isStale: false };
+  }
+  const years = Math.floor(daysSince / 365);
+  const year = new Date(lastUsedAt).getFullYear();
+  return {
+    label: years >= 1 ? `Last used ${year} — ${years} yr${years === 1 ? "" : "s"} ago` : `Last used ${year}`,
+    isStale: true,
+  };
+}
 
 export function sortedSkillEntries(fingerprint: SkillFingerprint): [SkillCategory, number][] {
   return (Object.entries(fingerprint) as [SkillCategory, number][]).sort((a, b) => b[1] - a[1]);

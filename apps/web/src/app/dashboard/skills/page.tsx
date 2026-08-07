@@ -9,6 +9,7 @@ import { VerifiedSkillsPanel } from "@/components/verified-skills-panel";
 import { CodeIcon } from "@/components/icons";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { buildDemoAttemptSummaries } from "@/lib/demo-data";
+import { describeSkillFreshness } from "@/lib/analysis";
 
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
@@ -57,20 +58,33 @@ export default async function SkillsPage() {
         <div className="rounded-2xl border border-surface-border bg-background-elevated p-6">
           <h2 className="text-sm font-semibold text-heading">Language Breakdown</h2>
           <div className="mt-4 flex flex-col gap-3">
-            {activity.languageBreakdown.slice(0, 8).map((lang) => (
-              <div key={lang.language}>
-                <div className="flex justify-between text-xs text-text-secondary">
-                  <span>{lang.language}</span>
-                  <span>{lang.percentage}%</span>
+            {activity.languageBreakdown.slice(0, 8).map((lang) => {
+              const freshness = describeSkillFreshness(lang.lastUsedAt);
+              return (
+                <div key={lang.language}>
+                  <div className="flex justify-between text-xs text-text-secondary">
+                    <span>{lang.language}</span>
+                    <span>{lang.percentage}%</span>
+                  </div>
+                  <div className="mt-1 h-2 rounded-full bg-surface">
+                    <div
+                      className="h-2 rounded-full bg-primary-gradient"
+                      style={{ width: `${Math.min(100, lang.percentage)}%` }}
+                    />
+                  </div>
+                  {freshness && (
+                    <p
+                      className={`mt-1 text-[11px] ${
+                        freshness.isStale ? "text-accent-amber" : "text-text-muted"
+                      }`}
+                    >
+                      {freshness.isStale ? "⚠ " : ""}
+                      {freshness.label}
+                    </p>
+                  )}
                 </div>
-                <div className="mt-1 h-2 rounded-full bg-surface">
-                  <div
-                    className="h-2 rounded-full bg-primary-gradient"
-                    style={{ width: `${Math.min(100, lang.percentage)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {activity.languageBreakdown.length === 0 && (
               <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-surface-border py-8 text-center">
                 <CodeIcon size={20} />

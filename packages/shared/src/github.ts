@@ -103,11 +103,17 @@ export async function buildLanguageBreakdown(
   );
 
   const totals = new Map<string, number>();
-  for (const langs of perRepo) {
+  const lastUsedAt = new Map<string, string>();
+  perRepo.forEach((langs, i) => {
+    const repo = nonForks[i];
     for (const [lang, bytes] of Object.entries(langs)) {
       totals.set(lang, (totals.get(lang) ?? 0) + bytes);
+      const existing = lastUsedAt.get(lang);
+      if (!existing || new Date(repo.updated_at) > new Date(existing)) {
+        lastUsedAt.set(lang, repo.updated_at);
+      }
     }
-  }
+  });
 
   const totalBytes = [...totals.values()].reduce((a, b) => a + b, 0) || 1;
   return [...totals.entries()]
@@ -115,6 +121,7 @@ export async function buildLanguageBreakdown(
       language,
       bytes,
       percentage: Math.round((bytes / totalBytes) * 1000) / 10,
+      lastUsedAt: lastUsedAt.get(language) ?? null,
     }))
     .sort((a, b) => b.bytes - a.bytes);
 }
