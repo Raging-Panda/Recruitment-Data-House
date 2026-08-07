@@ -1,18 +1,24 @@
 import { getServerSession } from "next-auth";
+import type { WorkExperience } from "@ipskill/shared";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { splitStrengthsAndGaps, sortedSkillEntries, computeLearningMomentum } from "@/lib/analysis";
 import { getProfileViewStats } from "@/lib/profile-views";
+import { suggestNextPositions } from "@/lib/position-suggestions";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
+import { DEMO_WORK_EXPERIENCE } from "@/lib/demo-data";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { rowToWorkExperience } from "@/lib/experience";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { CommitTrendChart } from "@/components/commit-trend-chart";
 import { StatTile } from "@/components/stat-tile";
 import { BentoPlaceholder } from "@/components/bento-placeholder";
+import { NextPositionCard } from "@/components/next-position-card";
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
-  const { profile, skillFingerprint, activity, analytics } = await loadDeveloperHubData(
+  const { profile, skillFingerprint, activity, analytics, projects } = await loadDeveloperHubData(
     session!.accessToken!
   );
 
@@ -22,6 +28,29 @@ export default async function AnalyticsPage() {
   const careerReadiness = Math.round(
     (profile.overallScore + Math.max(0, 100 - profile.percentileRank)) / 2
   );
+
+  let workExperience: WorkExperience[] = [];
+  if (isDemoAccount(session!.githubId)) {
+    workExperience = DEMO_WORK_EXPERIENCE;
+  } else if (!isTestAccount(session!.githubId)) {
+    try {
+      const { data } = await getSupabaseAdmin()
+        .from("work_experience")
+        .select("*")
+        .eq("github_id", session!.githubId!);
+      workExperience = (data ?? []).map(rowToWorkExperience);
+    } catch {
+      // position suggestions degrade gracefully to GitHub-only signals below
+    }
+  }
+
+  const nextPositions = suggestNextPositions({
+    skillFingerprint,
+    languageBreakdown: activity.languageBreakdown,
+    projects,
+    workExperience,
+    overallScore: profile.overallScore,
+  });
 
   // Profile Views is real (backed by the profile_views table, incremented
   // from the Directory) — Search Appearances and Connection Requests stay
@@ -196,11 +225,7 @@ export default async function AnalyticsPage() {
       </div>
 
       <div className="mt-6">
-        <BentoPlaceholder
-          title="AI Career Recommendations"
-          badge="Beta"
-          description="Personalized role suggestions from your skill fingerprint and goals — planned once an AI recommendation pass is wired up."
-        />
+        <NextPositionCard suggestions={nextPositions} />
       </div>
 
       <div className="mt-6">
