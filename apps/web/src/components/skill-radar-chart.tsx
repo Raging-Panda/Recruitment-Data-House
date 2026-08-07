@@ -30,6 +30,9 @@ export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint
           stroke={colors.violet}
           fill={colors.purple}
           fillOpacity={0.5}
+          isAnimationActive
+          animationDuration={900}
+          animationEasing="ease-out"
         />
       </RadarChart>
     </ResponsiveContainer>
