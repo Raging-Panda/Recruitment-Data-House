@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
   Radar,
   RadarChart,
@@ -12,11 +13,42 @@ import type { SkillFingerprint } from "@ipskill/shared";
 import { colors } from "@ipskill/shared";
 import { themeColor } from "@/lib/theme-colors";
 
+const STAGGER_MS = 100; // delay between each point starting its extension
+const POINT_DURATION_MS = 700; // how long each individual point takes to extend
+
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
 export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint }) {
-  const data = Object.entries(fingerprint).map(([category, value]) => ({
-    category,
-    value,
-  }));
+  const points = Object.entries(fingerprint).map(([category, value]) => ({ category, value }));
+  const [data, setData] = useState(() => points.map((p) => ({ ...p, value: 0 })));
+  const frameRef = useRef<number>();
+
+  useEffect(() => {
+    const totalDuration = (points.length - 1) * STAGGER_MS + POINT_DURATION_MS;
+    const start = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - start;
+      setData(
+        points.map((point, i) => {
+          const localElapsed = elapsed - i * STAGGER_MS;
+          if (localElapsed <= 0) return { ...point, value: 0 };
+          if (localElapsed >= POINT_DURATION_MS) return point;
+          return { ...point, value: point.value * easeOutCubic(localElapsed / POINT_DURATION_MS) };
+        })
+      );
+      if (elapsed < totalDuration) {
+        frameRef.current = requestAnimationFrame(tick);
+      }
+    }
+
+    frameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (frameRef.current !== undefined) cancelAnimationFrame(frameRef.current);
+    };
+  }, [fingerprint]);
 
   return (
     <ResponsiveContainer width="100%" height={360}>
@@ -30,9 +62,7 @@ export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint
           stroke={colors.violet}
           fill={colors.purple}
           fillOpacity={0.5}
-          isAnimationActive
-          animationDuration={900}
-          animationEasing="ease-out"
+          isAnimationActive={false}
         />
       </RadarChart>
     </ResponsiveContainer>
