@@ -16,6 +16,7 @@ import { DisplayNameEditor } from "@/components/display-name-editor";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { EndorsementList } from "@/components/endorsement-list";
 import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
+import { buttonClass } from "@/lib/button-styles";
 import type { Endorsement } from "@ipskill/shared";
 
 const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
@@ -120,6 +121,20 @@ export default async function ProfilePage() {
         </InfoCard>
 
         <PublicProfileLinkCard initialStatus={linkStatus} isDemo={isDemo} />
+
+        <InfoCard title="Export Profile">
+          <p className="pt-1 text-sm text-text-muted">
+            A one-page PDF summary of your profile and skill fingerprint — pairs well with your
+            share link above for sending directly to a client.
+          </p>
+          <a
+            href="/api/profile/pdf"
+            download={`ipskill-${profile.githubLogin}-profile.pdf`}
+            className={`${buttonClass("primary", "sm")} mt-2 inline-flex`}
+          >
+            Download PDF
+          </a>
+        </InfoCard>
       </div>
 
       <div className="mt-6">
