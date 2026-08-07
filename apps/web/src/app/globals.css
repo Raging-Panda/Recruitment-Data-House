@@ -2,25 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-background: 5 8 15;
-  --color-background-elevated: 10 17 32;
-  --color-surface: 17 26 46;
-  --color-surface-border: 30 42 68;
-  --color-text-secondary: 151 151 181;
-  --color-text-muted: 94 94 128;
-  --color-heading: 245 245 250;
-}
-
-[data-theme="light"] {
-  --color-background: 245 247 250;
-  --color-background-elevated: 255 255 255;
-  --color-surface: 233 236 241;
-  --color-surface-border: 221 226 234;
-  --color-text-secondary: 91 100 114;
-  --color-text-muted: 139 147 161;
-  --color-heading: 30 41 59;
-}
+/* The --color-* custom properties themselves are generated at request time
+   from packages/shared's colors/lightColors (see ThemeVars in layout.tsx) —
+   packages/shared/theme.ts is the single source of values, this file just
+   consumes the resulting variables so it never hand-duplicates a hex value. */
 
 body {
   background-color: rgb(var(--color-background));

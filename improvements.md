@@ -127,10 +127,18 @@ scheduled or scoped yet — just a running list to pull from.
   by a manual requestAnimationFrame loop instead of recharts' built-in
   animation. Re-triggers correctly whenever the `fingerprint` prop
   changes, not just on first mount.
-- **Design token audit** — the web (Tailwind config) and mobile
-  (theme/index.ts) color/spacing tokens are hand-duplicated from
-  `packages/shared`'s theme values; tighten this so both platforms
-  visibly drift less over time as the palette evolves.
+- **Design token audit** — ✅ shipped: found two real gaps and fixed
+  both. Web's `globals.css` hand-duplicated every dark/light color as
+  separate RGB-triplet CSS custom properties — now generated at
+  render time in `layout.tsx` from `packages/shared`'s `colors`/
+  `lightColors` via a `hexToRgbTriplet` helper, so there's exactly one
+  place these values are ever written (verified byte-identical output
+  before/after). Mobile's `theme/index.ts` retyped `spacing`/`radii`
+  literals that already existed in `packages/shared` (and had quietly
+  drifted — missing the `xxl` step) instead of importing them; now
+  imports directly. One accepted exception: `apps/mobile/app.json`'s
+  splash/background color has to stay a literal hex, since Expo's
+  static JSON manifest can't import from a TS package.
 - **Actionable onboarding checklist** — ✅ shipped: the Profile
   Completion ring is now driven by a real six-item checklist (Connect
   GitHub, set a display name, add a GitHub bio, add work experience,
