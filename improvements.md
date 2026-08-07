@@ -102,8 +102,13 @@ scheduled or scoped yet — just a running list to pull from.
   Persists to localStorage with a before-hydration script to avoid a
   flash of the wrong theme. Mobile doesn't have a theme toggle at all
   yet — still dark-only.
-- **Toasts/inline feedback** — confirm actions (login success, sign
-  out, save) with toasts/snackbars instead of silent state changes.
+- **Toasts/inline feedback** — ✅ shipped for same-page actions: a
+  ToastProvider (bottom-right stack, auto-dismiss) confirms Experience
+  and Certifications save/delete and the profile display-name edit,
+  success or error. Still open: login success and sign-out, since both
+  trigger a full-page redirect — a toast fired right before navigation
+  would just disappear, and doing it properly needs a
+  sessionStorage-flag-read-on-next-page pattern.
 - **Animated skill radar** — animate the radar chart filling in on
   first load and transitioning when the underlying data refreshes,
   rather than snapping straight to final values.
