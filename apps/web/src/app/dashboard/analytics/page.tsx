@@ -1,20 +1,15 @@
 import { getServerSession } from "next-auth";
-import type { WorkExperience } from "@ipskill/shared";
+import { Suspense } from "react";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { splitStrengthsAndGaps, sortedSkillEntries, computeLearningMomentum } from "@/lib/analysis";
-import { getProfileViewStats } from "@/lib/profile-views";
-import { suggestNextPositions } from "@/lib/position-suggestions";
-import { isDemoAccount } from "@/lib/demo-mode";
-import { isTestAccount } from "@/lib/test-mode";
-import { DEMO_WORK_EXPERIENCE } from "@/lib/demo-data";
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { rowToWorkExperience } from "@/lib/experience";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { CommitTrendChart } from "@/components/commit-trend-chart";
 import { StatTile } from "@/components/stat-tile";
 import { BentoPlaceholder } from "@/components/bento-placeholder";
-import { NextPositionCard } from "@/components/next-position-card";
+import { ProfileViewsStat } from "@/components/profile-views-stat";
+import { NextPositionSuggestionsSection } from "@/components/next-position-suggestions-section";
+import { Skeleton } from "@/components/skeleton";
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
@@ -30,61 +25,12 @@ export default async function AnalyticsPage() {
     (profile.overallScore + Math.max(0, 100 - profile.percentileRank)) / 2
   );
 
-  let workExperience: WorkExperience[] = [];
-  if (isDemoAccount(session!.githubId)) {
-    workExperience = DEMO_WORK_EXPERIENCE;
-  } else if (!isTestAccount(session!.githubId)) {
-    try {
-      const { data } = await getSupabaseAdmin()
-        .from("work_experience")
-        .select("*")
-        .eq("github_id", session!.githubId!);
-      workExperience = (data ?? []).map(rowToWorkExperience);
-    } catch {
-      // position suggestions degrade gracefully to GitHub-only signals below
-    }
-  }
-
-  const nextPositions = suggestNextPositions({
-    skillFingerprint,
-    languageBreakdown: activity.languageBreakdown,
-    projects,
-    workExperience,
-    overallScore: profile.overallScore,
-  });
-
-  // Profile Views is real (backed by the profile_views table, incremented
-  // from the Directory) — Search Appearances and Connection Requests stay
-  // as the derived placeholder until the platform has its own tracking for
-  // those too.
-  let profileViewsValue = analytics.profileViews.toLocaleString();
-  let profileViewsSublabel = `↑ ${analytics.profileViewsChangePct}% vs last month`;
-  let profileViewsSublabelClass = "text-accent-green";
-
-  if (!isDemoAccount(session!.githubId) && !isTestAccount(session!.githubId)) {
-    try {
-      const viewStats = await getProfileViewStats(session!.githubId!);
-      profileViewsValue = viewStats.total.toLocaleString();
-      if (viewStats.changePct === null) {
-        profileViewsSublabel = viewStats.total > 0 ? "New this month" : "No views yet";
-        profileViewsSublabelClass = "text-text-muted";
-      } else {
-        const arrow = viewStats.changePct >= 0 ? "↑" : "↓";
-        profileViewsSublabel = `${arrow} ${Math.abs(viewStats.changePct)}% vs last month`;
-        profileViewsSublabelClass = viewStats.changePct >= 0 ? "text-accent-green" : "text-accent-red";
-      }
-    } catch {
-      // fall back to the derived placeholder already assigned above
-    }
-  }
-
+  // Search Appearances and Connection Requests stay as the derived
+  // placeholder until the platform has its own tracking for those too —
+  // Profile Views is real but streams in separately below (see
+  // ProfileViewsStat), since it needs an extra fetch this page's core data
+  // doesn't.
   const engagementStats = [
-    {
-      label: "Profile Views",
-      value: profileViewsValue,
-      sublabel: profileViewsSublabel,
-      sublabelClassName: profileViewsSublabelClass,
-    },
     {
       label: "Search Appearances",
       value: analytics.searchAppearances.toLocaleString(),
@@ -226,7 +172,15 @@ export default async function AnalyticsPage() {
       </div>
 
       <div className="mt-6">
-        <NextPositionCard suggestions={nextPositions} />
+        <Suspense fallback={<NextPositionCardSkeleton />}>
+          <NextPositionSuggestionsSection
+            githubId={session!.githubId!}
+            skillFingerprint={skillFingerprint}
+            languageBreakdown={activity.languageBreakdown}
+            projects={projects}
+            overallScore={profile.overallScore}
+          />
+        </Suspense>
       </div>
 
       <div className="mt-6">
@@ -236,6 +190,13 @@ export default async function AnalyticsPage() {
           Requests are still estimated until that tracking exists.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Suspense fallback={<StatTileSkeleton />}>
+            <ProfileViewsStat
+              githubId={session!.githubId!}
+              fallbackValue={analytics.profileViews}
+              fallbackChangePct={analytics.profileViewsChangePct}
+            />
+          </Suspense>
           {engagementStats.map((stat) => (
             <StatTile
               key={stat.label}
@@ -265,6 +226,28 @@ export default async function AnalyticsPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatTileSkeleton() {
+  return (
+    <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+      <Skeleton className="h-3 w-24" />
+      <Skeleton className="mt-3 h-7 w-16" />
+      <Skeleton className="mt-2 h-3 w-20" />
+    </div>
+  );
+}
+
+function NextPositionCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+      <Skeleton className="h-4 w-56" />
+      <Skeleton className="mt-4 h-6 w-40" />
+      <Skeleton className="mt-3 h-3 w-full" />
+      <Skeleton className="mt-2 h-3 w-3/4" />
+      <Skeleton className="mt-2 h-3 w-2/3" />
     </div>
   );
 }
