@@ -3,9 +3,11 @@ import Image from "next/image";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
+import { getOnboardingChecklist } from "@/lib/onboarding";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
 import { DisplayNameEditor } from "@/components/display-name-editor";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -14,6 +16,7 @@ export default async function ProfilePage() {
     getCandidateProfileOverrideSafe(session!.githubId!),
   ]);
   const displayName = override?.displayName ?? profile.name;
+  const checklist = await getOnboardingChecklist(session!.githubId!, profile, Boolean(override));
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -41,8 +44,10 @@ export default async function ProfilePage() {
           </p>
           <p className="mt-3 text-xs text-text-muted">@{profile.githubLogin}</p>
         </div>
-        <ScoreRing score={profile.overallScore} label="Profile Completion" />
+        <ScoreRing score={checklist.percentage} label="Profile Completion" />
       </div>
+
+      <OnboardingChecklist items={checklist.items} percentage={checklist.percentage} />
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
         <InfoCard title="Personal Information">

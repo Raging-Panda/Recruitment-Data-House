@@ -146,3 +146,20 @@ export function ArrowRightIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function CheckCircleIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12.5 2.5 2.5L16 9.5" />
+    </Base>
+  );
+}
+
+export function CircleIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+    </Base>
+  );
+}
