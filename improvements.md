@@ -105,28 +105,41 @@ scheduled or scoped yet — just a running list to pull from.
   the Directory, Shortlists/Saved Searches, and the new Compare view
   (next bullet) were pulled out of the standard dev-profile sidebar
   entirely and moved under `/dashboard/recruiter/*`, gated by a single
-  layout (`app/dashboard/recruiter/layout.tsx`) that checks
-  `isPremiumAccount()` and renders a paywall screen in place of the
-  section for anyone not premium. It's reached from one dedicated
-  sidebar card ("Recruiter Tools") rather than being nav items mixed
-  in with Profile/Skills/Projects — clicking it either opens the
-  section (premium) or shows "Upgrade Now" (free). Premium itself is a
-  plain `is_premium` boolean on `candidate_profile`, flipped by a
-  self-serve `/api/premium/upgrade` stub — **there is no real payment
-  processor wired up yet** (Stripe is available as a connector but not
-  authorized in this environment), so "Upgrade Now" just flips the
-  flag for now; swapping in real billing is exactly the "Free vs.
-  Premium tiers" item further down, which this now seeds the mechanism
-  for. The demo account is always premium (so the public showcase
-  shows the full product); the dev-only test account is deliberately
-  NOT auto-premium, so `ALLOW_TEST_LOGIN` can exercise the paywall and
-  the upgrade flow end-to-end. Verified via Playwright: demo account
-  sees "Open Recruiter Tools" and the full section; test account sees
-  the paywall both from the sidebar card and from a direct nav to
-  `/dashboard/recruiter`, and clicking "Upgrade Now" correctly calls
-  the API (fails gracefully with a toast in this sandbox specifically
-  because outbound Supabase calls aren't allow-listed here — not an
-  app bug).
+  layout (`app/dashboard/recruiter/layout.tsx`) that renders a paywall
+  screen in place of the section for anyone without recruiter access.
+  It's reached from one dedicated sidebar card ("Recruiter Tools")
+  rather than being nav items mixed in with Profile/Skills/Projects —
+  clicking it either opens the section or shows "Upgrade Now".
+  **There is no real payment processor wired up yet** (Stripe is
+  available as a connector but not authorized in this environment).
+  Plans are a `plan` column (`free` | `premium_dev` |
+  `premium_recruiter`) on `candidate_profile` — see the next bullet
+  for why it's two premium tiers and not one boolean. Real accounts
+  self-serve straight to `premium_recruiter` via `/api/premium/upgrade`
+  (a stub — swapping in real billing is exactly the "Free vs. Premium
+  tiers" item further down). The demo account is always
+  `premium_recruiter` (public showcase always shows the full product).
+- **Test-only plan toggle** — ✅ shipped: the dev-only test account
+  (`ALLOW_TEST_LOGIN`) gets a "Test Plan" widget in the sidebar with
+  three buttons — Free / Premium Dev / Premium Recruiter — calling a
+  new `/api/premium/set-plan` route that's rejected (403) for every
+  other account, including demo, so it can never become a real-user
+  "set your own plan for free" backdoor. This exists because the real
+  self-serve upgrade flow is one-directional (free → premium_recruiter
+  only) and can't reach `premium_dev` at all, but QA needs to cycle
+  through all three states — including back down to free — to verify
+  every gate without real billing. This is also why the plan model has
+  two premium tiers instead of one: Premium Dev is reserved for future
+  candidate-side perks (not wired to anything gated yet — see "Free
+  vs. Premium tiers"), Premium Recruiter is the only one that unlocks
+  Recruiter Tools, and they're deliberately not hierarchical (Premium
+  Dev alone does not also grant recruiter access). Verified via
+  Playwright: demo account shows no Test Plan widget at all; test
+  account shows it defaulting to Free (paywalled), and clicking each
+  plan button correctly calls the route (fails gracefully with a toast
+  in this sandbox specifically because outbound Supabase calls aren't
+  allow-listed here — not an app bug); a demo-account request straight
+  to `/api/premium/set-plan` correctly 403s.
 - **Peer/verified-engineer endorsements** — lightweight skill
   endorsements from other verified developers on the platform, as a
   human signal alongside the automated GitHub-derived fingerprint.
@@ -324,16 +337,20 @@ scheduled or scoped yet — just a running list to pull from.
   client roles from the core ATS/CRM (once built) and surface match
   scores based on the skill fingerprint.
 - **Free vs. Premium tiers** — 🟡 partially shipped: the mechanism now
-  exists (`candidate_profile.is_premium`, `lib/premium.ts`'s
-  `isPremiumAccount()`, and a self-serve `/api/premium/upgrade` stub),
-  and Recruiter Tools (Directory/Shortlists/Compare) is the first
-  feature actually gated behind it — see "Recruiter Tools is now a
-  separate premium section" above. Still needed: real subscription
-  billing (Stripe is already available as a connector but not yet
-  authorized in this environment) to replace the upgrade stub, and the
-  rest of the feature split this item originally called for (skill
-  tests, PDF export, Growth Olympics eligibility, etc. still aren't
-  gated by anything).
+  exists as a `plan` column (`free` | `premium_dev` |
+  `premium_recruiter`, `lib/premium.ts`'s `getPlan()`) plus a self-serve
+  `/api/premium/upgrade` stub, and Recruiter Tools
+  (Directory/Shortlists/Compare) is the first feature actually gated
+  behind it (`premium_recruiter` specifically) — see "Recruiter Tools
+  is now a separate premium section" above. The `premium_dev` tier
+  exists in the schema and the test-plan toggle but isn't wired to any
+  gated feature yet. Still needed: real subscription billing (Stripe
+  is already available as a connector but not yet authorized in this
+  environment) to replace the upgrade stub, a concrete feature split
+  for what `premium_dev` actually unlocks (skill tests, PDF export,
+  Growth Olympics eligibility, etc. — still aren't gated by anything),
+  and a real checkout/plan-selection flow to replace the current
+  one-directional "Upgrade Now" button.
 - **Growth Olympics** — a monthly competition among premium users:
   whoever shows the biggest skill-fingerprint/activity growth over
   the month wins a prize (e.g. a R1000 Takealot voucher). Needs
