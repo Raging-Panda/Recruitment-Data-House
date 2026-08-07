@@ -30,9 +30,21 @@ scheduled or scoped yet — just a running list to pull from.
   it shows trajectory (ramping up, going quiet, switching stacks)
   rather than just the static snapshot the project list gives on its
   own.
-- **Next position suggestions** — given a candidate's skill
-  fingerprint and activity trend, surface role types/seniority levels
-  they're likely a good fit for (e.g. "Senior Backend — Go/Postgres").
+- **Next position suggestions** — ✅ shipped: the Analytics page now
+  surfaces a "Next Position Suggestions" card with a primary role
+  (e.g. "Staff Backend Engineer"), a match %, a top-language stack tag,
+  and up to two alternates (including "Engineering Lead" when
+  leadership + a strong domain both score highly). Deliberately
+  deterministic/rule-based rather than an AI/Gemini call — domain
+  scores come straight from the skill fingerprint, seniority blends
+  years of work experience (when available) with overall score and a
+  project-quality ratio (tests/CI/README/license across repos), and it
+  degrades gracefully to GitHub-only signals when no work experience is
+  on file. Verified on both the demo account (rich data → "Staff
+  Backend Engineer", 92% match) and the test account (no work
+  experience → correct Mid-Level fallback with an explicit "add work
+  experience for a more precise read" rationale line). Replaces the old
+  "AI Career Recommendations" placeholder.
 - **Developer directory with filters** — ✅ shipped: a searchable
   Developer Directory (location, primary language, minimum skill
   score, availability) any signed-in dev can browse, with a read-only
