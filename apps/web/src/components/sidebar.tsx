@@ -8,6 +8,7 @@ import { IPSkillLogo } from "./ipskill-logo";
 import { useTheme } from "./theme-provider";
 import { useToast } from "./toast-provider";
 import { setPendingToast } from "@/lib/pending-toast";
+import { PLAN_LABELS, type Plan } from "@/lib/plan";
 import {
   HomeIcon,
   PersonIcon,
@@ -36,12 +37,14 @@ const NAV_ITEMS = [
 
 export function Sidebar({
   userName,
-  isPremium,
+  plan,
+  showPlanToggle,
   isOpen,
   onClose,
 }: {
   userName: string;
-  isPremium: boolean;
+  plan: Plan;
+  showPlanToggle: boolean;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -107,7 +110,9 @@ export function Sidebar({
         </div>
 
         <div className="flex flex-col gap-4">
-          <RecruiterToolsCard isPremium={isPremium} onNavigate={onClose} />
+          {showPlanToggle && <TestPlanToggle currentPlan={plan} />}
+
+          <RecruiterToolsCard plan={plan} onNavigate={onClose} />
 
           <button
             onClick={toggleTheme}
@@ -145,14 +150,15 @@ export function Sidebar({
  * deliberately not a normal nav item, since that section is a separate,
  * premium-gated space rather than part of the standard dev profile. Doubles
  * as the account's upgrade CTA until real billing exists: "Upgrade Now"
- * just flips the is_premium flag via /api/premium/upgrade.
+ * self-serves straight to the premium_recruiter plan via /api/premium/upgrade
+ * (premium_dev alone wouldn't unlock this section).
  */
-function RecruiterToolsCard({ isPremium, onNavigate }: { isPremium: boolean; onNavigate: () => void }) {
+function RecruiterToolsCard({ plan, onNavigate }: { plan: Plan; onNavigate: () => void }) {
   const router = useRouter();
   const showToast = useToast();
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  if (isPremium) {
+  if (plan === "premium_recruiter") {
     return (
       <Link
         href="/dashboard/recruiter"
@@ -198,6 +204,65 @@ function RecruiterToolsCard({ isPremium, onNavigate }: { isPremium: boolean; onN
       >
         {isUpgrading ? "Upgrading…" : "Upgrade Now"} <ArrowRightIcon size={14} />
       </button>
+    </div>
+  );
+}
+
+const TOGGLE_PLANS: Plan[] = ["free", "premium_dev", "premium_recruiter"];
+
+/**
+ * Dev-only QA tool — never shown outside the ALLOW_TEST_LOGIN test account
+ * (gated server-side via showPlanToggle, and /api/premium/set-plan rejects
+ * every other account too). Lets you cycle through all three plans to test
+ * gated features without real billing, including going back down to Free,
+ * which the real self-serve "Upgrade Now" flow deliberately doesn't support.
+ */
+function TestPlanToggle({ currentPlan }: { currentPlan: Plan }) {
+  const router = useRouter();
+  const showToast = useToast();
+  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null);
+
+  async function handleSetPlan(plan: Plan) {
+    if (plan === currentPlan) return;
+    setPendingPlan(plan);
+    try {
+      const res = await fetch("/api/premium/set-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to set plan");
+      showToast(`Plan set to ${PLAN_LABELS[plan]}`);
+      router.refresh();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to set plan", "error");
+    } finally {
+      setPendingPlan(null);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-dashed border-surface-border bg-surface p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+        Test Plan (dev only)
+      </p>
+      <div className="mt-2 flex flex-col gap-1">
+        {TOGGLE_PLANS.map((plan) => (
+          <button
+            key={plan}
+            onClick={() => handleSetPlan(plan)}
+            disabled={pendingPlan !== null}
+            className={`rounded-lg px-2 py-1.5 text-left text-xs transition disabled:opacity-50 ${
+              plan === currentPlan
+                ? "bg-primary-gradient font-semibold text-white"
+                : "text-text-secondary hover:bg-background-elevated hover:text-heading"
+            }`}
+          >
+            {pendingPlan === plan ? "Setting…" : PLAN_LABELS[plan]}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

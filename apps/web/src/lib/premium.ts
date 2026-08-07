@@ -1,43 +1,44 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isDemoAccount } from "@/lib/demo-mode";
+import type { Plan } from "@/lib/plan";
+
+export type { Plan } from "@/lib/plan";
+export { PLAN_LABELS, hasRecruiterAccess } from "@/lib/plan";
 
 /**
- * Gates the Recruiter Tools section (Directory/Shortlists/Compare). There's
- * no payment processor wired up yet, so this is a plain flag on
- * candidate_profile flipped by the self-serve /api/premium/upgrade stub —
- * see improvements.md's "Free vs. Premium tiers" item for the real billing
- * integration this will eventually be replaced by.
+ * There's no payment processor wired up yet, so this is a plain `plan`
+ * column on candidate_profile. Real accounts self-serve to
+ * "premium_recruiter" via /api/premium/upgrade; the dev-only test account
+ * can additionally cycle through all three tiers via /api/premium/set-plan
+ * for QA, since ALLOW_TEST_LOGIN needs to exercise every gate without real
+ * GitHub OAuth or billing.
  *
- * The demo account is always premium, so the public showcase always shows
- * the full product. The dev-only test account deliberately is NOT
- * auto-premium — it goes through the same real is_premium check as a real
- * account, so ALLOW_TEST_LOGIN can exercise the paywall and the upgrade
- * flow end-to-end without needing real GitHub OAuth. A Supabase hiccup
- * fails closed (not premium) rather than 500ing or accidentally unlocking a
- * paid section.
+ * The demo account is always premium_recruiter so the public showcase
+ * always shows the full product. A Supabase hiccup fails closed (free)
+ * rather than 500ing or accidentally unlocking a paid section.
  */
-export async function isPremiumAccount(githubId: string | null | undefined): Promise<boolean> {
-  if (!githubId) return false;
-  if (isDemoAccount(githubId)) return true;
+export async function getPlan(githubId: string | null | undefined): Promise<Plan> {
+  if (!githubId) return "free";
+  if (isDemoAccount(githubId)) return "premium_recruiter";
 
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("candidate_profile")
-      .select("is_premium")
+      .select("plan")
       .eq("github_id", githubId)
       .maybeSingle();
-    if (error || !data) return false;
-    return Boolean(data.is_premium);
+    if (error || !data?.plan) return "free";
+    return data.plan as Plan;
   } catch {
-    return false;
+    return "free";
   }
 }
 
-export async function setPremium(githubId: string, isPremium: boolean): Promise<void> {
+export async function setPlan(githubId: string, plan: Plan): Promise<void> {
   const { error } = await getSupabaseAdmin()
     .from("candidate_profile")
     .upsert(
-      { github_id: githubId, is_premium: isPremium, updated_at: new Date().toISOString() },
+      { github_id: githubId, plan, updated_at: new Date().toISOString() },
       { onConflict: "github_id" }
     );
   if (error) throw new Error(error.message);

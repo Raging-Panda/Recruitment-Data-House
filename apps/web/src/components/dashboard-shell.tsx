@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import type { Plan } from "@/lib/plan";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { useToast } from "./toast-provider";
@@ -10,12 +11,14 @@ import { consumePendingToast } from "@/lib/pending-toast";
 export function DashboardShell({
   userName,
   userImage,
-  isPremium,
+  plan,
+  showPlanToggle,
   children,
 }: {
   userName: string;
   userImage?: string;
-  isPremium: boolean;
+  plan: Plan;
+  showPlanToggle: boolean;
   children: ReactNode;
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -40,7 +43,8 @@ export function DashboardShell({
     <div className="flex min-h-screen bg-background">
       <Sidebar
         userName={userName}
-        isPremium={isPremium}
+        plan={plan}
+        showPlanToggle={showPlanToggle}
         isOpen={isSidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { authOptions } from "@/lib/auth";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
-import { isPremiumAccount } from "@/lib/premium";
+import { getPlan } from "@/lib/premium";
+import { isTestAccount } from "@/lib/test-mode";
 import { DashboardShell } from "@/components/dashboard-shell";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -12,14 +13,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login");
   }
 
-  const [override, isPremium] = await Promise.all([
+  const [override, plan] = await Promise.all([
     getCandidateProfileOverrideSafe(session.githubId!),
-    isPremiumAccount(session.githubId),
+    getPlan(session.githubId),
   ]);
   const userName = override?.displayName ?? session.user?.name ?? "Developer";
 
   return (
-    <DashboardShell userName={userName} userImage={session.user?.image ?? undefined} isPremium={isPremium}>
+    <DashboardShell
+      userName={userName}
+      userImage={session.user?.image ?? undefined}
+      plan={plan}
+      showPlanToggle={isTestAccount(session.githubId)}
+    >
       {children}
     </DashboardShell>
   );
