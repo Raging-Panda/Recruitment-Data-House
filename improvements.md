@@ -119,11 +119,12 @@ scheduled or scoped yet — just a running list to pull from.
   trigger a full-page redirect — a toast fired right before navigation
   would just disappear, and doing it properly needs a
   sessionStorage-flag-read-on-next-page pattern.
-- **Animated skill radar** — ✅ shipped: the fingerprint now animates
-  in from the center (900ms, ease-out) on load instead of snapping to
-  final values. Still open: an explicit re-animation on data refresh,
-  since the chart currently only re-renders when its data prop changes
-  and there's no live-refresh trigger yet to test that path against.
+- **Animated skill radar** — ✅ shipped: each of the 8 skill points
+  extends individually in a staggered wave (100ms offset, ease-out)
+  rather than the whole polygon tweening as one uniform shape, driven
+  by a manual requestAnimationFrame loop instead of recharts' built-in
+  animation. Re-triggers correctly whenever the `fingerprint` prop
+  changes, not just on first mount.
 - **Design token audit** — the web (Tailwind config) and mobile
   (theme/index.ts) color/spacing tokens are hand-duplicated from
   `packages/shared`'s theme values; tighten this so both platforms

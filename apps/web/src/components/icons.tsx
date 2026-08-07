@@ -1,8 +1,13 @@
 import type { ReactNode, SVGProps } from "react";
 
-type IconProps = SVGProps<SVGSVGElement> & { size?: number };
+type IconProps = SVGProps<SVGSVGElement> & { size?: number; filled?: boolean };
 
-function Base({ size = 18, children, ...props }: IconProps & { children: ReactNode }) {
+function Base({
+  size = 18,
+  filled: _filled,
+  children,
+  ...props
+}: IconProps & { children: ReactNode }) {
   return (
     <svg
       width={size}
@@ -21,7 +26,18 @@ function Base({ size = 18, children, ...props }: IconProps & { children: ReactNo
   );
 }
 
-export function HomeIcon(props: IconProps) {
+export function HomeIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <path
+          d="M3 11.5 12 4l9 7.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v6H4.5A1.5 1.5 0 0 1 3 19v-7.5Z"
+          fill="currentColor"
+          stroke="none"
+        />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <path d="M3 11.5 12 4l9 7.5" />
@@ -30,7 +46,19 @@ export function HomeIcon(props: IconProps) {
   );
 }
 
-export function PersonIcon(props: IconProps) {
+export function PersonIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <circle cx="12" cy="8" r="3.5" fill="currentColor" stroke="none" />
+        <path
+          d="M12 12.5c-4.5 0-7.7 2.7-8.8 7a1 1 0 0 0 1 1.3h15.6a1 1 0 0 0 1-1.3c-1.1-4.3-4.3-7-8.8-7Z"
+          fill="currentColor"
+          stroke="none"
+        />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <circle cx="12" cy="8" r="3.5" />
@@ -39,7 +67,26 @@ export function PersonIcon(props: IconProps) {
   );
 }
 
-export function UsersIcon(props: IconProps) {
+export function UsersIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <circle cx="9" cy="8.5" r="3" fill="currentColor" stroke="none" />
+        <path
+          d="M9 14.2c-2.8 0-4.9 1.8-5.9 4.8a1 1 0 0 0 .95 1.3h9.9a1 1 0 0 0 .95-1.3c-1-3-3.1-4.8-5.9-4.8Z"
+          fill="currentColor"
+          stroke="none"
+        />
+        <circle cx="17" cy="9" r="2.3" fill="currentColor" stroke="none" fillOpacity={0.6} />
+        <path
+          d="M16 14.5c2.2 0.3 3.8 1.8 4.5 4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity={0.6}
+        />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <circle cx="9" cy="8.5" r="3" />
@@ -50,16 +97,28 @@ export function UsersIcon(props: IconProps) {
   );
 }
 
-export function CodeIcon(props: IconProps) {
+export function CodeIcon({ filled, ...props }: IconProps) {
   return (
-    <Base {...props}>
+    <Base {...props} strokeWidth={filled ? 2.5 : 1.75}>
       <path d="m9 8-4 4 4 4" />
       <path d="m15 8 4 4-4 4" />
     </Base>
   );
 }
 
-export function BriefcaseIcon(props: IconProps) {
+export function BriefcaseIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <path
+          d="M8.5 8V6a1.5 1.5 0 0 1 1.5-1.5h4A1.5 1.5 0 0 1 15.5 6v2"
+          fill="none"
+          stroke="currentColor"
+        />
+        <rect x="3.5" y="8" width="17" height="11" rx="1.5" fill="currentColor" stroke="none" />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <rect x="3.5" y="8" width="17" height="11" rx="1.5" />
@@ -69,7 +128,26 @@ export function BriefcaseIcon(props: IconProps) {
   );
 }
 
-export function LayersIcon(props: IconProps) {
+export function LayersIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <path d="m12 3 8.5 4.5L12 12 3.5 7.5 12 3Z" fill="currentColor" stroke="none" />
+        <path
+          d="m3.5 12 8.5 4.5 8.5-4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity={0.55}
+        />
+        <path
+          d="m3.5 16.5 8.5 4.5 8.5-4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity={0.55}
+        />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <path d="m12 3 8.5 4.5L12 12 3.5 7.5 12 3Z" />
@@ -79,7 +157,18 @@ export function LayersIcon(props: IconProps) {
   );
 }
 
-export function ShieldCheckIcon(props: IconProps) {
+export function ShieldCheckIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <path
+          d="M12 3.5 19 6v6c0 4.5-3 7.5-7 8.5-4-1-7-4-7-8.5V6l7-2.5Z"
+          fill="currentColor"
+          stroke="none"
+        />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <path d="M12 3.5 19 6v6c0 4.5-3 7.5-7 8.5-4-1-7-4-7-8.5V6l7-2.5Z" />
@@ -88,9 +177,9 @@ export function ShieldCheckIcon(props: IconProps) {
   );
 }
 
-export function StarIcon(props: IconProps) {
+export function StarIcon({ filled, ...props }: IconProps) {
   return (
-    <Base {...props}>
+    <Base {...props} fill={filled ? "currentColor" : "none"}>
       <path d="m12 4 2.3 4.9 5.4.7-3.9 3.8.9 5.4L12 16.3 7.3 18.8l.9-5.4-3.9-3.8 5.4-.7L12 4Z" />
     </Base>
   );
@@ -105,7 +194,16 @@ export function EyeIcon(props: IconProps) {
   );
 }
 
-export function BarChartIcon(props: IconProps) {
+export function BarChartIcon({ filled, ...props }: IconProps) {
+  if (filled) {
+    return (
+      <Base {...props}>
+        <rect x="3.8" y="10" width="2.6" height="10" rx="1" fill="currentColor" stroke="none" />
+        <rect x="10.7" y="4" width="2.6" height="16" rx="1" fill="currentColor" stroke="none" />
+        <rect x="17.6" y="13" width="2.6" height="7" rx="1" fill="currentColor" stroke="none" />
+      </Base>
+    );
+  }
   return (
     <Base {...props}>
       <path d="M5 20V10" />
@@ -115,10 +213,16 @@ export function BarChartIcon(props: IconProps) {
   );
 }
 
-export function GearIcon(props: IconProps) {
+export function GearIcon({ filled, ...props }: IconProps) {
   return (
     <Base {...props}>
-      <circle cx="12" cy="12" r="3" />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill={filled ? "currentColor" : "none"}
+        stroke={filled ? "none" : "currentColor"}
+      />
       <path d="M12 3v2.5M12 18.5V21M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M3 12h2.5M18.5 12H21M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
     </Base>
   );

@@ -95,7 +95,7 @@ export function Sidebar({
                       : "text-text-secondary hover:bg-surface hover:text-heading"
                   }`}
                 >
-                  <Icon size={17} />
+                  <Icon size={17} filled={active} />
                   {item.label}
                 </Link>
               );
