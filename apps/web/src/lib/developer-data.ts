@@ -12,12 +12,20 @@ import {
   type DeveloperActivitySummary,
   type DeveloperProfile,
   type DeveloperProject,
+  type RepoActivityEvent,
   type SkillFingerprint,
 } from "@ipskill/shared";
 import { TEST_ACCESS_TOKEN } from "./test-mode";
 import { buildMockDeveloperHubData, buildMockActivityTimeline } from "./mock-developer-data";
 import { DEMO_ACCESS_TOKEN } from "./demo-mode";
 import { buildDemoDeveloperHubData, buildDemoActivityTimeline } from "./demo-data";
+import { readGithubCache, writeGithubCache } from "./github-cache";
+
+// Hub summary (profile/skills/analytics) feels stale faster than raw repo
+// history, so it gets a shorter TTL than the timeline, which costs far more
+// GitHub API calls (up to 6 repos x 3 endpoints) to rebuild.
+const HUB_CACHE_TTL_MS = 10 * 60 * 1000;
+const TIMELINE_CACHE_TTL_MS = 30 * 60 * 1000;
 
 export interface DeveloperHubData {
   profile: DeveloperProfile;
@@ -27,9 +35,15 @@ export interface DeveloperHubData {
   analytics: ReturnType<typeof deriveAnalyticsSnapshot>;
 }
 
-export async function loadDeveloperHubData(accessToken: string): Promise<DeveloperHubData> {
+export async function loadDeveloperHubData(
+  accessToken: string,
+  githubId: string
+): Promise<DeveloperHubData> {
   if (accessToken === TEST_ACCESS_TOKEN) return buildMockDeveloperHubData();
   if (accessToken === DEMO_ACCESS_TOKEN) return buildDemoDeveloperHubData();
+
+  const cached = await readGithubCache<DeveloperHubData>(githubId, "hub", HUB_CACHE_TTL_MS);
+  if (cached) return cached;
 
   const [user, repos] = await Promise.all([
     fetchGithubUser(accessToken),
@@ -81,7 +95,7 @@ export async function loadDeveloperHubData(accessToken: string): Promise<Develop
     about: user.bio,
   };
 
-  return {
+  const result: DeveloperHubData = {
     profile,
     skillFingerprint,
     projects,
@@ -91,6 +105,9 @@ export async function loadDeveloperHubData(accessToken: string): Promise<Develop
       publicRepoCount: user.public_repos,
     }),
   };
+
+  await writeGithubCache(githubId, "hub", result);
+  return result;
 }
 
 /**
@@ -98,10 +115,22 @@ export async function loadDeveloperHubData(accessToken: string): Promise<Develop
  * calls (commits/PRs/releases per repo), so it's only paid for on the
  * Projects page rather than on every dashboard page load.
  */
-export async function loadProjectActivityTimeline(accessToken: string) {
+export async function loadProjectActivityTimeline(
+  accessToken: string,
+  githubId: string
+): Promise<RepoActivityEvent[]> {
   if (accessToken === TEST_ACCESS_TOKEN) return buildMockActivityTimeline();
   if (accessToken === DEMO_ACCESS_TOKEN) return buildDemoActivityTimeline();
 
+  const cached = await readGithubCache<RepoActivityEvent[]>(
+    githubId,
+    "timeline",
+    TIMELINE_CACHE_TTL_MS
+  );
+  if (cached) return cached;
+
   const repos = await fetchGithubRepos(accessToken);
-  return buildActivityTimeline(accessToken, repos);
+  const timeline = await buildActivityTimeline(accessToken, repos);
+  await writeGithubCache(githubId, "timeline", timeline);
+  return timeline;
 }

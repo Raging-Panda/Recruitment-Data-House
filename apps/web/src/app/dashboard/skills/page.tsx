@@ -13,7 +13,8 @@ import { buildDemoAttemptSummaries } from "@/lib/demo-data";
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
   const { profile, skillFingerprint, activity } = await loadDeveloperHubData(
-    session!.accessToken!
+    session!.accessToken!,
+    session!.githubId!
   );
 
   // Verified Skills is a layer on top of the GitHub-derived fingerprint

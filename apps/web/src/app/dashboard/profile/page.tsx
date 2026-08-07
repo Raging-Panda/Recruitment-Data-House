@@ -15,7 +15,7 @@ import { OnboardingChecklist } from "@/components/onboarding-checklist";
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   const [{ profile, activity }, override] = await Promise.all([
-    loadDeveloperHubData(session!.accessToken!),
+    loadDeveloperHubData(session!.accessToken!, session!.githubId!),
     getCandidateProfileOverrideSafe(session!.githubId!),
   ]);
   const displayName = override?.displayName ?? profile.name;

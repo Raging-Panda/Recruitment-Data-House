@@ -19,7 +19,8 @@ import { NextPositionCard } from "@/components/next-position-card";
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
   const { profile, skillFingerprint, activity, analytics, projects } = await loadDeveloperHubData(
-    session!.accessToken!
+    session!.accessToken!,
+    session!.githubId!
   );
 
   const { strengths, improvementAreas } = splitStrengthsAndGaps(skillFingerprint);

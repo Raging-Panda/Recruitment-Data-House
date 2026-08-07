@@ -8,8 +8,8 @@ import { EmptyState } from "@/components/empty-state";
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions);
   const [{ projects }, timeline] = await Promise.all([
-    loadDeveloperHubData(session!.accessToken!),
-    loadProjectActivityTimeline(session!.accessToken!),
+    loadDeveloperHubData(session!.accessToken!, session!.githubId!),
+    loadProjectActivityTimeline(session!.accessToken!, session!.githubId!),
   ]);
 
   return (
