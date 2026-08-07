@@ -112,13 +112,15 @@ scheduled or scoped yet — just a running list to pull from.
   Persists to localStorage with a before-hydration script to avoid a
   flash of the wrong theme. Mobile doesn't have a theme toggle at all
   yet — still dark-only.
-- **Toasts/inline feedback** — ✅ shipped for same-page actions: a
+- **Toasts/inline feedback** — ✅ shipped, including login/logout: a
   ToastProvider (bottom-right stack, auto-dismiss) confirms Experience
-  and Certifications save/delete and the profile display-name edit,
-  success or error. Still open: login success and sign-out, since both
-  trigger a full-page redirect — a toast fired right before navigation
-  would just disappear, and doing it properly needs a
-  sessionStorage-flag-read-on-next-page pattern.
+  and Certifications save/delete, the profile display-name edit, and
+  now sign-in/sign-out too. The latter two survive their full-page
+  redirects via a small `lib/pending-toast.ts` helper — the message is
+  stashed in sessionStorage right before the redirect and consumed
+  once by whichever page mounts next (DashboardShell for sign-in,
+  LoginCard for sign-out), rather than firing right before navigation
+  and immediately vanishing.
 - **Animated skill radar** — ✅ shipped: each of the 8 skill points
   extends individually in a staggered wave (100ms offset, ease-out)
   rather than the whole polygon tweening as one uniform shape, driven

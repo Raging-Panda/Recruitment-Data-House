@@ -5,12 +5,15 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { IPSkillLogo } from "./ipskill-logo";
 import { ArrowRightIcon } from "./icons";
+import { useToast } from "./toast-provider";
+import { setPendingToast, consumePendingToast } from "@/lib/pending-toast";
 
 const DEMO_EMAIL = "admin@admin.com";
 const DEMO_PASSWORD = "1234";
 
 export function LoginCard() {
   const router = useRouter();
+  const showToast = useToast();
   const [testLoginAvailable, setTestLoginAvailable] = useState(false);
   const [demoEmail, setDemoEmail] = useState(DEMO_EMAIL);
   const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
@@ -23,6 +26,18 @@ export function LoginCard() {
       .then((providers) => setTestLoginAvailable(Boolean(providers?.["test-account"])))
       .catch(() => setTestLoginAvailable(false));
   }, []);
+
+  // Catches the toast set by Sidebar right before sign-out redirected here —
+  // a toast fired on that page would just vanish with the navigation.
+  useEffect(() => {
+    const pending = consumePendingToast();
+    if (pending) showToast(pending.message, pending.variant);
+  }, [showToast]);
+
+  function signInWithGithub() {
+    setPendingToast("Signed in with GitHub");
+    signIn("github", { callbackUrl: "/dashboard/profile" });
+  }
 
   async function handleDemoSubmit(e: FormEvent) {
     e.preventDefault();
@@ -37,8 +52,14 @@ export function LoginCard() {
     if (res?.error) {
       setDemoError("Invalid demo credentials.");
     } else {
+      setPendingToast("Viewing the demo profile");
       router.push("/dashboard/profile");
     }
+  }
+
+  function signInAsTestUser() {
+    setPendingToast("Signed in as Test Developer");
+    signIn("test-account", { callbackUrl: "/dashboard/profile" });
   }
 
   return (
@@ -53,7 +74,7 @@ export function LoginCard() {
 
       <div className="mt-8 flex flex-col gap-3">
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
+          onClick={signInWithGithub}
           className="flex items-center justify-center gap-2 rounded-full bg-primary-gradient px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
           Get Started <ArrowRightIcon size={16} />
@@ -68,14 +89,14 @@ export function LoginCard() {
         </button>
 
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
+          onClick={signInWithGithub}
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GithubMark /> Continue with GitHub
         </button>
 
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
+          onClick={signInWithGithub}
           className="rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
         >
           Log in
@@ -83,7 +104,7 @@ export function LoginCard() {
 
         {testLoginAvailable && (
           <button
-            onClick={() => signIn("test-account", { callbackUrl: "/dashboard/profile" })}
+            onClick={signInAsTestUser}
             className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
           >
             Continue as Test User (dev only)

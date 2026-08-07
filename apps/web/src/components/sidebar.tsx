@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { IPSkillLogo } from "./ipskill-logo";
 import { useTheme } from "./theme-provider";
+import { setPendingToast } from "@/lib/pending-toast";
 import {
   HomeIcon,
   PersonIcon,
@@ -129,7 +130,10 @@ export function Sidebar({
           </button>
 
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => {
+              setPendingToast("Signed out");
+              signOut({ callbackUrl: "/" });
+            }}
             className="px-2 text-left text-sm text-text-secondary hover:text-heading"
           >
             Log out — {userName}
