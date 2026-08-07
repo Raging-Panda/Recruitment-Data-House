@@ -410,9 +410,26 @@ scheduled or scoped yet — just a running list to pull from.
 - **Real two-factor authentication** — the Account Security card
   currently shows "Two-Factor Authentication: Enabled" as static
   copy; wire up an actual TOTP/authenticator flow.
-- **Export profile as PDF** — generate a client-shareable PDF summary
-  of a candidate's verified profile and skill fingerprint (pairs well
-  with the shareable-link idea above).
+- **Export profile as PDF** — ✅ shipped: a "Download PDF" button on
+  the Profile page (new "Export Profile" card, next to the share-link
+  card) hits `GET /api/profile/pdf`, which renders a one-page summary
+  — name/headline/location, overall score, the full skill-fingerprint
+  bar chart, top languages, and endorsements — via
+  `@react-pdf/renderer`'s `renderToBuffer`, returned as a real
+  `application/pdf` download. Chose `@react-pdf/renderer` (a
+  React-component-based PDF layout engine) over a headless-browser
+  approach (Puppeteer/Playwright printing an HTML page) specifically
+  to avoid bundling a Chromium binary into the deployment. Unlike
+  every write-gated route in the app, this one is intentionally open
+  to the demo account too — it's read-only, nothing is persisted.
+  Dropped the candidate's avatar photo from the layout after the
+  library's remote-image fetch silently produced a blank space rather
+  than an error — rather than debug that, left it out on purpose: a
+  photo-free skills summary is arguably the better default for a
+  document meant to leave the platform. Verified end-to-end: fetched
+  the real PDF bytes for the demo account, confirmed a valid `%PDF`
+  header, and inspected the rendered page directly — correct layout,
+  correct data, one page.
 - **Role/job matching module** — connect candidate profiles to open
   client roles from the core ATS/CRM (once built) and surface match
   scores based on the skill fingerprint.
