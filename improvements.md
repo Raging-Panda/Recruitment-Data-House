@@ -47,15 +47,16 @@ scheduled or scoped yet — just a running list to pull from.
   "AI Career Recommendations" placeholder.
 - **Developer directory with filters** — ✅ shipped: a searchable
   Developer Directory (location, primary language, minimum skill
-  score, availability) any signed-in dev can browse, with a read-only
-  detail view per developer — the recruiter-facing counterpart to the
-  candidate-facing profile screens. Entries are a cached snapshot
-  (`directory_profiles`, refreshed whenever a candidate visits their
-  own Profile page), not a live GitHub fetch, since we only ever hold
-  the signed-in user's own access token. Still open: no verification-
-  status filter yet (waiting on the candidate-verification layer from
-  `PLAN.md`), and no recruiter-only gating — right now any dev can
-  browse the directory, not just recruiters.
+  score, availability), with a read-only detail view per developer —
+  the recruiter-facing counterpart to the candidate-facing profile
+  screens. Entries are a cached snapshot (`directory_profiles`,
+  refreshed whenever a candidate visits their own Profile page), not a
+  live GitHub fetch, since we only ever hold the signed-in user's own
+  access token. **Update:** now lives inside the premium-gated
+  Recruiter Tools section (`/dashboard/recruiter/*`) rather than being
+  open to every signed-in dev — see "Recruiter Tools is now a separate
+  premium section" below. Still open: no verification-status filter
+  yet (waiting on the candidate-verification layer from `PLAN.md`).
 - **Profile view counter** — ✅ shipped (page-hit version): opening a
   developer's directory entry records a real `profile_views` row
   (self-views excluded), and the Analytics screen's "Profile Views"
@@ -98,6 +99,34 @@ scheduled or scoped yet — just a running list to pull from.
   page → saved-search "Run" → correct filtered Directory results.
   Still open: no "already in this shortlist" checkmark on the Directory
   card itself, and no bulk actions (export shortlist, remove-all).
+  **Update:** now lives inside the premium-gated Recruiter Tools
+  section — see below.
+- **Recruiter Tools is now a separate premium section** — ✅ shipped:
+  the Directory, Shortlists/Saved Searches, and the new Compare view
+  (next bullet) were pulled out of the standard dev-profile sidebar
+  entirely and moved under `/dashboard/recruiter/*`, gated by a single
+  layout (`app/dashboard/recruiter/layout.tsx`) that checks
+  `isPremiumAccount()` and renders a paywall screen in place of the
+  section for anyone not premium. It's reached from one dedicated
+  sidebar card ("Recruiter Tools") rather than being nav items mixed
+  in with Profile/Skills/Projects — clicking it either opens the
+  section (premium) or shows "Upgrade Now" (free). Premium itself is a
+  plain `is_premium` boolean on `candidate_profile`, flipped by a
+  self-serve `/api/premium/upgrade` stub — **there is no real payment
+  processor wired up yet** (Stripe is available as a connector but not
+  authorized in this environment), so "Upgrade Now" just flips the
+  flag for now; swapping in real billing is exactly the "Free vs.
+  Premium tiers" item further down, which this now seeds the mechanism
+  for. The demo account is always premium (so the public showcase
+  shows the full product); the dev-only test account is deliberately
+  NOT auto-premium, so `ALLOW_TEST_LOGIN` can exercise the paywall and
+  the upgrade flow end-to-end. Verified via Playwright: demo account
+  sees "Open Recruiter Tools" and the full section; test account sees
+  the paywall both from the sidebar card and from a direct nav to
+  `/dashboard/recruiter`, and clicking "Upgrade Now" correctly calls
+  the API (fails gracefully with a toast in this sandbox specifically
+  because outbound Supabase calls aren't allow-listed here — not an
+  app bug).
 - **Peer/verified-engineer endorsements** — lightweight skill
   endorsements from other verified developers on the platform, as a
   human signal alongside the automated GitHub-derived fingerprint.
@@ -270,8 +299,21 @@ scheduled or scoped yet — just a running list to pull from.
 - **Push notifications (mobile)** — notify candidates on profile
   views, shortlist activity, and messages via Expo push
   notifications.
-- **Candidate comparison view** — side-by-side skill fingerprints and
-  stats for a recruiter's shortlisted candidates.
+- **Candidate comparison view** — ✅ shipped: a new Compare tab in
+  Recruiter Tools (`/dashboard/recruiter/compare`) shows 2-4 selected
+  candidates side by side — overall score, location, top languages,
+  availability, and a bar-per-category breakdown of the full skill
+  fingerprint (Backend/Frontend/Database/DevOps/Cloud/Problem
+  Solving/Communication/Leadership). Selection happens via a
+  circle-select toggle added to both the Directory and Shortlist
+  candidate cards, with a floating "N selected · Compare" bar that
+  carries the choice into the URL (`?ids=a,b,c`) so the comparison is
+  linkable/shareable. Required extending `directory_profiles` with a
+  `skill_fingerprint` column, synced alongside the rest of the
+  directory row from the candidate's own Profile page visit — the same
+  cached-snapshot constraint as the rest of the Directory (we only
+  ever see a candidate's own most-recent sync, not a live fetch).
+  Verified via Playwright against the demo account's fixture data.
 - **Real two-factor authentication** — the Account Security card
   currently shows "Two-Factor Authentication: Enabled" as static
   copy; wire up an actual TOTP/authenticator flow.
@@ -281,15 +323,17 @@ scheduled or scoped yet — just a running list to pull from.
 - **Role/job matching module** — connect candidate profiles to open
   client roles from the core ATS/CRM (once built) and surface match
   scores based on the skill fingerprint.
-- **Free vs. Premium tiers** — define what's actually gated behind
-  the "Upgrade to Pro" button already sitting in the web sidebar
-  (currently just UI, not wired to anything). Needs: a concrete
-  feature split (e.g. free = basic profile + GitHub skill
-  fingerprint; premium = skill tests, PDF export, Growth Olympics
-  eligibility, priority placement in the recruiter directory),
-  subscription billing (Stripe is already available as a connector
-  but not yet authorized in this environment), and a `plan` field on
-  the user/profile model that every gated feature checks against.
+- **Free vs. Premium tiers** — 🟡 partially shipped: the mechanism now
+  exists (`candidate_profile.is_premium`, `lib/premium.ts`'s
+  `isPremiumAccount()`, and a self-serve `/api/premium/upgrade` stub),
+  and Recruiter Tools (Directory/Shortlists/Compare) is the first
+  feature actually gated behind it — see "Recruiter Tools is now a
+  separate premium section" above. Still needed: real subscription
+  billing (Stripe is already available as a connector but not yet
+  authorized in this environment) to replace the upgrade stub, and the
+  rest of the feature split this item originally called for (skill
+  tests, PDF export, Growth Olympics eligibility, etc. still aren't
+  gated by anything).
 - **Growth Olympics** — a monthly competition among premium users:
   whoever shows the biggest skill-fingerprint/activity growth over
   the month wins a prize (e.g. a R1000 Takealot voucher). Needs
