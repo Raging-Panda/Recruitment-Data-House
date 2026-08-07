@@ -24,6 +24,28 @@ scheduled or scoped yet — just a running list to pull from.
   replaced by their leveled equivalents, so Verified Skills isn't
   empty in the meantime. Next step: author real questions per
   tier/skill, then flip `is_active` on as each is ready.
+- **"Get More Verified Skills" entry point on Profile** — ✅ shipped:
+  a "Verified Skills" card on the Profile page with a button that
+  opens a modal listing every stack in `skill_test_templates`
+  (`lib/skill-test-options.ts` groups all 16 by stack, active or not).
+  Stacks with a live test (currently JavaScript, Python, SQL) are
+  clickable and jump straight to `/dashboard/skills/tests/[slug]`;
+  the other 13 — scaffolded per the difficulty-tier item above but with
+  no question content yet — show as disabled "Coming soon" rather than
+  being hidden, so the modal doubles as an honest preview of what's
+  planned. Available options sort first, then alphabetical. Reuses the
+  same read pattern as the Skills page's own template list
+  (`skill_test_templates` is reference data, read the same way for
+  every account including demo — no fixture needed). Verified the
+  modal's open/close/Escape/backdrop-click mechanics directly; couldn't
+  exercise the live "Available" vs "Coming soon" split against real
+  data in this sandbox specifically because its dev server currently
+  can't reach Supabase at all (confirmed by checking that the
+  already-shipped Skills page shows the same "No skill tests available
+  yet" empty state right now) — not a bug introduced here. Traced the
+  grouping logic by hand against the real table contents (fetched via
+  the Supabase MCP tool, which doesn't go through the dev server) and
+  confirmed it produces the correct 3-available/13-coming-soon split.
 - **Recent project history with GitHub** — ✅ shipped: a "Recent
   Activity" timeline on the Projects page merging commits/PRs/releases
   across the top 6 most active repos into one chronological feed, so
