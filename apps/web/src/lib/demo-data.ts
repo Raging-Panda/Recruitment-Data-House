@@ -19,6 +19,7 @@ import type {
 import { DEMO_GITHUB_ID } from "./demo-mode";
 import { DEFAULT_DIRECTORY_FILTERS } from "./directory-filters";
 import type { RecruiterEngagementSummary } from "./recruiter-engagement";
+import type { PublicProfileLinkStatus } from "./public-profile-link";
 
 const NOW = Date.now();
 const DAY = 24 * 60 * 60 * 1000;
@@ -677,4 +678,17 @@ export const DEMO_RECRUITER_ENGAGEMENT: RecruiterEngagementSummary = {
       timeToFirstViewHours: null,
     },
   ],
+};
+
+/** Display-only — the demo account never writes to real Supabase, so this
+ * token doesn't actually resolve on /p/[token]; it just shows what an
+ * active link looks like on the Profile page. */
+export const DEMO_PUBLIC_LINK_STATUS: PublicProfileLinkStatus = {
+  token: "demo-token",
+  path: "/p/demo-token",
+  createdAt: new Date(NOW - 20 * DAY).toISOString(),
+  expiresAt: new Date(NOW + 70 * DAY).toISOString(),
+  isExpired: false,
+  isRevoked: false,
+  viewCount: 12,
 };

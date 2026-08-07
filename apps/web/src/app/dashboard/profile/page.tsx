@@ -6,15 +6,27 @@ import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { getOnboardingChecklist } from "@/lib/onboarding";
 import { syncDirectoryProfile } from "@/lib/directory";
 import { getEndorsementsFor } from "@/lib/endorsements";
+import { getPublicProfileLinkStatus, type PublicProfileLinkStatus } from "@/lib/public-profile-link";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
-import { DEMO_ENDORSEMENTS } from "@/lib/demo-data";
+import { DEMO_ENDORSEMENTS, DEMO_PUBLIC_LINK_STATUS } from "@/lib/demo-data";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
 import { DisplayNameEditor } from "@/components/display-name-editor";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { EndorsementList } from "@/components/endorsement-list";
+import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
 import type { Endorsement } from "@ipskill/shared";
+
+const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
+  token: null,
+  path: null,
+  createdAt: null,
+  expiresAt: null,
+  isExpired: false,
+  isRevoked: false,
+  viewCount: 0,
+};
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -24,16 +36,24 @@ export default async function ProfilePage() {
   ]);
   const displayName = override?.displayName ?? profile.name;
   const checklist = await getOnboardingChecklist(session!.githubId!, profile, Boolean(override));
+  const isDemo = isDemoAccount(session!.githubId);
 
   let endorsements: Endorsement[] = [];
-  if (isDemoAccount(session!.githubId)) {
+  let linkStatus: PublicProfileLinkStatus = EMPTY_LINK_STATUS;
+  if (isDemo) {
     endorsements = DEMO_ENDORSEMENTS[session!.githubId!] ?? [];
+    linkStatus = DEMO_PUBLIC_LINK_STATUS;
   } else if (!isTestAccount(session!.githubId)) {
     void syncDirectoryProfile(session!.githubId!, displayName, profile, activity, skillFingerprint);
     try {
       endorsements = await getEndorsementsFor(session!.githubId!);
     } catch {
       endorsements = [];
+    }
+    try {
+      linkStatus = await getPublicProfileLinkStatus(session!.githubId!);
+    } catch {
+      linkStatus = EMPTY_LINK_STATUS;
     }
   }
 
@@ -98,6 +118,8 @@ export default async function ProfilePage() {
             Resume upload isn&apos;t wired up yet — coming in a later milestone.
           </p>
         </InfoCard>
+
+        <PublicProfileLinkCard initialStatus={linkStatus} isDemo={isDemo} />
       </div>
 
       <div className="mt-6">
