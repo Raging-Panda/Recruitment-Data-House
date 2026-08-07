@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 
 type ToastVariant = "success" | "error";
 interface Toast {
@@ -18,7 +18,7 @@ const VARIANT_STYLES: Record<ToastVariant, string> = {
   error: "border-accent-red/40 text-accent-red",
 };
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
+export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(0);
 

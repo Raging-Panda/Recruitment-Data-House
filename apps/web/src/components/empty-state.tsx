@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 export function EmptyState({
   icon: Icon,
@@ -10,7 +10,7 @@ export function EmptyState({
   icon: ComponentType<{ size?: number }>;
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   className?: string;
 }) {
   return (

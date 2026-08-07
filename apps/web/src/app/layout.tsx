@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/session-provider-wrapper";
 import { ThemeProvider, ThemeFlashGuard } from "@/components/theme-provider";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   description: "The developer hub for verified, skill-validated tech candidates.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>

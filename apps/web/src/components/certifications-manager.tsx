@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import type { Certification } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
 import { EmptyState } from "@/components/empty-state";
@@ -73,7 +73,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
     setError(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form.name || !form.issuer || !form.issueDate) {
       setError("Name, issuer, and issue date are required.");
@@ -274,7 +274,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-xs text-text-secondary">
       {label}

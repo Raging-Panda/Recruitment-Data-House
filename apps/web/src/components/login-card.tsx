@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { IPSkillLogo } from "./ipskill-logo";
@@ -24,7 +24,7 @@ export function LoginCard() {
       .catch(() => setTestLoginAvailable(false));
   }, []);
 
-  async function handleDemoSubmit(e: React.FormEvent) {
+  async function handleDemoSubmit(e: FormEvent) {
     e.preventDefault();
     setDemoError(null);
     setIsSubmittingDemo(true);
