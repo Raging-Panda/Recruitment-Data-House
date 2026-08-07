@@ -3,13 +3,13 @@ import { Suspense } from "react";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { splitStrengthsAndGaps, sortedSkillEntries, computeLearningMomentum } from "@/lib/analysis";
-import { SkillRadarChart } from "@/components/skill-radar-chart";
-import { CommitTrendChart } from "@/components/commit-trend-chart";
 import { StatTile } from "@/components/stat-tile";
 import { BentoPlaceholder } from "@/components/bento-placeholder";
 import { ProfileViewsStat } from "@/components/profile-views-stat";
 import { NextPositionSuggestionsSection } from "@/components/next-position-suggestions-section";
 import { Skeleton } from "@/components/skeleton";
+import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
+import { CommitTrendChartLazy as CommitTrendChart } from "@/components/commit-trend-chart-lazy";
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);

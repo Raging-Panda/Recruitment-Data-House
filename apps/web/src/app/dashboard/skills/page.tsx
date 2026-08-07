@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
-import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
 import type { SkillTestTemplate, SkillTestAttemptSummary } from "@ipskill/shared";
@@ -10,6 +9,7 @@ import { CodeIcon } from "@/components/icons";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { buildDemoAttemptSummaries } from "@/lib/demo-data";
 import { describeSkillFreshness } from "@/lib/analysis";
+import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
 
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
