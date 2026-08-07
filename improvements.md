@@ -126,6 +126,15 @@ scheduled or scoped yet — just a running list to pull from.
   a pre-existing bug in the process — the ring was previously showing
   the GitHub skill-fingerprint average mislabeled as "Profile
   Completion," a number unrelated to actual profile completeness.
+- **Mobile-responsive web dashboard** — ✅ shipped: the shell was
+  desktop-only (a permanent 256px sidebar, an 80-wide search bar, zero
+  responsive breakpoints on most pages). The sidebar is now an
+  off-canvas drawer below 1024px, opened via a hamburger button in the
+  topbar with a backdrop and auto-close on navigation; row-style cards
+  (Projects, Verified Skills, Experience, Certifications) stack
+  vertically below `sm` instead of squeezing a title and action
+  buttons into one row. Verified at 375/768/1280px with no horizontal
+  overflow at any width.
 
 ## Performance
 
