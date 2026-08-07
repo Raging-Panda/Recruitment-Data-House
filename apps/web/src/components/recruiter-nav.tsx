@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UsersIcon, BookmarkIcon, BarChartIcon, ArrowRightIcon } from "@/components/icons";
+import { UsersIcon, BookmarkIcon, BarChartIcon, EyeIcon, ArrowRightIcon } from "@/components/icons";
 
 const TABS = [
   { href: "/dashboard/recruiter/directory", label: "Directory", icon: UsersIcon },
   { href: "/dashboard/recruiter/shortlists", label: "Shortlists", icon: BookmarkIcon },
   { href: "/dashboard/recruiter/compare", label: "Compare", icon: BarChartIcon },
+  { href: "/dashboard/recruiter/engagement", label: "Engagement", icon: EyeIcon },
 ];
 
 /**
