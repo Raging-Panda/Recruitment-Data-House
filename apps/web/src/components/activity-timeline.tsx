@@ -1,6 +1,7 @@
 import type { RepoActivityEvent } from "@ipskill/shared";
 import { EmptyState } from "@/components/empty-state";
 import { ActivityIcon, TagIcon } from "@/components/icons";
+import { formatRelativeTime } from "@/lib/format";
 
 const TYPE_ICON: Record<RepoActivityEvent["type"], string | null> = {
   commit: "●",
@@ -13,19 +14,6 @@ const TYPE_LABEL: Record<RepoActivityEvent["type"], string> = {
   pull_request: "Pull request",
   release: "Release",
 };
-
-function formatRelativeTime(dateString: string): string {
-  const diffMs = Date.now() - new Date(dateString).getTime();
-  const diffMinutes = Math.round(diffMs / 60_000);
-  if (diffMinutes < 60) return `${Math.max(diffMinutes, 0)}m ago`;
-  const diffHours = Math.round(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.round(diffHours / 24);
-  if (diffDays < 30) return `${diffDays}d ago`;
-  const diffMonths = Math.round(diffDays / 30);
-  if (diffMonths < 12) return `${diffMonths}mo ago`;
-  return `${Math.round(diffMonths / 12)}y ago`;
-}
 
 export function ActivityTimeline({ events }: { events: RepoActivityEvent[] }) {
   if (events.length === 0) {

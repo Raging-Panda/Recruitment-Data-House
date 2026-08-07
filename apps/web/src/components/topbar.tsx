@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { BellIcon, MenuIcon } from "./icons";
+import { MenuIcon } from "./icons";
+import { NotificationsPanel } from "./notifications-panel";
 
 export function Topbar({
   userName,
@@ -26,13 +27,7 @@ export function Topbar({
         className="min-w-0 flex-1 rounded-lg border border-surface-border bg-surface px-4 py-2 text-sm text-heading placeholder:text-text-muted focus:outline-none md:w-80 md:flex-none"
       />
       <div className="flex items-center gap-3 md:gap-4">
-        <button
-          aria-label="Notifications"
-          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary transition hover:text-heading"
-        >
-          <BellIcon />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-pink" />
-        </button>
+        <NotificationsPanel />
         <div className="hidden items-center gap-2 sm:flex">
           {userImage ? (
             <Image

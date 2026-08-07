@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToWorkExperience } from "@/lib/experience";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -59,6 +60,13 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  void createNotification(session.githubId, {
+    type: "experience_added",
+    title: "Experience added",
+    body: `${role} at ${company}`,
+    link: "/dashboard/experience",
+  });
 
   return NextResponse.json({ entry: rowToWorkExperience(data) }, { status: 201 });
 }

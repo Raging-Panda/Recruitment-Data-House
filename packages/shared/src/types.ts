@@ -177,6 +177,22 @@ export interface SkillTestSubmitResult {
   percentage: number;
 }
 
+export type NotificationType =
+  | "experience_added"
+  | "certification_added"
+  | "skill_test_completed"
+  | "welcome";
+
+export interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface AnalyticsSnapshot {
   profileViews: number;
   profileViewsChangePct: number;

@@ -5,7 +5,12 @@ import {
   type SkillTestTemplate,
 } from "@ipskill/shared";
 import type { DeveloperHubData } from "./developer-data";
-import type { WorkExperience, Certification, CandidateProfileOverride } from "@ipskill/shared";
+import type {
+  WorkExperience,
+  Certification,
+  CandidateProfileOverride,
+  NotificationItem,
+} from "@ipskill/shared";
 import { DEMO_GITHUB_ID } from "./demo-mode";
 
 const NOW = Date.now();
@@ -334,3 +339,48 @@ export function buildDemoAttemptSummaries(
   });
   return summaries;
 }
+
+/**
+ * Not backed by the notifications table — the demo account's write routes
+ * are all blocked, so it would never generate a real one. Mark-as-read for
+ * these is a harmless client-side-only no-op (see the API routes), which is
+ * fine since this inbox is meant to look lived-in, not to persist per-visitor.
+ */
+export const DEMO_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: "demo-notif-1",
+    type: "skill_test_completed",
+    title: "Scored 94% on a Verified Skills test",
+    body: "Nice work — that puts you in the top tier for this stack.",
+    link: "/dashboard/skills",
+    isRead: false,
+    createdAt: new Date(NOW - 1 * DAY).toISOString(),
+  },
+  {
+    id: "demo-notif-2",
+    type: "certification_added",
+    title: "Certification added",
+    body: "AWS Certified Solutions Architect – Professional",
+    link: "/dashboard/certifications",
+    isRead: false,
+    createdAt: new Date(NOW - 3 * DAY).toISOString(),
+  },
+  {
+    id: "demo-notif-3",
+    type: "experience_added",
+    title: "Experience added",
+    body: "Senior Backend Engineer at Yoco",
+    link: "/dashboard/experience",
+    isRead: true,
+    createdAt: new Date(NOW - 10 * DAY).toISOString(),
+  },
+  {
+    id: "demo-notif-4",
+    type: "welcome",
+    title: "Welcome to IPSkill",
+    body: "Your developer hub is set up — explore your skill fingerprint, projects, and verified tests.",
+    link: "/dashboard/profile",
+    isRead: true,
+    createdAt: new Date(NOW - 40 * DAY).toISOString(),
+  },
+];
