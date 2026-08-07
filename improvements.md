@@ -86,12 +86,26 @@ scheduled or scoped yet — just a running list to pull from.
 - **Contribution activity heatmap** — GitHub-style calendar heatmap
   on the profile, giving an at-a-glance consistency signal that's
   easier to scan than the weekly commit-count chart.
-- **GitHub data caching/refresh layer** — cache aggregated GitHub API
-  results (with periodic or webhook-triggered refresh) instead of
-  recomputing language/PR/issue stats on every page load — needed
-  before this scales past a handful of users, since the current
-  scaffold hits GitHub's REST/Search API directly per request and
-  will run into rate limits.
+- **GitHub data caching/refresh layer** — ✅ shipped: `loadDeveloperHubData`
+  and `loadProjectActivityTimeline` are now read-through cached in a
+  new `github_data_cache` table (`lib/github-cache.ts`), keyed by
+  `<github_id>:<kind>`. Before this, every one of the four dashboard
+  pages (Profile, Skills, Projects, Analytics) independently triggered
+  the full GitHub fan-out on its own — up to ~30 REST/Search calls for
+  the hub summary (`/user`, `/user/repos`, per-repo languages, PR/issue
+  search, events) plus ~18 more for the Projects timeline
+  (commits/PRs/releases across 6 repos) — meaning simply clicking
+  between dashboard pages repeatedly re-paid that cost per user. Hub
+  data gets a 10-minute TTL (feels stale fastest — skills/score change
+  often), the timeline gets 30 minutes (much more expensive to rebuild,
+  less need to be second-to-second fresh). A cache miss/expiry falls
+  through to a live fetch and repopulates the row; any Supabase error
+  degrades to a live fetch rather than breaking the page. Demo/test
+  accounts bypass the cache entirely since they never hit GitHub.
+  Still open: no manual "refresh now" action yet, and this is still
+  per-request REST calls on a miss rather than GraphQL batching (see
+  "Fewer GitHub round-trips" below) — the cache reduces call *volume*,
+  it doesn't reduce the cost of a single cold fetch.
 - **Recruiter-side profile engagement dashboard** — the inverse of
   the candidate's own Analytics screen: which of a recruiter's
   shortlisted/contacted candidates are most engaged, response rates,
