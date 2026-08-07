@@ -140,9 +140,28 @@ scheduled or scoped yet — just a running list to pull from.
   in this sandbox specifically because outbound Supabase calls aren't
   allow-listed here — not an app bug); a demo-account request straight
   to `/api/premium/set-plan` correctly 403s.
-- **Peer/verified-engineer endorsements** — lightweight skill
-  endorsements from other verified developers on the platform, as a
-  human signal alongside the automated GitHub-derived fingerprint.
+- **Peer/verified-engineer endorsements** — ✅ shipped: a new
+  `endorsements` table (endorser/endorsee/skill_category/comment,
+  unique per endorser+endorsee+skill, self-endorsement blocked by a
+  DB check constraint) backs a lightweight "endorse a skill category"
+  flow: from a candidate's Directory detail page, any other signed-in
+  dev can endorse one of their skill categories with an optional
+  comment. Endorsements show up read-only on the endorsee's own
+  Profile page and on their Directory detail page, and fire a
+  notification (`endorsement_received`) to the endorsee. Endorser
+  display info (name/avatar) is resolved from `directory_profiles` at
+  read time rather than stored on the row, so it stays current and
+  degrades to "A verified developer" if the endorser has no directory
+  snapshot yet. "Verified" here just means "another real signed-in
+  account" — there's no separate identity-verification layer yet (see
+  `PLAN.md`). Because giving an endorsement currently rides on the
+  Directory detail page, it inherits that page's premium-recruiter
+  gate — genuinely open peer endorsement (any dev endorsing any other
+  dev, not just recruiters browsing the Directory) isn't possible
+  until candidates can view each other's profiles outside Recruiter
+  Tools. Demo account: read-only, two canned endorsements (on the demo
+  persona and on one seed candidate); the endorse form is hidden
+  entirely for demo (can't write). Verified via Playwright.
 - **Shareable public profile link** — a candidate-controlled,
   revocable link (or PDF export) they can send directly to a client
   outside the platform, with an expiry and view-count on the link
@@ -170,13 +189,34 @@ scheduled or scoped yet — just a running list to pull from.
   per-request REST calls on a miss rather than GraphQL batching (see
   "Fewer GitHub round-trips" below) — the cache reduces call *volume*,
   it doesn't reduce the cost of a single cold fetch.
-- **Recruiter-side profile engagement dashboard** — the inverse of
-  the candidate's own Analytics screen: which of a recruiter's
-  shortlisted/contacted candidates are most engaged, response rates,
-  time-to-first-view after shortlisting, etc.
-- **Skill freshness indicator** — flag when a listed skill hasn't
-  shown up in recent activity (e.g. "Python — last used 2019") so the
-  fingerprint reflects current ability, not just historical totals.
+- **Recruiter-side profile engagement dashboard** — ✅ shipped: a new
+  "Engagement" tab in Recruiter Tools (`/dashboard/recruiter/engagement`,
+  `lib/recruiter-engagement.ts`) is the inverse of the candidate's own
+  Analytics screen — for the signed-in recruiter, it shows every
+  candidate across all their shortlists with view count, first/last
+  viewed date, and time-to-first-view after shortlisting, plus summary
+  stat tiles (total shortlisted, % viewed at least once, average time
+  to first view). Built entirely from data already tracked —
+  `shortlist_candidates.added_at` joined against `profile_views` rows
+  where the recruiter is the viewer — no new tables needed. Still
+  open: "response rates" from the original ask can't exist until real
+  in-app messaging replaces the current "contacting isn't wired up
+  yet" placeholder, since there's no "contacted" event to measure a
+  response against. Verified via Playwright against demo fixture data
+  (4 shortlisted candidates, 3 viewed, 75%, 11h avg time-to-first-view
+  — all matching the seeded numbers).
+- **Skill freshness indicator** — ✅ shipped: `buildLanguageBreakdown`
+  now tracks, per language, the most recent `updated_at` among repos
+  containing it (a repo-level proxy for "last used" — GitHub doesn't
+  expose per-language commit dates cheaply), exposed as
+  `LanguageBreakdownEntry.lastUsedAt`. The Skills page's Language
+  Breakdown now shows a caption per language
+  (`lib/analysis.ts`'s `describeSkillFreshness`) — "Used this month",
+  "Last used N months ago", or, once past a year, an amber ⚠ "Last
+  used 2024 — 1 yr ago" warning so the fingerprint reads as current
+  ability, not historical totals. Verified via Playwright with a
+  deliberately-stale fixture (Terraform, ~600 days) correctly flagged
+  while fresher languages show plain unstyled captions.
 - **Verification badges on the public profile** — once the
   candidate-verification layer from `PLAN.md` exists, surface exactly
   which checks passed (ID, qualification, employment history) as
@@ -291,10 +331,23 @@ scheduled or scoped yet — just a running list to pull from.
   `useEffect` fetch in `use-developer-hub-data.ts` with React
   Query/SWR so data is cached, revalidated in the background, and
   doesn't re-fetch from scratch on every screen focus.
-- **Streaming/suspense on web** — use Next.js streaming so the
-  dashboard shell (sidebar, topbar) renders immediately while GitHub
-  data for the page body streams in, instead of blocking the whole
-  route on `loadDeveloperHubData`.
+- **Streaming/suspense on web** — ✅ mostly already shipped, now
+  extended: the shell-vs-body split this item describes already exists
+  for every GitHub-data-heavy route (Profile, Skills, Projects,
+  Analytics) via each route's `loading.tsx` — Next's automatic
+  per-segment Suspense boundary — see "Loading states" above, which is
+  the same mechanism under a different heading. What this pass added
+  is *finer-grained* streaming *within* a page: the Analytics page's
+  two sections that need an extra fetch beyond the core
+  `loadDeveloperHubData` result (Next Position Suggestions needs
+  `work_experience`; the Profile Views stat needs `profile_views`) are
+  now separate async Server Components
+  (`NextPositionSuggestionsSection`, `ProfileViewsStat`) each in their
+  own `<Suspense>` with a lightweight skeleton fallback, so the rest of
+  the page — radar chart, category breakdown, strengths/gaps, growth
+  trend — no longer waits on those two extra round trips to appear.
+  Verified via Playwright that both sections still render correctly
+  under Suspense.
 - **Trim the skills bundle** — `recharts` alone accounts for ~94KB of
   the Skills page's first-load JS; either code-split it behind a
   dynamic import or swap it for a lighter/custom radar renderer like
