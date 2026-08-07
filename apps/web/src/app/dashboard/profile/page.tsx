@@ -7,6 +7,7 @@ import { getOnboardingChecklist } from "@/lib/onboarding";
 import { syncDirectoryProfile } from "@/lib/directory";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { getPublicProfileLinkStatus, type PublicProfileLinkStatus } from "@/lib/public-profile-link";
+import { getSkillTestOptions, type SkillTestOption } from "@/lib/skill-test-options";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
 import { DEMO_ENDORSEMENTS, DEMO_PUBLIC_LINK_STATUS } from "@/lib/demo-data";
@@ -17,6 +18,7 @@ import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { EndorsementList } from "@/components/endorsement-list";
 import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
 import { ContributionHeatmap } from "@/components/contribution-heatmap";
+import { GetVerifiedSkillButton } from "@/components/get-verified-skill-modal";
 import { buttonClass } from "@/lib/button-styles";
 import type { ContributionDay, Endorsement } from "@ipskill/shared";
 
@@ -68,6 +70,13 @@ export default async function ProfilePage() {
     );
   } catch {
     contributionDays = [];
+  }
+
+  let skillTestOptions: SkillTestOption[] = [];
+  try {
+    skillTestOptions = await getSkillTestOptions();
+  } catch {
+    skillTestOptions = [];
   }
 
   return (
@@ -146,6 +155,16 @@ export default async function ProfilePage() {
           >
             Download PDF
           </a>
+        </InfoCard>
+
+        <InfoCard title="Verified Skills">
+          <p className="pt-1 text-sm text-text-muted">
+            Add another language or framework to your Verified Skills — a proctored-free knowledge
+            check, separate from your GitHub-derived fingerprint.
+          </p>
+          <div className="mt-2">
+            <GetVerifiedSkillButton options={skillTestOptions} />
+          </div>
         </InfoCard>
       </div>
 
