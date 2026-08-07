@@ -109,17 +109,23 @@ scheduled or scoped yet — just a running list to pull from.
   trigger a full-page redirect — a toast fired right before navigation
   would just disappear, and doing it properly needs a
   sessionStorage-flag-read-on-next-page pattern.
-- **Animated skill radar** — animate the radar chart filling in on
-  first load and transitioning when the underlying data refreshes,
-  rather than snapping straight to final values.
+- **Animated skill radar** — ✅ shipped: the fingerprint now animates
+  in from the center (900ms, ease-out) on load instead of snapping to
+  final values. Still open: an explicit re-animation on data refresh,
+  since the chart currently only re-renders when its data prop changes
+  and there's no live-refresh trigger yet to test that path against.
 - **Design token audit** — the web (Tailwind config) and mobile
   (theme/index.ts) color/spacing tokens are hand-duplicated from
   `packages/shared`'s theme values; tighten this so both platforms
   visibly drift less over time as the palette evolves.
-- **Actionable onboarding checklist** — turn the Profile Completion
-  ring into a real checklist ("Connect GitHub ✓", "Add a bio",
-  "Run a skill test") with links straight to the missing step, like
-  LinkedIn's profile-completion nudges.
+- **Actionable onboarding checklist** — ✅ shipped: the Profile
+  Completion ring is now driven by a real six-item checklist (Connect
+  GitHub, set a display name, add a GitHub bio, add work experience,
+  add a certification, run a skill test), rendered below the ring with
+  each unfinished item linking straight to where to complete it. Fixes
+  a pre-existing bug in the process — the ring was previously showing
+  the GitHub skill-fingerprint average mislabeled as "Profile
+  Completion," a number unrelated to actual profile completeness.
 
 ## Performance
 
