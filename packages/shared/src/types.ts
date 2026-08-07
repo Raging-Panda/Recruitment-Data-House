@@ -123,6 +123,31 @@ export type CertificationInput = Omit<
   "id" | "githubId" | "createdAt" | "updatedAt"
 >;
 
+/** Nine-tier difficulty ladder. Existing single-tier templates (predating
+ * this scaffold) have `level: null` and sit outside the ladder entirely. */
+export type SkillTestLevel =
+  | "beginner_1"
+  | "beginner_2"
+  | "beginner_3"
+  | "intermediate_1"
+  | "intermediate_2"
+  | "intermediate_3"
+  | "advanced_1"
+  | "advanced_2"
+  | "advanced_3";
+
+export const SKILL_TEST_LEVEL_LABELS: Record<SkillTestLevel, string> = {
+  beginner_1: "Beginner 1",
+  beginner_2: "Beginner 2",
+  beginner_3: "Beginner 3",
+  intermediate_1: "Intermediate 1",
+  intermediate_2: "Intermediate 2",
+  intermediate_3: "Intermediate 3",
+  advanced_1: "Advanced 1",
+  advanced_2: "Advanced 2",
+  advanced_3: "Advanced 3",
+};
+
 export interface SkillTestTemplate {
   id: string;
   slug: string;
@@ -131,6 +156,11 @@ export interface SkillTestTemplate {
   description: string;
   timeLimitSeconds: number;
   questionCount: number;
+  /** Null for the original single-tier "Fundamentals" templates. */
+  level: SkillTestLevel | null;
+  levelOrder: number | null;
+  /** Content-authoring target for this tier — not enforced, questionCount is the real count. */
+  targetQuestionCount: number | null;
 }
 
 /** Deliberately has no correct-answer field — this is the shape served to candidates. */
