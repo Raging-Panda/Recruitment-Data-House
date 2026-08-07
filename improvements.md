@@ -12,6 +12,18 @@ scheduled or scoped yet — just a running list to pull from.
   fingerprint. Deliberately not a real coding/execution sandbox; the
   plan is to migrate to a third-party assessment vendor (see below)
   once the app is earning revenue to justify the per-candidate cost.
+  **Difficulty tiers scaffolded, content not yet written**: a 9-tier
+  ladder (Beginner 1-3, Intermediate 1-3, Advanced 1-3) exists as
+  `is_active=false` placeholder rows across 16 skills (Python, Go,
+  Vue, C#, AWS, Azure, JavaScript/TypeScript, SQL, Docker &
+  Kubernetes, Java, Acumatica, HubSpot, ClickUp, HTML, CSS, PHP) —
+  144 template rows total, each tagged with a `target_question_count`
+  (5 at Beginner 1 up to 9 at Advanced 3) as a guide for whoever
+  writes the actual questions. The original 3 single-tier
+  "Fundamentals" tests (JavaScript, Python, SQL) stay active until
+  replaced by their leveled equivalents, so Verified Skills isn't
+  empty in the meantime. Next step: author real questions per
+  tier/skill, then flip `is_active` on as each is ready.
 - **Recent project history with GitHub** — ✅ shipped: a "Recent
   Activity" timeline on the Projects page merging commits/PRs/releases
   across the top 6 most active repos into one chronological feed, so
