@@ -145,8 +145,8 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
             key={entry.id}
             className="rounded-2xl border border-surface-border bg-background-elevated p-5"
           >
-            <div className="flex items-start justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-heading">{entry.role}</h3>
                 <p className="text-sm text-text-secondary">
                   {entry.company}
@@ -159,7 +159,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                   <p className="mt-2 text-sm text-text-secondary">{entry.description}</p>
                 )}
               </div>
-              <div className="flex gap-3 text-xs">
+              <div className="flex shrink-0 gap-3 text-xs">
                 <button
                   onClick={() => startEdit(entry)}
                   className="text-primary hover:underline"

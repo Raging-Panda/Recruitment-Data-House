@@ -26,10 +26,10 @@ export default async function ProjectsPage() {
             href={project.url}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-between rounded-xl border border-surface-border bg-background-elevated p-4 transition hover:border-primary"
+            className="flex flex-col gap-3 rounded-xl border border-surface-border bg-background-elevated p-4 transition hover:border-primary sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-semibold text-heading">{project.name}</h3>
                 <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] uppercase text-text-secondary">
                   {project.category}
@@ -42,7 +42,7 @@ export default async function ProjectsPage() {
                 <p className="mt-1 text-xs text-text-muted">{project.description}</p>
               )}
             </div>
-            <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <div className="flex shrink-0 items-center gap-4 text-sm text-text-secondary">
               <span className="flex items-center gap-1">
                 <StarIcon size={14} /> {project.stars}
               </span>

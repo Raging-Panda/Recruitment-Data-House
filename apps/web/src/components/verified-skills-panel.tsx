@@ -43,10 +43,10 @@ export function VerifiedSkillsPanel({
         return (
           <div
             key={template.id}
-            className="flex items-center justify-between rounded-2xl border border-surface-border bg-background-elevated p-5"
+            className="flex flex-col gap-3 rounded-2xl border border-surface-border bg-background-elevated p-5 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-semibold text-heading">{template.title}</h3>
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
                   {badge.label}

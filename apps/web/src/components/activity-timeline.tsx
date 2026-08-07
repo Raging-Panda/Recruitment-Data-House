@@ -52,7 +52,7 @@ export function ActivityTimeline({ events }: { events: RepoActivityEvent[] }) {
             rel="noreferrer"
             className="block rounded-lg p-1 hover:bg-surface"
           >
-            <div className="flex items-center gap-2 text-xs text-text-muted">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
               <span className="font-semibold text-text-secondary">{event.repoName}</span>
               <span>·</span>
               <span>{TYPE_LABEL[event.type]}</span>

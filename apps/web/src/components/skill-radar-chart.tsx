@@ -20,7 +20,7 @@ export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint
 
   return (
     <ResponsiveContainer width="100%" height={360}>
-      <RadarChart data={data} outerRadius="62%" margin={{ top: 16, right: 32, bottom: 16, left: 32 }}>
+      <RadarChart data={data} outerRadius="55%" margin={{ top: 16, right: 40, bottom: 16, left: 40 }}>
         <PolarGrid stroke={themeColor.surfaceBorder} />
         <PolarAngleAxis dataKey="category" tick={{ fill: themeColor.textSecondary, fontSize: 11 }} />
         <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />

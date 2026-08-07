@@ -147,6 +147,25 @@ export function ArrowRightIcon(props: IconProps) {
   );
 }
 
+export function MenuIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </Base>
+  );
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m5 5 14 14" />
+      <path d="m19 5-14 14" />
+    </Base>
+  );
+}
+
 export function CheckCircleIcon(props: IconProps) {
   return (
     <Base {...props}>
