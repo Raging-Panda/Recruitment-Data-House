@@ -11,12 +11,14 @@ import {
   type TemplateRow,
 } from "@/lib/skill-tests";
 import type { SkillTestStartResponse } from "@ipskill/shared";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 
 export async function POST(_req: Request, { params }: { params: { templateId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const supabase = getSupabaseAdmin();
 

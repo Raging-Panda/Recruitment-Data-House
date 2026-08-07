@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCandidateProfileOverride } from "@/lib/candidate-profile";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,7 @@ export async function PUT(req: NextRequest) {
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const body = await req.json();
   const displayName = typeof body?.displayName === "string" ? body.displayName.trim() : "";

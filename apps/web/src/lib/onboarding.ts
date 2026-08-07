@@ -1,5 +1,6 @@
 import type { DeveloperProfile } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { isDemoAccount } from "@/lib/demo-mode";
 
 export interface OnboardingItem {
   id: string;
@@ -25,33 +26,39 @@ export async function getOnboardingChecklist(
   profile: DeveloperProfile,
   hasDisplayNameOverride: boolean
 ): Promise<OnboardingChecklist> {
-  let hasExperience = false;
-  let hasCertification = false;
-  let hasSkillTest = false;
+  // The demo account's experience/certifications/skill-test data is
+  // hardcoded (see demo-data.ts), not in Supabase, so its checklist is
+  // hardcoded to fully-done rather than querying tables it has no rows in.
+  const isDemo = isDemoAccount(githubId);
+  let hasExperience = isDemo;
+  let hasCertification = isDemo;
+  let hasSkillTest = isDemo;
 
-  try {
-    const supabase = getSupabaseAdmin();
-    const [{ count: experienceCount }, { count: certificationCount }, { count: skillTestCount }] =
-      await Promise.all([
-        supabase
-          .from("work_experience")
-          .select("*", { count: "exact", head: true })
-          .eq("github_id", githubId),
-        supabase
-          .from("certifications")
-          .select("*", { count: "exact", head: true })
-          .eq("github_id", githubId),
-        supabase
-          .from("skill_test_attempts")
-          .select("*", { count: "exact", head: true })
-          .eq("github_id", githubId)
-          .not("percentage", "is", null),
-      ]);
-    hasExperience = (experienceCount ?? 0) > 0;
-    hasCertification = (certificationCount ?? 0) > 0;
-    hasSkillTest = (skillTestCount ?? 0) > 0;
-  } catch {
-    // leave the three manually-entered steps as not-done rather than throwing
+  if (!isDemo) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const [{ count: experienceCount }, { count: certificationCount }, { count: skillTestCount }] =
+        await Promise.all([
+          supabase
+            .from("work_experience")
+            .select("*", { count: "exact", head: true })
+            .eq("github_id", githubId),
+          supabase
+            .from("certifications")
+            .select("*", { count: "exact", head: true })
+            .eq("github_id", githubId),
+          supabase
+            .from("skill_test_attempts")
+            .select("*", { count: "exact", head: true })
+            .eq("github_id", githubId)
+            .not("percentage", "is", null),
+        ]);
+      hasExperience = (experienceCount ?? 0) > 0;
+      hasCertification = (certificationCount ?? 0) > 0;
+      hasSkillTest = (skillTestCount ?? 0) > 0;
+    } catch {
+      // leave the three manually-entered steps as not-done rather than throwing
+    }
   }
 
   const items: OnboardingItem[] = [

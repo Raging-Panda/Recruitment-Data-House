@@ -3,12 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToWorkExperience } from "@/lib/experience";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const body = await req.json();
   const { company, role, location, startDate, endDate, isCurrent, description } = body ?? {};
@@ -43,6 +45,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const { error } = await getSupabaseAdmin()
     .from("work_experience")

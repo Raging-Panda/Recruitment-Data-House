@@ -7,6 +7,8 @@ import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } f
 import type { SkillTestTemplate, SkillTestAttemptSummary } from "@ipskill/shared";
 import { VerifiedSkillsPanel } from "@/components/verified-skills-panel";
 import { CodeIcon } from "@/components/icons";
+import { isDemoAccount } from "@/lib/demo-mode";
+import { buildDemoAttemptSummaries } from "@/lib/demo-data";
 
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
@@ -21,12 +23,17 @@ export default async function SkillsPage() {
   let summaries = new Map<string, SkillTestAttemptSummary>();
   try {
     const supabase = getSupabaseAdmin();
-    const [{ data: templateRows }, { data: attemptRows }] = await Promise.all([
+    const isDemo = isDemoAccount(session!.githubId);
+    const [{ data: templateRows }, attemptRows] = await Promise.all([
       supabase.from("skill_test_templates").select("*, skill_test_questions(count)").eq("is_active", true).order("stack"),
-      supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),
+      isDemo
+        ? Promise.resolve({ data: [] as AttemptRow[] })
+        : supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),
     ]);
     templates = (templateRows as TemplateRow[] | null)?.map(rowToTemplate) ?? [];
-    summaries = summarizeAttempts((attemptRows as AttemptRow[]) ?? []);
+    summaries = isDemo
+      ? buildDemoAttemptSummaries(templates)
+      : summarizeAttempts((attemptRows.data as AttemptRow[]) ?? []);
   } catch {
     // leave templates/summaries empty — VerifiedSkillsPanel handles zero templates
   }

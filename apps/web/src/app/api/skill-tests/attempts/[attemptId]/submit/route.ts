@@ -4,12 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAttemptExpired, type AttemptRow, type QuestionRow, type TemplateRow } from "@/lib/skill-tests";
 import type { SkillTestSubmitResult } from "@ipskill/shared";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 
 export async function POST(req: NextRequest, { params }: { params: { attemptId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const supabase = getSupabaseAdmin();
 

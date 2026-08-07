@@ -1,5 +1,7 @@
 import type { CandidateProfileOverride } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { isDemoAccount } from "@/lib/demo-mode";
+import { DEMO_PROFILE_OVERRIDE } from "@/lib/demo-data";
 
 interface CandidateProfileRow {
   github_id: string;
@@ -18,6 +20,8 @@ function rowToOverride(row: CandidateProfileRow): CandidateProfileOverride {
 export async function getCandidateProfileOverride(
   githubId: string
 ): Promise<CandidateProfileOverride | null> {
+  if (isDemoAccount(githubId)) return DEMO_PROFILE_OVERRIDE;
+
   const { data, error } = await getSupabaseAdmin()
     .from("candidate_profile")
     .select("*")

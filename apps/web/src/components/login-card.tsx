@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { IPSkillLogo } from "./ipskill-logo";
 import { ArrowRightIcon } from "./icons";
 
+const DEMO_EMAIL = "admin@admin.com";
+const DEMO_PASSWORD = "1234";
+
 export function LoginCard() {
+  const router = useRouter();
   const [testLoginAvailable, setTestLoginAvailable] = useState(false);
+  const [demoEmail, setDemoEmail] = useState(DEMO_EMAIL);
+  const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
+  const [demoError, setDemoError] = useState<string | null>(null);
+  const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/providers")
@@ -14,6 +23,23 @@ export function LoginCard() {
       .then((providers) => setTestLoginAvailable(Boolean(providers?.["test-account"])))
       .catch(() => setTestLoginAvailable(false));
   }, []);
+
+  async function handleDemoSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setDemoError(null);
+    setIsSubmittingDemo(true);
+    const res = await signIn("demo-account", {
+      email: demoEmail,
+      password: demoPassword,
+      redirect: false,
+    });
+    setIsSubmittingDemo(false);
+    if (res?.error) {
+      setDemoError("Invalid demo credentials.");
+    } else {
+      router.push("/dashboard/profile");
+    }
+  }
 
   return (
     <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-background-elevated p-8 text-center">
@@ -64,6 +90,40 @@ export function LoginCard() {
           </button>
         )}
       </div>
+
+      <div className="mt-6 flex items-center gap-3 text-[11px] uppercase tracking-widest text-text-muted">
+        <div className="h-px flex-1 bg-surface-border" />
+        View a demo profile
+        <div className="h-px flex-1 bg-surface-border" />
+      </div>
+
+      <form onSubmit={handleDemoSubmit} className="mt-4 flex flex-col gap-2 text-left">
+        <input
+          type="email"
+          value={demoEmail}
+          onChange={(e) => setDemoEmail(e.target.value)}
+          placeholder="admin@admin.com"
+          className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
+        />
+        <input
+          type="password"
+          value={demoPassword}
+          onChange={(e) => setDemoPassword(e.target.value)}
+          placeholder="1234"
+          className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
+        />
+        {demoError && <p className="text-xs text-accent-red">{demoError}</p>}
+        <button
+          type="submit"
+          disabled={isSubmittingDemo}
+          className="rounded-full border border-primary/40 px-4 py-3 text-sm font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
+        >
+          {isSubmittingDemo ? "Loading demo…" : "View Demo Profile"}
+        </button>
+        <p className="text-center text-xs text-text-muted">
+          Prefilled with the public demo login — a fully populated proof-of-concept profile.
+        </p>
+      </form>
     </div>
   );
 }

@@ -16,6 +16,8 @@ import {
 } from "@ipskill/shared";
 import { TEST_ACCESS_TOKEN } from "./test-mode";
 import { buildMockDeveloperHubData, buildMockActivityTimeline } from "./mock-developer-data";
+import { DEMO_ACCESS_TOKEN } from "./demo-mode";
+import { buildDemoDeveloperHubData, buildDemoActivityTimeline } from "./demo-data";
 
 export interface DeveloperHubData {
   profile: DeveloperProfile;
@@ -27,6 +29,7 @@ export interface DeveloperHubData {
 
 export async function loadDeveloperHubData(accessToken: string): Promise<DeveloperHubData> {
   if (accessToken === TEST_ACCESS_TOKEN) return buildMockDeveloperHubData();
+  if (accessToken === DEMO_ACCESS_TOKEN) return buildDemoDeveloperHubData();
 
   const [user, repos] = await Promise.all([
     fetchGithubUser(accessToken),
@@ -97,6 +100,7 @@ export async function loadDeveloperHubData(accessToken: string): Promise<Develop
  */
 export async function loadProjectActivityTimeline(accessToken: string) {
   if (accessToken === TEST_ACCESS_TOKEN) return buildMockActivityTimeline();
+  if (accessToken === DEMO_ACCESS_TOKEN) return buildDemoActivityTimeline();
 
   const repos = await fetchGithubRepos(accessToken);
   return buildActivityTimeline(accessToken, repos);

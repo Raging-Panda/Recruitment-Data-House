@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToWorkExperience } from "@/lib/experience";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const body = await req.json();
   const { company, role, location, startDate, endDate, isCurrent, description } = body ?? {};
