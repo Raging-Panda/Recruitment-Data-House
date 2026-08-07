@@ -73,9 +73,31 @@ scheduled or scoped yet — just a running list to pull from.
 - **GitLab / Bitbucket connectors** — extend the GitHub-only data
   source to cover SA enterprise/.NET devs who live on those
   platforms instead (already flagged as V2 in `PLAN.md`).
-- **Recruiter shortlists & saved searches** — let recruiters save
-  candidates into named lists per role, and save filter combinations
-  as alerts that notify them when a new matching profile appears.
+- **Recruiter shortlists & saved searches** — ✅ shipped: a new
+  Shortlists page (`shortlists`, `shortlist_candidates`,
+  `saved_searches`, `saved_search_matches` tables) lets any signed-in
+  user bookmark Directory candidates into named lists (via a bookmark
+  button on each card, with inline "create a new list" support) and
+  save the current Directory filter combination by name. Saved
+  searches have a "Run" link that deep-links back into the Directory
+  with those filters pre-applied (`DirectoryBrowser` now accepts
+  `initialFilters`, parsed from the Directory page's URL query
+  params). The matching/notify half is real, not just a re-run
+  button: whenever a candidate's directory profile syncs (on their own
+  Profile page visit), `notifySavedSearchMatches` checks every other
+  user's saved searches with the exact same filter logic the browser
+  uses (`matchesDirectoryFilters`, extracted once and shared by both),
+  and creates a notification for the owner of each newly-matching
+  search — a `saved_search_matches` dedupe ledger (unique on
+  `(saved_search_id, candidate_github_id)`) means a candidate
+  revisiting their own profile never re-notifies the same recruiter
+  twice for the same match. Demo account shows two canned shortlists
+  and two canned saved searches (read-only, writes correctly 403
+  "shared demo account" like every other demo write path). Verified
+  end-to-end via Playwright: bookmark → create-list → shortlist detail
+  page → saved-search "Run" → correct filtered Directory results.
+  Still open: no "already in this shortlist" checkmark on the Directory
+  card itself, and no bulk actions (export shortlist, remove-all).
 - **Peer/verified-engineer endorsements** — lightweight skill
   endorsements from other verified developers on the platform, as a
   human signal alongside the automated GitHub-derived fingerprint.
