@@ -95,7 +95,7 @@ export async function notifySavedSearchMatches(candidate: DirectoryEntry): Promi
             type: "saved_search_match",
             title: `New match for "${s.name}"`,
             body: `${candidate.displayName} now matches your saved search.`,
-            link: `/dashboard/directory/${candidate.githubId}`,
+            link: `/dashboard/recruiter/directory/${candidate.githubId}`,
           })
         )
     );

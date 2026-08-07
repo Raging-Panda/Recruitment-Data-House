@@ -1,4 +1,9 @@
-import type { DeveloperProfile, DeveloperActivitySummary, DirectoryEntry } from "@ipskill/shared";
+import type {
+  DeveloperProfile,
+  DeveloperActivitySummary,
+  DirectoryEntry,
+  SkillFingerprint,
+} from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { notifySavedSearchMatches } from "@/lib/saved-searches";
 
@@ -14,6 +19,7 @@ export interface DirectoryRow {
   available_for_opportunities: boolean;
   about: string | null;
   last_active_at: string;
+  skill_fingerprint: SkillFingerprint;
 }
 
 export function rowToDirectoryEntry(row: DirectoryRow): DirectoryEntry {
@@ -29,6 +35,7 @@ export function rowToDirectoryEntry(row: DirectoryRow): DirectoryEntry {
     availableForOpportunities: row.available_for_opportunities,
     about: row.about,
     lastActiveAt: row.last_active_at,
+    skillFingerprint: row.skill_fingerprint,
   };
 }
 
@@ -42,7 +49,8 @@ export async function syncDirectoryProfile(
   githubId: string,
   displayName: string,
   profile: DeveloperProfile,
-  activity: DeveloperActivitySummary
+  activity: DeveloperActivitySummary,
+  skillFingerprint: SkillFingerprint
 ): Promise<void> {
   try {
     const topLanguages = activity.languageBreakdown.slice(0, 3).map((l) => l.language);
@@ -58,6 +66,7 @@ export async function syncDirectoryProfile(
       availableForOpportunities: profile.availableForOpportunities,
       about: profile.about,
       lastActiveAt: new Date().toISOString(),
+      skillFingerprint,
     };
     await getSupabaseAdmin().from("directory_profiles").upsert({
       github_id: entry.githubId,
@@ -71,6 +80,7 @@ export async function syncDirectoryProfile(
       available_for_opportunities: entry.availableForOpportunities,
       about: entry.about,
       last_active_at: entry.lastActiveAt,
+      skill_fingerprint: entry.skillFingerprint,
     });
     void notifySavedSearchMatches(entry);
   } catch {
@@ -97,4 +107,15 @@ export async function getDirectoryEntry(githubId: string): Promise<DirectoryEntr
 
   if (error) throw new Error(error.message);
   return data ? rowToDirectoryEntry(data as DirectoryRow) : null;
+}
+
+export async function getDirectoryEntriesByIds(githubIds: string[]): Promise<DirectoryEntry[]> {
+  if (githubIds.length === 0) return [];
+  const { data, error } = await getSupabaseAdmin()
+    .from("directory_profiles")
+    .select("*")
+    .in("github_id", githubIds);
+
+  if (error) throw new Error(error.message);
+  return (data as DirectoryRow[]).map(rowToDirectoryEntry);
 }

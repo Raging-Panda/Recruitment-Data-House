@@ -410,6 +410,16 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     about:
       "Senior backend engineer with 7+ years building distributed systems in Go and Python. Focused on payments infrastructure, developer tooling, and mentoring junior engineers.",
     lastActiveAt: new Date(NOW - 1 * DAY).toISOString(),
+    skillFingerprint: {
+      Backend: 92,
+      Frontend: 38,
+      Database: 74,
+      DevOps: 66,
+      Cloud: 61,
+      "Problem Solving": 88,
+      Communication: 70,
+      Leadership: 64,
+    },
   },
   {
     githubId: "seed-1",
@@ -423,6 +433,16 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     availableForOpportunities: true,
     about: "Frontend engineer focused on accessible, performant web apps.",
     lastActiveAt: new Date(NOW - 2 * DAY).toISOString(),
+    skillFingerprint: {
+      Backend: 30,
+      Frontend: 90,
+      Database: 35,
+      DevOps: 40,
+      Cloud: 38,
+      "Problem Solving": 76,
+      Communication: 72,
+      Leadership: 45,
+    },
   },
   {
     githubId: "seed-2",
@@ -436,6 +456,16 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     availableForOpportunities: true,
     about: "DevOps engineer running Kubernetes platforms for fintech clients.",
     lastActiveAt: new Date(NOW - 4 * DAY).toISOString(),
+    skillFingerprint: {
+      Backend: 68,
+      Frontend: 20,
+      Database: 55,
+      DevOps: 94,
+      Cloud: 90,
+      "Problem Solving": 82,
+      Communication: 60,
+      Leadership: 58,
+    },
   },
   {
     githubId: "seed-3",
@@ -449,6 +479,16 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     availableForOpportunities: false,
     about: "Data engineer building batch and streaming pipelines.",
     lastActiveAt: new Date(NOW - 6 * DAY).toISOString(),
+    skillFingerprint: {
+      Backend: 58,
+      Frontend: 15,
+      Database: 88,
+      DevOps: 50,
+      Cloud: 62,
+      "Problem Solving": 70,
+      Communication: 48,
+      Leadership: 30,
+    },
   },
   {
     githubId: "seed-4",
@@ -462,6 +502,16 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     availableForOpportunities: true,
     about: "Mobile engineer shipping iOS and Android apps for retail.",
     lastActiveAt: new Date(NOW - 8 * DAY).toISOString(),
+    skillFingerprint: {
+      Backend: 42,
+      Frontend: 80,
+      Database: 40,
+      DevOps: 35,
+      Cloud: 45,
+      "Problem Solving": 74,
+      Communication: 66,
+      Leadership: 40,
+    },
   },
   {
     githubId: "seed-5",
@@ -475,6 +525,16 @@ export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
     availableForOpportunities: true,
     about: "Backend engineer specializing in payments and ledger systems.",
     lastActiveAt: new Date(NOW - 12 * DAY).toISOString(),
+    skillFingerprint: {
+      Backend: 88,
+      Frontend: 22,
+      Database: 80,
+      DevOps: 52,
+      Cloud: 48,
+      "Problem Solving": 79,
+      Communication: 55,
+      Leadership: 62,
+    },
   },
 ];
 

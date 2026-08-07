@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import type { DirectoryEntry } from "@ipskill/shared";
 import { EmptyState } from "@/components/empty-state";
-import { BookmarkIcon } from "@/components/icons";
+import { BookmarkIcon, CheckCircleIcon, CircleIcon } from "@/components/icons";
 import { useToast } from "@/components/toast-provider";
+import { CompareSelectionBar, MAX_COMPARE_SELECTION } from "@/components/compare-selection-bar";
 
 export function ShortlistCandidateGrid({
   shortlistId,
@@ -16,7 +17,19 @@ export function ShortlistCandidateGrid({
   initialCandidates: DirectoryEntry[];
 }) {
   const [candidates, setCandidates] = useState(initialCandidates);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const showToast = useToast();
+
+  function toggleSelected(githubId: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(githubId)) return prev.filter((id) => id !== githubId);
+      if (prev.length >= MAX_COMPARE_SELECTION) {
+        showToast(`You can compare up to ${MAX_COMPARE_SELECTION} at a time`, "error");
+        return prev;
+      }
+      return [...prev, githubId];
+    });
+  }
 
   async function handleRemove(candidateGithubId: string) {
     const res = await fetch(
@@ -50,7 +63,7 @@ export function ShortlistCandidateGrid({
           key={entry.githubId}
           className="relative flex flex-col gap-3 rounded-2xl border border-surface-border bg-background-elevated p-5"
         >
-          <Link href={`/dashboard/directory/${entry.githubId}`} className="flex flex-col gap-3">
+          <Link href={`/dashboard/recruiter/directory/${entry.githubId}`} className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               {entry.avatarUrl ? (
                 <Image
@@ -83,8 +96,27 @@ export function ShortlistCandidateGrid({
           >
             Remove from shortlist
           </button>
+
+          <button
+            type="button"
+            title="Select to compare"
+            onClick={() => toggleSelected(entry.githubId)}
+            className={`absolute left-3 top-3 rounded-full border bg-background-elevated/90 p-1.5 backdrop-blur transition ${
+              selectedIds.includes(entry.githubId)
+                ? "border-primary text-primary"
+                : "border-surface-border text-text-secondary hover:text-primary"
+            }`}
+          >
+            {selectedIds.includes(entry.githubId) ? (
+              <CheckCircleIcon size={15} />
+            ) : (
+              <CircleIcon size={15} />
+            )}
+          </button>
         </div>
       ))}
+
+      <CompareSelectionBar selectedIds={selectedIds} onClear={() => setSelectedIds([])} />
     </div>
   );
 }

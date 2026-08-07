@@ -14,7 +14,7 @@ import { OnboardingChecklist } from "@/components/onboarding-checklist";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
-  const [{ profile, activity }, override] = await Promise.all([
+  const [{ profile, activity, skillFingerprint }, override] = await Promise.all([
     loadDeveloperHubData(session!.accessToken!, session!.githubId!),
     getCandidateProfileOverrideSafe(session!.githubId!),
   ]);
@@ -22,7 +22,7 @@ export default async function ProfilePage() {
   const checklist = await getOnboardingChecklist(session!.githubId!, profile, Boolean(override));
 
   if (!isDemoAccount(session!.githubId) && !isTestAccount(session!.githubId)) {
-    void syncDirectoryProfile(session!.githubId!, displayName, profile, activity);
+    void syncDirectoryProfile(session!.githubId!, displayName, profile, activity, skillFingerprint);
   }
 
   return (

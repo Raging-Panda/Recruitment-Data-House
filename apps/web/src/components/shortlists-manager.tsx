@@ -105,7 +105,7 @@ export function ShortlistsManager({
                 key={list.id}
                 className="flex items-center justify-between gap-3 rounded-2xl border border-surface-border bg-background-elevated p-4"
               >
-                <Link href={`/dashboard/shortlists/${list.id}`} className="min-w-0 flex-1">
+                <Link href={`/dashboard/recruiter/shortlists/${list.id}`} className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-heading hover:underline">{list.name}</p>
                   <p className="mt-0.5 text-xs text-text-muted">
                     {list.candidateCount} candidate{list.candidateCount === 1 ? "" : "s"} · created{" "}

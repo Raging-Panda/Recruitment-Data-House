@@ -27,7 +27,7 @@ export default async function ShortlistDetailPage({ params }: { params: { id: st
 
   return (
     <div className="mx-auto max-w-5xl">
-      <Link href="/dashboard/shortlists" className="text-sm text-text-secondary hover:text-heading">
+      <Link href="/dashboard/recruiter/shortlists" className="text-sm text-text-secondary hover:text-heading">
         ← Back to Shortlists
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-heading">{shortlist.name}</h1>

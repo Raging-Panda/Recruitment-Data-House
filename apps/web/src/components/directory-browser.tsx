@@ -5,11 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import type { DirectoryEntry, DirectoryFilters, Shortlist } from "@ipskill/shared";
 import { EmptyState } from "@/components/empty-state";
-import { UsersIcon, BookmarkIcon } from "@/components/icons";
+import { UsersIcon, BookmarkIcon, CheckCircleIcon, CircleIcon } from "@/components/icons";
 import { buttonClass } from "@/lib/button-styles";
 import { useToast } from "@/components/toast-provider";
 import { DEFAULT_DIRECTORY_FILTERS, matchesDirectoryFilters } from "@/lib/directory-filters";
 import { ShortlistPicker } from "@/components/shortlist-picker";
+import { CompareSelectionBar, MAX_COMPARE_SELECTION } from "@/components/compare-selection-bar";
 
 const MIN_SCORE_OPTIONS = [
   { label: "Any skill level", value: 0 },
@@ -33,7 +34,19 @@ export function DirectoryBrowser({
   const [openPickerFor, setOpenPickerFor] = useState<string | null>(null);
   const [shortlists, setShortlists] = useState<Shortlist[] | null>(null);
   const [isSavingSearch, setIsSavingSearch] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const showToast = useToast();
+
+  function toggleSelected(githubId: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(githubId)) return prev.filter((id) => id !== githubId);
+      if (prev.length >= MAX_COMPARE_SELECTION) {
+        showToast(`You can compare up to ${MAX_COMPARE_SELECTION} at a time`, "error");
+        return prev;
+      }
+      return [...prev, githubId];
+    });
+  }
 
   const filters = { search, location, language, minScore, availableOnly };
 
@@ -154,7 +167,7 @@ export function DirectoryBrowser({
         {filtered.map((entry) => (
           <div key={entry.githubId} className="relative">
             <Link
-              href={`/dashboard/directory/${entry.githubId}`}
+              href={`/dashboard/recruiter/directory/${entry.githubId}`}
               className="flex h-full flex-col gap-3 rounded-2xl border border-surface-border bg-background-elevated p-5 transition hover:border-primary"
             >
               <div className="flex items-center gap-3">
@@ -216,6 +229,27 @@ export function DirectoryBrowser({
               <BookmarkIcon size={15} />
             </button>
 
+            <button
+              type="button"
+              title="Select to compare"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSelected(entry.githubId);
+              }}
+              className={`absolute left-3 top-3 rounded-full border bg-background-elevated/90 p-1.5 backdrop-blur transition ${
+                selectedIds.includes(entry.githubId)
+                  ? "border-primary text-primary"
+                  : "border-surface-border text-text-secondary hover:text-primary"
+              }`}
+            >
+              {selectedIds.includes(entry.githubId) ? (
+                <CheckCircleIcon size={15} />
+              ) : (
+                <CircleIcon size={15} />
+              )}
+            </button>
+
             {openPickerFor === entry.githubId && (
               <ShortlistPicker
                 candidateGithubId={entry.githubId}
@@ -227,6 +261,8 @@ export function DirectoryBrowser({
           </div>
         ))}
       </div>
+
+      <CompareSelectionBar selectedIds={selectedIds} onClear={() => setSelectedIds([])} />
 
       {filtered.length === 0 && (
         <EmptyState

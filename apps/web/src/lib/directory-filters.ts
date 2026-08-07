@@ -25,7 +25,7 @@ export function directoryUrlForFilters(filters: DirectoryFilters): string {
   if (filters.minScore > 0) params.set("minScore", String(filters.minScore));
   if (filters.availableOnly) params.set("availableOnly", "true");
   const query = params.toString();
-  return query ? `/dashboard/directory?${query}` : "/dashboard/directory";
+  return query ? `/dashboard/recruiter/directory?${query}` : "/dashboard/recruiter/directory";
 }
 
 /** Human-readable one-liner for a saved search card, e.g. "Go · Cape Town · 70%+ · Open to opportunities". */

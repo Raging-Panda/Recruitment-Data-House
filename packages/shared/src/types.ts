@@ -243,6 +243,9 @@ export interface DirectoryEntry {
   availableForOpportunities: boolean;
   about: string | null;
   lastActiveAt: string;
+  /** Snapshot of the candidate's own skill fingerprint, synced alongside
+   * the rest of this row — powers the recruiter-side Compare view. */
+  skillFingerprint: SkillFingerprint;
 }
 
 export interface ProfileViewStats {

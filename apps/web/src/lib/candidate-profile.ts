@@ -5,11 +5,14 @@ import { DEMO_PROFILE_OVERRIDE } from "@/lib/demo-data";
 
 interface CandidateProfileRow {
   github_id: string;
-  display_name: string;
+  display_name: string | null;
   updated_at: string;
 }
 
-function rowToOverride(row: CandidateProfileRow): CandidateProfileOverride {
+function rowToOverride(row: CandidateProfileRow): CandidateProfileOverride | null {
+  // A row can exist purely to carry other per-account flags (e.g.
+  // is_premium) without a display-name override ever being set.
+  if (!row.display_name) return null;
   return {
     githubId: row.github_id,
     displayName: row.display_name,

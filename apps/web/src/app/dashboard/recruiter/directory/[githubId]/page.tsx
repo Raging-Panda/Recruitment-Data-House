@@ -40,7 +40,7 @@ export default async function DirectoryProfilePage({
   return (
     <div className="mx-auto max-w-3xl">
       <Link
-        href="/dashboard/directory"
+        href="/dashboard/recruiter/directory"
         className="text-sm text-text-secondary hover:text-heading"
       >
         ← Back to Directory
@@ -103,7 +103,7 @@ export default async function DirectoryProfilePage({
           Contacting candidates directly isn&apos;t wired up yet — this is the read-only view.
         </p>
         <Link
-          href="/dashboard/directory"
+          href="/dashboard/recruiter/directory"
           className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
         >
           Browse more developers <ArrowRightIcon size={14} />

@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { IPSkillLogo } from "./ipskill-logo";
 import { useTheme } from "./theme-provider";
+import { useToast } from "./toast-provider";
 import { setPendingToast } from "@/lib/pending-toast";
 import {
   HomeIcon,
@@ -18,15 +20,11 @@ import {
   GearIcon,
   ArrowRightIcon,
   CloseIcon,
-  UsersIcon,
-  BookmarkIcon,
 } from "./icons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: HomeIcon },
   { href: "/dashboard/profile", label: "Profile", icon: PersonIcon },
-  { href: "/dashboard/directory", label: "Directory", icon: UsersIcon },
-  { href: "/dashboard/shortlists", label: "Shortlists", icon: BookmarkIcon },
   { href: "/dashboard/skills", label: "Skills", icon: CodeIcon },
   { href: "/dashboard/projects", label: "Projects", icon: BriefcaseIcon },
   { href: "/dashboard/experience", label: "Experience", icon: LayersIcon },
@@ -38,10 +36,12 @@ const NAV_ITEMS = [
 
 export function Sidebar({
   userName,
+  isPremium,
   isOpen,
   onClose,
 }: {
   userName: string;
+  isPremium: boolean;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -107,13 +107,7 @@ export function Sidebar({
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="rounded-xl border border-surface-border bg-surface p-4">
-            <p className="text-sm font-semibold text-heading">Upgrade to Pro</p>
-            <p className="mt-1 text-xs text-text-secondary">Unlock more features.</p>
-            <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white transition hover:opacity-90">
-              Upgrade Now <ArrowRightIcon size={14} />
-            </button>
-          </div>
+          <RecruiterToolsCard isPremium={isPremium} onNavigate={onClose} />
 
           <button
             onClick={toggleTheme}
@@ -143,5 +137,67 @@ export function Sidebar({
         </div>
       </aside>
     </>
+  );
+}
+
+/**
+ * Entry point for Recruiter Tools (Directory/Shortlists/Compare) —
+ * deliberately not a normal nav item, since that section is a separate,
+ * premium-gated space rather than part of the standard dev profile. Doubles
+ * as the account's upgrade CTA until real billing exists: "Upgrade Now"
+ * just flips the is_premium flag via /api/premium/upgrade.
+ */
+function RecruiterToolsCard({ isPremium, onNavigate }: { isPremium: boolean; onNavigate: () => void }) {
+  const router = useRouter();
+  const showToast = useToast();
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  if (isPremium) {
+    return (
+      <Link
+        href="/dashboard/recruiter"
+        onClick={onNavigate}
+        className="block rounded-xl border border-primary/30 bg-surface p-4 transition hover:border-primary"
+      >
+        <p className="text-sm font-semibold text-heading">Recruiter Tools</p>
+        <p className="mt-1 text-xs text-text-secondary">Directory, shortlists & comparisons.</p>
+        <span className="mt-3 flex items-center justify-center gap-1.5 rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white">
+          Open Recruiter Tools <ArrowRightIcon size={14} />
+        </span>
+      </Link>
+    );
+  }
+
+  async function handleUpgrade() {
+    setIsUpgrading(true);
+    try {
+      const res = await fetch("/api/premium/upgrade", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to upgrade");
+      showToast("Upgraded — Recruiter Tools unlocked");
+      onNavigate();
+      router.push("/dashboard/recruiter");
+      router.refresh();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to upgrade", "error");
+    } finally {
+      setIsUpgrading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-surface-border bg-surface p-4">
+      <p className="text-sm font-semibold text-heading">Recruiter Tools</p>
+      <p className="mt-1 text-xs text-text-secondary">
+        Unlock the Directory, shortlists, and candidate comparison — Premium only.
+      </p>
+      <button
+        onClick={handleUpgrade}
+        disabled={isUpgrading}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+      >
+        {isUpgrading ? "Upgrading…" : "Upgrade Now"} <ArrowRightIcon size={14} />
+      </button>
+    </div>
   );
 }

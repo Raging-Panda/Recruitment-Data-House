@@ -46,7 +46,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   };
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div>
       <h1 className="text-2xl font-bold text-heading">Developer Directory</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Browse other developers on IPSkill — the same recruiter-facing view clients see, minus the

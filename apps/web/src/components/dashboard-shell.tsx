@@ -10,10 +10,12 @@ import { consumePendingToast } from "@/lib/pending-toast";
 export function DashboardShell({
   userName,
   userImage,
+  isPremium,
   children,
 }: {
   userName: string;
   userImage?: string;
+  isPremium: boolean;
   children: ReactNode;
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -36,7 +38,12 @@ export function DashboardShell({
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar userName={userName} isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        userName={userName}
+        isPremium={isPremium}
+        isOpen={isSidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar userName={userName} userImage={userImage} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">{children}</main>
