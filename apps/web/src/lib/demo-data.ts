@@ -10,6 +10,7 @@ import type {
   Certification,
   CandidateProfileOverride,
   NotificationItem,
+  DirectoryEntry,
 } from "@ipskill/shared";
 import { DEMO_GITHUB_ID } from "./demo-mode";
 
@@ -382,5 +383,93 @@ export const DEMO_NOTIFICATIONS: NotificationItem[] = [
     link: "/dashboard/profile",
     isRead: true,
     createdAt: new Date(NOW - 40 * DAY).toISOString(),
+  },
+];
+
+/**
+ * Mirrors the fixture rows seeded directly into the real directory_profiles
+ * table (see the create_directory_and_profile_views migration), plus the
+ * demo persona herself — the demo account never writes to real Supabase, so
+ * it needs its own copy of the same directory to browse and click into.
+ */
+export const DEMO_DIRECTORY_ENTRIES: DirectoryEntry[] = [
+  {
+    githubId: DEMO_GITHUB_ID,
+    githubLogin: "naledi-khumalo",
+    displayName: DEMO_DISPLAY_NAME,
+    avatarUrl: "https://i.pravatar.cc/300?img=47",
+    headline: "Senior Backend Engineer",
+    location: "Johannesburg, South Africa",
+    overallScore: 78,
+    topLanguages: ["Go", "TypeScript", "Python"],
+    availableForOpportunities: true,
+    about:
+      "Senior backend engineer with 7+ years building distributed systems in Go and Python. Focused on payments infrastructure, developer tooling, and mentoring junior engineers.",
+    lastActiveAt: new Date(NOW - 1 * DAY).toISOString(),
+  },
+  {
+    githubId: "seed-1",
+    githubLogin: "thabo-mokoena",
+    displayName: "Thabo Mokoena",
+    avatarUrl: "https://i.pravatar.cc/300?img=12",
+    headline: "Frontend Engineer",
+    location: "Pretoria, South Africa",
+    overallScore: 81,
+    topLanguages: ["TypeScript", "React", "CSS"],
+    availableForOpportunities: true,
+    about: "Frontend engineer focused on accessible, performant web apps.",
+    lastActiveAt: new Date(NOW - 2 * DAY).toISOString(),
+  },
+  {
+    githubId: "seed-2",
+    githubLogin: "lerato-dube",
+    displayName: "Lerato Dube",
+    avatarUrl: "https://i.pravatar.cc/300?img=45",
+    headline: "DevOps Engineer",
+    location: "Cape Town, South Africa",
+    overallScore: 88,
+    topLanguages: ["Go", "Terraform", "Kubernetes"],
+    availableForOpportunities: true,
+    about: "DevOps engineer running Kubernetes platforms for fintech clients.",
+    lastActiveAt: new Date(NOW - 4 * DAY).toISOString(),
+  },
+  {
+    githubId: "seed-3",
+    githubLogin: "sipho-nkosi",
+    displayName: "Sipho Nkosi",
+    avatarUrl: "https://i.pravatar.cc/300?img=33",
+    headline: "Data Engineer",
+    location: "Durban, South Africa",
+    overallScore: 74,
+    topLanguages: ["Python", "SQL", "Airflow"],
+    availableForOpportunities: false,
+    about: "Data engineer building batch and streaming pipelines.",
+    lastActiveAt: new Date(NOW - 6 * DAY).toISOString(),
+  },
+  {
+    githubId: "seed-4",
+    githubLogin: "amahle-vilakazi",
+    displayName: "Amahle Vilakazi",
+    avatarUrl: "https://i.pravatar.cc/300?img=25",
+    headline: "Mobile Engineer",
+    location: "Johannesburg, South Africa",
+    overallScore: 79,
+    topLanguages: ["Swift", "Kotlin"],
+    availableForOpportunities: true,
+    about: "Mobile engineer shipping iOS and Android apps for retail.",
+    lastActiveAt: new Date(NOW - 8 * DAY).toISOString(),
+  },
+  {
+    githubId: "seed-5",
+    githubLogin: "jaco-bester",
+    displayName: "Jaco Bester",
+    avatarUrl: "https://i.pravatar.cc/300?img=53",
+    headline: "Backend Engineer",
+    location: "Stellenbosch, South Africa",
+    overallScore: 85,
+    topLanguages: ["Java", "PostgreSQL"],
+    availableForOpportunities: true,
+    about: "Backend engineer specializing in payments and ledger systems.",
+    lastActiveAt: new Date(NOW - 12 * DAY).toISOString(),
   },
 ];

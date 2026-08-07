@@ -11,3 +11,7 @@ export function isTestModeEnabled(): boolean {
 
 export const TEST_ACCESS_TOKEN = "test-mode";
 export const TEST_GITHUB_ID = "900000001";
+
+export function isTestAccount(githubId: string | null | undefined): boolean {
+  return githubId === TEST_GITHUB_ID;
+}

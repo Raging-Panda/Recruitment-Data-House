@@ -39,6 +39,17 @@ export function PersonIcon(props: IconProps) {
   );
 }
 
+export function UsersIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="9" cy="8.5" r="3" />
+      <path d="M3 19c0.9-3 3.2-4.8 6-4.8s5.1 1.8 6 4.8" />
+      <circle cx="17" cy="9" r="2.3" />
+      <path d="M16 14.5c2.2 0.3 3.8 1.8 4.5 4.5" />
+    </Base>
+  );
+}
+
 export function CodeIcon(props: IconProps) {
   return (
     <Base {...props}>

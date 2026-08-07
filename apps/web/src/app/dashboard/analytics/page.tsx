@@ -2,6 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { splitStrengthsAndGaps, sortedSkillEntries, computeLearningMomentum } from "@/lib/analysis";
+import { getProfileViewStats } from "@/lib/profile-views";
+import { isDemoAccount } from "@/lib/demo-mode";
+import { isTestAccount } from "@/lib/test-mode";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { CommitTrendChart } from "@/components/commit-trend-chart";
 import { StatTile } from "@/components/stat-tile";
@@ -20,21 +23,49 @@ export default async function AnalyticsPage() {
     (profile.overallScore + Math.max(0, 100 - profile.percentileRank)) / 2
   );
 
+  // Profile Views is real (backed by the profile_views table, incremented
+  // from the Directory) — Search Appearances and Connection Requests stay
+  // as the derived placeholder until the platform has its own tracking for
+  // those too.
+  let profileViewsValue = analytics.profileViews.toLocaleString();
+  let profileViewsSublabel = `↑ ${analytics.profileViewsChangePct}% vs last month`;
+  let profileViewsSublabelClass = "text-accent-green";
+
+  if (!isDemoAccount(session!.githubId) && !isTestAccount(session!.githubId)) {
+    try {
+      const viewStats = await getProfileViewStats(session!.githubId!);
+      profileViewsValue = viewStats.total.toLocaleString();
+      if (viewStats.changePct === null) {
+        profileViewsSublabel = viewStats.total > 0 ? "New this month" : "No views yet";
+        profileViewsSublabelClass = "text-text-muted";
+      } else {
+        const arrow = viewStats.changePct >= 0 ? "↑" : "↓";
+        profileViewsSublabel = `${arrow} ${Math.abs(viewStats.changePct)}% vs last month`;
+        profileViewsSublabelClass = viewStats.changePct >= 0 ? "text-accent-green" : "text-accent-red";
+      }
+    } catch {
+      // fall back to the derived placeholder already assigned above
+    }
+  }
+
   const engagementStats = [
     {
       label: "Profile Views",
-      value: analytics.profileViews.toLocaleString(),
-      change: analytics.profileViewsChangePct,
+      value: profileViewsValue,
+      sublabel: profileViewsSublabel,
+      sublabelClassName: profileViewsSublabelClass,
     },
     {
       label: "Search Appearances",
       value: analytics.searchAppearances.toLocaleString(),
-      change: analytics.searchAppearancesChangePct,
+      sublabel: `↑ ${analytics.searchAppearancesChangePct}% vs last month`,
+      sublabelClassName: "text-accent-green",
     },
     {
       label: "Connection Requests",
       value: analytics.connectionRequests.toLocaleString(),
-      change: analytics.connectionRequestsChangePct,
+      sublabel: `↑ ${analytics.connectionRequestsChangePct}% vs last month`,
+      sublabelClassName: "text-accent-green",
     },
   ];
 
@@ -175,7 +206,8 @@ export default async function AnalyticsPage() {
       <div className="mt-6">
         <h2 className="text-lg font-semibold text-heading">Engagement</h2>
         <p className="mt-1 text-xs text-text-muted">
-          Estimated from account signals until platform-native tracking ships.
+          Profile Views is tracked live from the Directory. Search Appearances and Connection
+          Requests are still estimated until that tracking exists.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
           {engagementStats.map((stat) => (
@@ -183,8 +215,8 @@ export default async function AnalyticsPage() {
               key={stat.label}
               label={stat.label}
               value={stat.value}
-              sublabel={`↑ ${stat.change}% vs last month`}
-              sublabelClassName="text-accent-green"
+              sublabel={stat.sublabel}
+              sublabelClassName={stat.sublabelClassName}
             />
           ))}
         </div>

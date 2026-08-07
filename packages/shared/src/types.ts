@@ -193,6 +193,33 @@ export interface NotificationItem {
   createdAt: string;
 }
 
+/**
+ * A cached, self-reported-ish snapshot for the developer directory — not a
+ * live GitHub fetch. There's no way to fetch another user's GitHub data on
+ * their behalf (we only ever hold the signed-in user's own access token),
+ * so directory entries are refreshed from a candidate's own profile data
+ * whenever they visit it, and everyone else just reads the cached copy.
+ */
+export interface DirectoryEntry {
+  githubId: string;
+  githubLogin: string;
+  displayName: string;
+  avatarUrl: string | null;
+  headline: string | null;
+  location: string | null;
+  overallScore: number;
+  topLanguages: string[];
+  availableForOpportunities: boolean;
+  about: string | null;
+  lastActiveAt: string;
+}
+
+export interface ProfileViewStats {
+  total: number;
+  last30Days: number;
+  changePct: number | null;
+}
+
 export interface AnalyticsSnapshot {
   profileViews: number;
   profileViewsChangePct: number;

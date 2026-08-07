@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { getOnboardingChecklist } from "@/lib/onboarding";
+import { syncDirectoryProfile } from "@/lib/directory";
+import { isDemoAccount } from "@/lib/demo-mode";
+import { isTestAccount } from "@/lib/test-mode";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
 import { DisplayNameEditor } from "@/components/display-name-editor";
@@ -17,6 +20,10 @@ export default async function ProfilePage() {
   ]);
   const displayName = override?.displayName ?? profile.name;
   const checklist = await getOnboardingChecklist(session!.githubId!, profile, Boolean(override));
+
+  if (!isDemoAccount(session!.githubId) && !isTestAccount(session!.githubId)) {
+    void syncDirectoryProfile(session!.githubId!, displayName, profile, activity);
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
