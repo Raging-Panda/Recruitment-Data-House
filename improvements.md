@@ -162,10 +162,25 @@ scheduled or scoped yet — just a running list to pull from.
   Tools. Demo account: read-only, two canned endorsements (on the demo
   persona and on one seed candidate); the endorse form is hidden
   entirely for demo (can't write). Verified via Playwright.
-- **Shareable public profile link** — a candidate-controlled,
-  revocable link (or PDF export) they can send directly to a client
-  outside the platform, with an expiry and view-count on the link
-  itself.
+- **Shareable public profile link** — ✅ shipped: a new
+  `public_profile_links` table (one row per candidate, a `token` uuid
+  swapped on regenerate, `expires_at`, `revoked`, `view_count`) backs a
+  "Share Your Profile" card on the Profile page — Generate, Regenerate
+  (old link stops working immediately), and Revoke, plus a live view
+  count and expiry date (90 days, reset on regenerate). The link
+  itself (`/p/[token]`) is a genuinely unauthenticated route outside
+  `/dashboard` — no login, no session — rendering the same read-only
+  view a recruiter sees on the Directory detail page (avatar, headline,
+  score, skill fingerprint, top languages, availability, endorsements),
+  looked up straight from the `directory_profiles` snapshot. An
+  invalid, revoked, or expired token all 404 identically, on purpose —
+  a dead link shouldn't hint at why. View-count increments are a
+  best-effort read-then-write, not atomic — acceptable for a low-
+  traffic share-link counter, same tradeoff as the rest of the app's
+  view tracking. PDF export (the alternative this bullet originally
+  offered) is still a separate open item below. Demo account shows a
+  read-only canned link; verified via Playwright that Regenerate/Revoke
+  are genuinely disabled for it, and that an invalid token 404s.
 - **Contribution activity heatmap** — GitHub-style calendar heatmap
   on the profile, giving an at-a-glance consistency signal that's
   easier to scan than the weekly commit-count chart.
@@ -348,10 +363,22 @@ scheduled or scoped yet — just a running list to pull from.
   trend — no longer waits on those two extra round trips to appear.
   Verified via Playwright that both sections still render correctly
   under Suspense.
-- **Trim the skills bundle** — `recharts` alone accounts for ~94KB of
-  the Skills page's first-load JS; either code-split it behind a
-  dynamic import or swap it for a lighter/custom radar renderer like
-  the one already built for mobile.
+- **Trim the skills bundle** — ✅ shipped: `SkillRadarChart` and
+  `CommitTrendChart` (both recharts-backed) are now lazy-loaded via
+  `next/dynamic` wrapped in small Client Components
+  (`skill-radar-chart-lazy.tsx`, `commit-trend-chart-lazy.tsx`) with
+  `ssr: false` and a skeleton fallback. The first attempt — calling
+  `next/dynamic` directly inside the Server Component pages — compiled
+  fine but didn't actually shrink anything, because Next disallows
+  `ssr: false` in a Server Component, and `ssr: true` dynamic imports
+  still count toward "First Load JS" since the client needs that code
+  immediately to hydrate the SSR'd output. Wrapping the dynamic import
+  in a genuine Client Component (which a Server Component page can
+  still render directly) was what actually deferred the load to after
+  hydration. Measured with `next build`: Analytics 195 kB → 89.1 kB,
+  Skills 198 kB → 100 kB, and the new public profile link page
+  192 kB → 94.2 kB — each chart now flashes a brief skeleton before
+  mounting client-side instead of shipping in the main bundle.
 - **Virtualize long lists** — the web Projects page and the eventual
   developer directory should virtualize rows once candidate/repo
   counts grow past a page or two (mobile's `FlatList` already does
