@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useDeveloperHubData } from "@/lib/use-developer-hub-data";
-import { theme } from "@/theme";
+import { useTheme, type ThemeColors } from "@/lib/theme-context";
 import type { ProfileStackParamList } from "@/navigation/types";
 import type { DeveloperProject } from "@ipskill/shared";
 
@@ -11,6 +11,8 @@ type Props = NativeStackScreenProps<ProfileStackParamList, "Projects">;
 const FILTERS = ["All", "Featured", "Personal", "Collaborations"] as const;
 
 export function ProjectsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { data, isLoading } = useDeveloperHubData();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
 
@@ -39,13 +41,13 @@ export function ProjectsScreen({ navigation }: Props) {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={theme.colors.primary} />
+        <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
           data={projects}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 40 }}
-          renderItem={({ item }) => <ProjectRow project={item} />}
+          renderItem={({ item }) => <ProjectRow project={item} styles={styles} />}
           ListEmptyComponent={
             <Text style={styles.empty}>No repositories in this category yet.</Text>
           }
@@ -55,7 +57,13 @@ export function ProjectsScreen({ navigation }: Props) {
   );
 }
 
-function ProjectRow({ project }: { project: DeveloperProject }) {
+function ProjectRow({
+  project,
+  styles,
+}: {
+  project: DeveloperProject;
+  styles: ReturnType<typeof createStyles>;
+}) {
   return (
     <View style={styles.row}>
       <View style={styles.thumb} />
@@ -71,37 +79,39 @@ function ProjectRow({ project }: { project: DeveloperProject }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 20 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-  },
-  back: { color: theme.colors.white, fontSize: 24 },
-  headerTitle: { color: theme.colors.white, fontSize: 18, fontWeight: "700" },
-  headerIcon: { color: theme.colors.textSecondary, fontSize: 16 },
-  filters: { flexDirection: "row", gap: 16, marginTop: 20, marginBottom: 12 },
-  filter: { color: theme.colors.textSecondary, fontSize: 13, paddingBottom: 6 },
-  filterActive: {
-    color: theme.colors.primary,
-    fontWeight: "700",
-    borderBottomWidth: 2,
-    borderBottomColor: theme.colors.primary,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.surfaceBorder,
-  },
-  thumb: { width: 56, height: 56, borderRadius: 12, backgroundColor: theme.colors.surface },
-  projectName: { color: theme.colors.white, fontSize: 14, fontWeight: "600" },
-  projectMeta: { color: theme.colors.textSecondary, fontSize: 12, marginTop: 2 },
-  projectStats: { color: theme.colors.textMuted, fontSize: 12, marginTop: 2 },
-  year: { color: theme.colors.textMuted, fontSize: 12 },
-  empty: { color: theme.colors.textMuted, textAlign: "center", marginTop: 40 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: 20 },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingTop: 16,
+    },
+    back: { color: colors.heading, fontSize: 24 },
+    headerTitle: { color: colors.heading, fontSize: 18, fontWeight: "700" },
+    headerIcon: { color: colors.textSecondary, fontSize: 16 },
+    filters: { flexDirection: "row", gap: 16, marginTop: 20, marginBottom: 12 },
+    filter: { color: colors.textSecondary, fontSize: 13, paddingBottom: 6 },
+    filterActive: {
+      color: colors.primary,
+      fontWeight: "700",
+      borderBottomWidth: 2,
+      borderBottomColor: colors.primary,
+    },
+    row: {
+      flexDirection: "row",
+      gap: 12,
+      alignItems: "center",
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceBorder,
+    },
+    thumb: { width: 56, height: 56, borderRadius: 12, backgroundColor: colors.surface },
+    projectName: { color: colors.heading, fontSize: 14, fontWeight: "600" },
+    projectMeta: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+    projectStats: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+    year: { color: colors.textMuted, fontSize: 12 },
+    empty: { color: colors.textMuted, textAlign: "center", marginTop: 40 },
+  });
+}

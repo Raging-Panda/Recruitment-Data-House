@@ -85,33 +85,44 @@ scheduled or scoped yet — just a running list to pull from.
 
 ## Visual & UI polish
 
-- **Loading states** — ✅ shipped on web: every data-fetching dashboard
-  page (Profile, Skills, Projects, Analytics, Experience,
-  Certifications) has a `loading.tsx` skeleton shaped like its real
-  layout, via Next.js's automatic Suspense-boundary convention — the
-  sidebar/topbar stay live, only the content area shows placeholders.
-  Still open on mobile: a bare `ActivityIndicator` spinner is still
-  what shows while GitHub data loads, plus a branded splash/loading
-  screen on cold start.
+- **Loading states** — ✅ shipped on both platforms. Web: every
+  data-fetching dashboard page (Profile, Skills, Projects, Analytics,
+  Experience, Certifications) has a `loading.tsx` skeleton shaped like
+  its real layout, via Next.js's automatic Suspense-boundary
+  convention — the sidebar/topbar stay live, only the content area
+  shows placeholders. Mobile: added a `BrandedLoadingScreen` (logo +
+  spinner) replacing the bare `ActivityIndicator` on Profile and
+  Analytics' full-page loads, and used it to fix a real bug along the
+  way — `App.tsx` ignored `useAuth()`'s `isLoading` entirely, so a
+  returning signed-in user briefly flashed the login screen every cold
+  start while the stored token loaded from SecureStore.
 - **Real icon set** — ✅ shipped: a shared line-icon set (outline style,
   matching the IPSkill brand's design system) now covers the web
   sidebar/topbar/nav and the mobile tab bar, replacing the emoji
-  placeholders (🔔 🏠 🔍 💬 👤 📊) that used to be there. Still open:
-  consistent active/inactive icon *states* beyond color (e.g. filled
-  vs. outline variants), which the current set doesn't do yet.
+  placeholders (🔔 🏠 🔍 💬 👤 📊) that used to be there. Active/inactive
+  *states* beyond color are also shipped on web now (see below) —
+  mobile's tab bar still only differs by tint color, no filled/outline
+  distinction yet.
 - **Empty states with illustration + copy** — ✅ shipped: a shared
   EmptyState component (icon badge + title + actionable copy) now
   covers Projects, Skills' language breakdown, Verified Skills,
   Experience, Certifications, Recent Activity, and the
   Achievements/Settings stubs — replacing the old plain "No X yet"
   text.
-- **Functional light mode** — ✅ shipped: the Dark Mode toggle actually
-  restyles the app now. Structural tokens (background, surfaces,
-  borders, text) flip via CSS variables + a `[data-theme]` attribute;
-  brand/accent colors stay constant across both themes by design.
-  Persists to localStorage with a before-hydration script to avoid a
-  flash of the wrong theme. Mobile doesn't have a theme toggle at all
-  yet — still dark-only.
+- **Functional light mode** — ✅ shipped on both platforms. Web: the
+  Dark Mode toggle actually restyles the app. Structural tokens
+  (background, surfaces, borders, text) flip via CSS variables + a
+  `[data-theme]` attribute; brand/accent colors stay constant across
+  both themes by design. Persists to localStorage with a
+  before-hydration script to avoid a flash of the wrong theme. Mobile:
+  a `ThemeProvider` (persisted via `expo-secure-store`, reusing
+  `packages/shared`'s `lightColors` for the light palette) with a
+  sun/moon toggle on the Profile screen. Since React Native has no CSS
+  variables, every screen's `StyleSheet.create` call became a
+  `createStyles(colors)` function invoked per-render instead of a
+  static module-level object — a bigger refactor than web's version,
+  since the styles themselves needed to become reactive, not just the
+  values they reference.
 - **Toasts/inline feedback** — ✅ shipped, including login/logout: a
   ToastProvider (bottom-right stack, auto-dismiss) confirms Experience
   and Certifications save/delete, the profile display-name edit, and

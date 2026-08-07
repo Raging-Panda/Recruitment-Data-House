@@ -74,3 +74,20 @@ export function ArrowRightIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function SunIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <Circle cx="12" cy="12" r="4" />
+      <Path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </Base>
+  );
+}
+
+export function MoonIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <Path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
+    </Base>
+  );
+}

@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { IPSkillLogo } from "@/components/IPSkillLogo";
 import { ArrowRightIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
-import { theme } from "@/theme";
+import { useTheme, type ThemeColors } from "@/lib/theme-context";
 
 export function LoginScreen() {
   const { signInWithGithub, isLoading } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.container}>
@@ -17,7 +19,7 @@ export function LoginScreen() {
       <View style={styles.buttons}>
         <TouchableOpacity style={styles.primaryButton} onPress={signInWithGithub}>
           <Text style={styles.primaryButtonText}>Get Started</Text>
-          <ArrowRightIcon size={16} color={theme.colors.white} />
+          <ArrowRightIcon size={16} color={colors.white} />
         </TouchableOpacity>
 
         <View style={[styles.secondaryButton, styles.disabled]}>
@@ -40,75 +42,77 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  title: {
-    marginTop: 16,
-    fontSize: 32,
-    fontWeight: "800",
-    color: theme.colors.white,
-  },
-  tagline: {
-    marginTop: 4,
-    fontSize: 11,
-    letterSpacing: 1.5,
-    color: theme.colors.textSecondary,
-  },
-  buttons: {
-    marginTop: 40,
-    width: "100%",
-    gap: 12,
-  },
-  primaryButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 999,
-    paddingVertical: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  primaryButtonText: {
-    color: theme.colors.white,
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  secondaryButton: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 999,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: "#111",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  secondaryButtonTextDisabled: {
-    color: "#999",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  ghostButton: {
-    borderRadius: 999,
-    paddingVertical: 16,
-    alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.surfaceBorder,
-  },
-  ghostButtonText: {
-    color: theme.colors.textSecondary,
-    fontWeight: "600",
-    fontSize: 14,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    title: {
+      marginTop: 16,
+      fontSize: 32,
+      fontWeight: "800",
+      color: colors.heading,
+    },
+    tagline: {
+      marginTop: 4,
+      fontSize: 11,
+      letterSpacing: 1.5,
+      color: colors.textSecondary,
+    },
+    buttons: {
+      marginTop: 40,
+      width: "100%",
+      gap: 12,
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 999,
+      paddingVertical: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+    },
+    primaryButtonText: {
+      color: colors.white,
+      fontWeight: "700",
+      fontSize: 14,
+    },
+    secondaryButton: {
+      backgroundColor: colors.white,
+      borderRadius: 999,
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    secondaryButtonText: {
+      color: "#111",
+      fontWeight: "700",
+      fontSize: 14,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    secondaryButtonTextDisabled: {
+      color: "#999",
+      fontWeight: "700",
+      fontSize: 14,
+    },
+    ghostButton: {
+      borderRadius: 999,
+      paddingVertical: 16,
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surfaceBorder,
+    },
+    ghostButtonText: {
+      color: colors.textSecondary,
+      fontWeight: "600",
+      fontSize: 14,
+    },
+  });
+}

@@ -1,15 +1,17 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { IPSkillLogo } from "./IPSkillLogo";
 import { useTheme, type ThemeColors } from "@/lib/theme-context";
 
-export function PlaceholderScreen({ title }: { title: string }) {
+export function BrandedLoadingScreen({ label }: { label?: string }) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>Not built yet.</Text>
+      <IPSkillLogo size={72} />
+      <ActivityIndicator color={colors.primary} style={styles.spinner} />
+      {label && <Text style={styles.label}>{label}</Text>}
     </View>
   );
 }
@@ -22,7 +24,7 @@ function createStyles(colors: ThemeColors) {
       alignItems: "center",
       justifyContent: "center",
     },
-    title: { color: colors.heading, fontSize: 18, fontWeight: "700" },
-    subtitle: { color: colors.textMuted, fontSize: 13, marginTop: 6 },
+    spinner: { marginTop: 24 },
+    label: { marginTop: 12, color: colors.textSecondary, fontSize: 13 },
   });
 }
