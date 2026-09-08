@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import type { SkillTestAttemptSummary, SkillTestTemplate } from "@ipskill/shared";
+import { buttonClass } from "@/lib/button-styles";
+import { EmptyState } from "@/components/empty-state";
+import { ShieldCheckIcon } from "@/components/icons";
 
 function badgeFor(summary: SkillTestAttemptSummary | undefined) {
   if (!summary || summary.status === "not_started") {
@@ -11,7 +14,7 @@ function badgeFor(summary: SkillTestAttemptSummary | undefined) {
     return { label: "In progress", className: "bg-primary/20 text-primary" };
   }
   if (summary.status === "expired" && summary.bestPercentage === null) {
-    return { label: "Expired", className: "bg-accent-pink/20 text-accent-pink" };
+    return { label: "Expired", className: "bg-accent-amber/20 text-accent-amber" };
   }
   return {
     label: `${summary.bestPercentage}%`,
@@ -40,11 +43,11 @@ export function VerifiedSkillsPanel({
         return (
           <div
             key={template.id}
-            className="flex items-center justify-between rounded-2xl border border-surface-border bg-background-elevated p-5"
+            className="flex flex-col gap-3 rounded-2xl border border-surface-border bg-background-elevated p-5 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white">{template.title}</h3>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-semibold text-heading">{template.title}</h3>
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
                   {badge.label}
                 </span>
@@ -56,7 +59,7 @@ export function VerifiedSkillsPanel({
             </div>
             <Link
               href={`/dashboard/skills/tests/${template.slug}`}
-              className="whitespace-nowrap rounded-lg bg-primary-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              className={buttonClass("primary", "md", "whitespace-nowrap")}
             >
               {buttonLabel(summary)}
             </Link>
@@ -64,7 +67,11 @@ export function VerifiedSkillsPanel({
         );
       })}
       {templates.length === 0 && (
-        <p className="text-sm text-text-muted">No skill tests available yet.</p>
+        <EmptyState
+          icon={ShieldCheckIcon}
+          title="No skill tests available yet"
+          description="We're adding more stacks — check back soon."
+        />
       )}
     </div>
   );

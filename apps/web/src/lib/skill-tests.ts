@@ -2,6 +2,7 @@ import type {
   SkillTestAttempt,
   SkillTestAttemptStatus,
   SkillTestAttemptSummary,
+  SkillTestLevel,
   SkillTestQuestion,
   SkillTestTemplate,
 } from "@ipskill/shared";
@@ -14,6 +15,9 @@ export interface TemplateRow {
   description: string;
   time_limit_seconds: number;
   is_active: boolean;
+  level: SkillTestLevel | null;
+  level_order: number | null;
+  target_question_count: number | null;
   skill_test_questions?: { count: number }[];
 }
 
@@ -50,6 +54,9 @@ export function rowToTemplate(row: TemplateRow): SkillTestTemplate {
     description: row.description,
     timeLimitSeconds: row.time_limit_seconds,
     questionCount: row.skill_test_questions?.[0]?.count ?? 0,
+    level: row.level,
+    levelOrder: row.level_order,
+    targetQuestionCount: row.target_question_count,
   };
 }
 

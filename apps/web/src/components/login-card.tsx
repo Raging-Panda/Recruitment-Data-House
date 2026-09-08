@@ -1,49 +1,150 @@
 "use client";
 
+import { useEffect, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { IPSkillLogo } from "./ipskill-logo";
+import { ArrowRightIcon } from "./icons";
+import { useToast } from "./toast-provider";
+import { setPendingToast, consumePendingToast } from "@/lib/pending-toast";
+
+const DEMO_EMAIL = "admin@admin.com";
+const DEMO_PASSWORD = "1234";
 
 export function LoginCard() {
+  const router = useRouter();
+  const showToast = useToast();
+  const [testLoginAvailable, setTestLoginAvailable] = useState(false);
+  const [demoEmail, setDemoEmail] = useState(DEMO_EMAIL);
+  const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
+  const [demoError, setDemoError] = useState<string | null>(null);
+  const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((res) => res.json())
+      .then((providers) => setTestLoginAvailable(Boolean(providers?.["test-account"])))
+      .catch(() => setTestLoginAvailable(false));
+  }, []);
+
+  // Catches the toast set by Sidebar right before sign-out redirected here —
+  // a toast fired on that page would just vanish with the navigation.
+  useEffect(() => {
+    const pending = consumePendingToast();
+    if (pending) showToast(pending.message, pending.variant);
+  }, [showToast]);
+
+  function signInWithGithub() {
+    setPendingToast("Signed in with GitHub");
+    signIn("github", { callbackUrl: "/dashboard/profile" });
+  }
+
+  async function handleDemoSubmit(e: FormEvent) {
+    e.preventDefault();
+    setDemoError(null);
+    setIsSubmittingDemo(true);
+    const res = await signIn("demo-account", {
+      email: demoEmail,
+      password: demoPassword,
+      redirect: false,
+    });
+    setIsSubmittingDemo(false);
+    if (res?.error) {
+      setDemoError("Invalid demo credentials.");
+    } else {
+      setPendingToast("Viewing the demo profile");
+      router.push("/dashboard/profile");
+    }
+  }
+
+  function signInAsTestUser() {
+    setPendingToast("Signed in as Test Developer");
+    signIn("test-account", { callbackUrl: "/dashboard/profile" });
+  }
+
   return (
     <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-background-elevated p-8 text-center">
       <div className="flex justify-center">
         <IPSkillLogo size={96} />
       </div>
-      <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-white">IPSkill</h1>
+      <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-heading">IPSkill</h1>
       <p className="mt-1 text-xs uppercase tracking-widest text-text-secondary">
         Unique Skills, Perfect Match.
       </p>
 
       <div className="mt-8 flex flex-col gap-3">
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="rounded-xl bg-primary-gradient px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+          onClick={signInWithGithub}
+          className="flex items-center justify-center gap-2 rounded-full bg-primary-gradient px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
-          Get Started
+          Get Started <ArrowRightIcon size={16} />
         </button>
 
         <button
           disabled
           title="Google sign-in is not wired up yet — use GitHub for now"
-          className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-400 opacity-50"
+          className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-400 opacity-50"
         >
           Continue with Google
         </button>
 
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
+          onClick={signInWithGithub}
+          className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GithubMark /> Continue with GitHub
         </button>
 
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard/profile" })}
-          className="rounded-xl border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-white"
+          onClick={signInWithGithub}
+          className="rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
         >
           Log in
         </button>
+
+        {testLoginAvailable && (
+          <button
+            onClick={signInAsTestUser}
+            className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
+          >
+            Continue as Test User (dev only)
+          </button>
+        )}
       </div>
+
+      <div className="mt-6 flex items-center gap-3 text-[11px] uppercase tracking-widest text-text-muted">
+        <div className="h-px flex-1 bg-surface-border" />
+        View a demo profile
+        <div className="h-px flex-1 bg-surface-border" />
+      </div>
+
+      <form onSubmit={handleDemoSubmit} className="mt-4 flex flex-col gap-2 text-left">
+        <input
+          type="email"
+          value={demoEmail}
+          onChange={(e) => setDemoEmail(e.target.value)}
+          placeholder="admin@admin.com"
+          className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
+        />
+        <input
+          type="password"
+          value={demoPassword}
+          onChange={(e) => setDemoPassword(e.target.value)}
+          placeholder="1234"
+          className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
+        />
+        {demoError && <p className="text-xs text-accent-red">{demoError}</p>}
+        <button
+          type="submit"
+          disabled={isSubmittingDemo}
+          className="rounded-full border border-primary/40 px-4 py-3 text-sm font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
+        >
+          {isSubmittingDemo ? "Loading demo…" : "View Demo Profile"}
+        </button>
+        <p className="text-center text-xs text-text-muted">
+          Prefilled with the public demo login — a fully populated proof-of-concept profile.
+        </p>
+      </form>
     </div>
   );
 }

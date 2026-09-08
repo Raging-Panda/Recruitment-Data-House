@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Polygon, Line, Circle } from "react-native-svg";
 import type { SkillFingerprint } from "@ipskill/shared";
+import { colors } from "@ipskill/shared";
+import { useTheme, type ThemeColors } from "@/lib/theme-context";
 
 const SIZE = 280;
 const CENTER = SIZE / 2;
 const MAX_RADIUS = SIZE / 2 - 40;
 
 export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint }) {
+  const { colors: themeColors } = useTheme();
+  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
   const entries = Object.entries(fingerprint);
   const angleStep = (2 * Math.PI) / entries.length;
 
@@ -37,7 +41,7 @@ export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint
             <Polygon
               key={level}
               points={gridPoints}
-              stroke="#2A2A4A"
+              stroke={themeColors.surfaceBorder}
               strokeWidth={1}
               fill="none"
             />
@@ -53,15 +57,21 @@ export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint
               y1={CENTER}
               x2={outer.x}
               y2={outer.y}
-              stroke="#2A2A4A"
+              stroke={themeColors.surfaceBorder}
               strokeWidth={1}
             />
           );
         })}
 
-        <Polygon points={dataPolygon} stroke="#A855F7" strokeWidth={2} fill="#7C3AED" fillOpacity={0.5} />
+        <Polygon
+          points={dataPolygon}
+          stroke={colors.violet}
+          strokeWidth={2}
+          fill={colors.purple}
+          fillOpacity={0.5}
+        />
         {dataPoints.map((p, i) => (
-          <Circle key={i} cx={p.x} cy={p.y} r={3} fill="#A855F7" />
+          <Circle key={i} cx={p.x} cy={p.y} r={3} fill={colors.violet} />
         ))}
       </Svg>
 
@@ -89,17 +99,19 @@ export function SkillRadarChart({ fingerprint }: { fingerprint: SkillFingerprint
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: SIZE,
-    height: SIZE,
-    alignSelf: "center",
-  },
-  label: {
-    position: "absolute",
-    width: 80,
-    textAlign: "center",
-    fontSize: 10,
-    color: "#9797B5",
-  },
-});
+function createStyles(themeColors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      width: SIZE,
+      height: SIZE,
+      alignSelf: "center",
+    },
+    label: {
+      position: "absolute",
+      width: 80,
+      textAlign: "center",
+      fontSize: 10,
+      color: themeColors.textSecondary,
+    },
+  });
+}

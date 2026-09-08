@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToWorkExperience } from "@/lib/experience";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -28,6 +30,7 @@ export async function POST(req: NextRequest) {
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const body = await req.json();
   const { company, role, location, startDate, endDate, isCurrent, description } = body ?? {};
@@ -57,6 +60,13 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  void createNotification(session.githubId, {
+    type: "experience_added",
+    title: "Experience added",
+    body: `${role} at ${company}`,
+    link: "/dashboard/experience",
+  });
 
   return NextResponse.json({ entry: rowToWorkExperience(data) }, { status: 201 });
 }

@@ -1,17 +1,87 @@
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import { authOptions } from "@/lib/auth";
-import { loadDeveloperHubData } from "@/lib/developer-data";
+import { loadDeveloperHubData, loadContributionCalendar } from "@/lib/developer-data";
+import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
+import { getOnboardingChecklist } from "@/lib/onboarding";
+import { syncDirectoryProfile } from "@/lib/directory";
+import { getEndorsementsFor } from "@/lib/endorsements";
+import { getPublicProfileLinkStatus, type PublicProfileLinkStatus } from "@/lib/public-profile-link";
+import { getSkillTestOptions, type SkillTestOption } from "@/lib/skill-test-options";
+import { isDemoAccount } from "@/lib/demo-mode";
+import { isTestAccount } from "@/lib/test-mode";
+import { DEMO_ENDORSEMENTS, DEMO_PUBLIC_LINK_STATUS } from "@/lib/demo-data";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
+import { DisplayNameEditor } from "@/components/display-name-editor";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
+import { EndorsementList } from "@/components/endorsement-list";
+import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
+import { ContributionHeatmap } from "@/components/contribution-heatmap";
+import { GetVerifiedSkillButton } from "@/components/get-verified-skill-modal";
+import { buttonClass } from "@/lib/button-styles";
+import type { ContributionDay, Endorsement } from "@ipskill/shared";
+
+const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
+  token: null,
+  path: null,
+  createdAt: null,
+  expiresAt: null,
+  isExpired: false,
+  isRevoked: false,
+  viewCount: 0,
+};
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
-  const { profile, activity } = await loadDeveloperHubData(session!.accessToken!);
+  const [{ profile, activity, skillFingerprint }, override] = await Promise.all([
+    loadDeveloperHubData(session!.accessToken!, session!.githubId!),
+    getCandidateProfileOverrideSafe(session!.githubId!),
+  ]);
+  const displayName = override?.displayName ?? profile.name;
+  const checklist = await getOnboardingChecklist(session!.githubId!, profile, Boolean(override));
+  const isDemo = isDemoAccount(session!.githubId);
+
+  let endorsements: Endorsement[] = [];
+  let linkStatus: PublicProfileLinkStatus = EMPTY_LINK_STATUS;
+  if (isDemo) {
+    endorsements = DEMO_ENDORSEMENTS[session!.githubId!] ?? [];
+    linkStatus = DEMO_PUBLIC_LINK_STATUS;
+  } else if (!isTestAccount(session!.githubId)) {
+    void syncDirectoryProfile(session!.githubId!, displayName, profile, activity, skillFingerprint);
+    try {
+      endorsements = await getEndorsementsFor(session!.githubId!);
+    } catch {
+      endorsements = [];
+    }
+    try {
+      linkStatus = await getPublicProfileLinkStatus(session!.githubId!);
+    } catch {
+      linkStatus = EMPTY_LINK_STATUS;
+    }
+  }
+
+  let contributionDays: ContributionDay[] = [];
+  try {
+    contributionDays = await loadContributionCalendar(
+      session!.accessToken!,
+      session!.githubId!,
+      profile.githubLogin
+    );
+  } catch {
+    contributionDays = [];
+  }
+
+  let skillTestOptions: SkillTestOption[] = [];
+  try {
+    skillTestOptions = await getSkillTestOptions();
+  } catch {
+    skillTestOptions = [];
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-bold text-white">My Profile</h1>
+      <h1 className="text-2xl font-bold text-heading">My Profile</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Your developer profile, sourced live from GitHub.
       </p>
@@ -19,15 +89,13 @@ export default async function ProfilePage() {
       <div className="mt-6 grid grid-cols-1 gap-6 rounded-2xl border border-surface-border bg-background-elevated p-6 md:grid-cols-[auto_1fr_auto]">
         <Image
           src={profile.avatarUrl}
-          alt={profile.name}
+          alt={displayName}
           width={88}
           height={88}
           className="rounded-full"
         />
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-            {profile.name} <span className="text-primary">✓</span>
-          </h2>
+          <DisplayNameEditor initialName={displayName} />
           <p className="text-sm text-text-secondary">{profile.headline}</p>
           {profile.location && (
             <p className="mt-1 text-xs text-text-muted">📍 {profile.location}</p>
@@ -35,15 +103,17 @@ export default async function ProfilePage() {
           <p className="mt-3 max-w-md text-sm text-text-secondary">
             {profile.about ?? "No bio provided on GitHub yet."}
           </p>
+          <p className="mt-3 text-xs text-text-muted">@{profile.githubLogin}</p>
         </div>
-        <ScoreRing score={profile.overallScore} label="Profile Completion" />
+        <ScoreRing score={checklist.percentage} label="Profile Completion" />
       </div>
+
+      <OnboardingChecklist items={checklist.items} percentage={checklist.percentage} />
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
         <InfoCard title="Personal Information">
-          <Row label="Full Name" value={profile.name} />
+          <Row label="Full Name" value={displayName} />
           <Row label="Location" value={profile.location ?? "Not set on GitHub"} />
-          <Row label="GitHub" value={`@${profile.githubLogin}`} />
         </InfoCard>
 
         <InfoCard title="Professional Information">
@@ -70,6 +140,54 @@ export default async function ProfilePage() {
             Resume upload isn&apos;t wired up yet — coming in a later milestone.
           </p>
         </InfoCard>
+
+        <PublicProfileLinkCard initialStatus={linkStatus} isDemo={isDemo} />
+
+        <InfoCard title="Export Profile">
+          <p className="pt-1 text-sm text-text-muted">
+            A one-page PDF summary of your profile and skill fingerprint — pairs well with your
+            share link above for sending directly to a client.
+          </p>
+          <a
+            href="/api/profile/pdf"
+            download={`ipskill-${profile.githubLogin}-profile.pdf`}
+            className={`${buttonClass("primary", "sm")} mt-2 inline-flex`}
+          >
+            Download PDF
+          </a>
+        </InfoCard>
+
+        <InfoCard title="Verified Skills">
+          <p className="pt-1 text-sm text-text-muted">
+            Add another language or framework to your Verified Skills — a proctored-free knowledge
+            check, separate from your GitHub-derived fingerprint.
+          </p>
+          <div className="mt-2">
+            <GetVerifiedSkillButton options={skillTestOptions} />
+          </div>
+        </InfoCard>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+        <h2 className="text-sm font-semibold text-heading">Contribution Activity</h2>
+        <p className="mt-1 text-xs text-text-secondary">
+          A consistency signal at a glance — easier to scan than the weekly commit trend on
+          Analytics.
+        </p>
+        <div className="mt-4">
+          <ContributionHeatmap days={contributionDays} />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
+        <p className="mt-1 text-xs text-text-muted">
+          A human signal from other developers on the platform, alongside your GitHub-derived
+          fingerprint. Given by other devs from your Directory profile.
+        </p>
+        <div className="mt-4">
+          <EndorsementList endorsements={endorsements} />
+        </div>
       </div>
     </div>
   );
@@ -79,7 +197,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 text-sm">
       <span className="text-text-secondary">{label}</span>
-      <span className="text-white">{value}</span>
+      <span className="text-heading">{value}</span>
     </div>
   );
 }

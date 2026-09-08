@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import type { Certification } from "@ipskill/shared";
+import { buttonClass } from "@/lib/button-styles";
+import { EmptyState } from "@/components/empty-state";
+import { ShieldCheckIcon } from "@/components/icons";
+import { useToast } from "@/components/toast-provider";
+
+const INPUT_CLASS =
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
 
 interface FormState {
   name: string;
@@ -39,6 +46,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showToast = useToast();
 
   function startAdd() {
     setForm(EMPTY_FORM);
@@ -65,7 +73,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
     setError(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form.name || !form.issuer || !form.issueDate) {
       setError("Name, issuer, and issue date are required.");
@@ -100,8 +108,11 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
         return prev.map((e) => (e.id === data.entry.id ? data.entry : e));
       });
       setEditingId(null);
+      showToast(isNew ? "Certification added" : "Certification updated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      const message = err instanceof Error ? err.message : "Failed to save";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSaving(false);
     }
@@ -111,15 +122,20 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
     const res = await fetch(`/api/certifications/${id}`, { method: "DELETE" });
     if (res.ok) {
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      showToast("Certification deleted");
+    } else {
+      showToast("Failed to delete certification", "error");
     }
   }
 
   return (
     <div className="mt-6">
       {entries.length === 0 && editingId === null && (
-        <div className="rounded-2xl border border-dashed border-surface-border bg-background-elevated p-10 text-center">
-          <p className="text-sm text-text-secondary">No certifications added yet.</p>
-        </div>
+        <EmptyState
+          icon={ShieldCheckIcon}
+          title="No certifications added yet"
+          description="Add a certification to show off verified credentials on your profile."
+        />
       )}
 
       <div className="flex flex-col gap-3">
@@ -128,9 +144,9 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
             key={entry.id}
             className="rounded-2xl border border-surface-border bg-background-elevated p-5"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold text-white">{entry.name}</h3>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-heading">{entry.name}</h3>
                 <p className="text-sm text-text-secondary">{entry.issuer}</p>
                 <p className="mt-1 text-xs text-text-muted">
                   Issued {formatMonth(entry.issueDate)}
@@ -153,7 +169,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                   <p className="mt-2 text-sm text-text-secondary">{entry.description}</p>
                 )}
               </div>
-              <div className="flex gap-3 text-xs">
+              <div className="flex shrink-0 gap-3 text-xs">
                 <button
                   onClick={() => startEdit(entry)}
                   className="text-primary hover:underline"
@@ -162,7 +178,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="text-accent-pink hover:underline"
+                  className="text-accent-red hover:underline"
                 >
                   Delete
                 </button>
@@ -173,10 +189,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
       </div>
 
       {editingId === null && (
-        <button
-          onClick={startAdd}
-          className="mt-4 rounded-xl bg-primary-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-        >
+        <button onClick={startAdd} className={buttonClass("primary", "md", "mt-4")}>
           + Add Certification
         </button>
       )}
@@ -191,7 +204,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -199,7 +212,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
               <input
                 value={form.issuer}
                 onChange={(e) => setForm({ ...form, issuer: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -208,7 +221,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 type="month"
                 value={form.issueDate}
                 onChange={(e) => setForm({ ...form, issueDate: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -217,14 +230,14 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 type="month"
                 value={form.expiryDate}
                 onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
             <Field label="Credential ID (optional)">
               <input
                 value={form.credentialId}
                 onChange={(e) => setForm({ ...form, credentialId: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
             <Field label="Credential URL (optional)">
@@ -232,7 +245,7 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
                 type="url"
                 value={form.credentialUrl}
                 onChange={(e) => setForm({ ...form, credentialUrl: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
           </div>
@@ -241,47 +254,27 @@ export function CertificationsManager({ initialEntries }: { initialEntries: Cert
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input min-h-20"
+              className={`${INPUT_CLASS} min-h-20`}
             />
           </Field>
 
-          {error && <p className="text-sm text-accent-pink">{error}</p>}
+          {error && <p className="text-sm text-accent-red">{error}</p>}
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-primary-gradient px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
+            <button type="submit" disabled={isSaving} className={buttonClass("primary")}>
               {isSaving ? "Saving…" : "Save"}
             </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="rounded-lg border border-surface-border px-4 py-2 text-sm text-text-secondary"
-            >
+            <button type="button" onClick={cancelEdit} className={buttonClass("ghost")}>
               Cancel
             </button>
           </div>
         </form>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border-radius: 0.5rem;
-          border: 1px solid #2a2a4a;
-          background-color: #1a1a35;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-xs text-text-secondary">
       {label}

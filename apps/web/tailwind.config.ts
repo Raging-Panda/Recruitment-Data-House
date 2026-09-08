@@ -6,20 +6,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: colors.background,
-        "background-elevated": colors.backgroundElevated,
-        surface: colors.surface,
-        "surface-border": colors.surfaceBorder,
+        // Theme-dependent (see globals.css :root / [data-theme="light"]) —
+        // these are the only tokens that flip between dark and light mode.
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        "background-elevated": "rgb(var(--color-background-elevated) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        "surface-border": "rgb(var(--color-surface-border) / <alpha-value>)",
+        "text-secondary": "rgb(var(--color-text-secondary) / <alpha-value>)",
+        "text-muted": "rgb(var(--color-text-muted) / <alpha-value>)",
+        heading: "rgb(var(--color-heading) / <alpha-value>)",
+        // Brand/accent colors stay constant across both themes.
         primary: colors.primary,
         "primary-from": colors.primaryGradientFrom,
         "primary-to": colors.primaryGradientTo,
         "accent-pink": colors.accentPink,
         "accent-green": colors.accentGreen,
-        "text-secondary": colors.textSecondary,
-        "text-muted": colors.textMuted,
+        "accent-amber": colors.accentAmber,
+        "accent-red": colors.accentRed,
+        "light-gray": colors.lightGray,
+        navy: colors.navy,
+        purple: colors.purple,
+        violet: colors.violet,
+        indigo: colors.indigo,
+        "midnight-blue": colors.midnightBlue,
+        "deep-navy": colors.deepNavy,
       },
       backgroundImage: {
-        "primary-gradient": `linear-gradient(90deg, ${colors.primaryGradientFrom} 0%, ${colors.primaryGradientTo} 100%)`,
+        "primary-gradient": `linear-gradient(135deg, ${colors.primaryGradientFrom} 0%, ${colors.primaryGradientTo} 100%)`,
       },
     },
   },

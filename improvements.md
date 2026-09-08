@@ -12,21 +12,80 @@ scheduled or scoped yet — just a running list to pull from.
   fingerprint. Deliberately not a real coding/execution sandbox; the
   plan is to migrate to a third-party assessment vendor (see below)
   once the app is earning revenue to justify the per-candidate cost.
-- **Recent project history with GitHub** — a timeline view of recent
-  commits/PRs/releases per repo, not just the current snapshot, so
-  recruiters can see trajectory (ramping up, going quiet, switching
-  stacks) rather than a single point-in-time score.
-- **Next position suggestions** — given a candidate's skill
-  fingerprint and activity trend, surface role types/seniority levels
-  they're likely a good fit for (e.g. "Senior Backend — Go/Postgres").
-- **Developer directory with filters** — searchable list of devs,
-  filterable by region, primary language, skill level, availability,
-  and verification status. This is the recruiter-facing counterpart
-  to the candidate-facing profile screens already built.
-- **Profile view counter** — increment when a profile is opened, and
-  again on sustained scroll/dwell (not just a page hit) so "Profile
-  Views" on the Analytics screen becomes a real metric instead of the
-  current derived placeholder.
+  **Difficulty tiers scaffolded, content not yet written**: a 9-tier
+  ladder (Beginner 1-3, Intermediate 1-3, Advanced 1-3) exists as
+  `is_active=false` placeholder rows across 16 skills (Python, Go,
+  Vue, C#, AWS, Azure, JavaScript/TypeScript, SQL, Docker &
+  Kubernetes, Java, Acumatica, HubSpot, ClickUp, HTML, CSS, PHP) —
+  144 template rows total, each tagged with a `target_question_count`
+  (5 at Beginner 1 up to 9 at Advanced 3) as a guide for whoever
+  writes the actual questions. The original 3 single-tier
+  "Fundamentals" tests (JavaScript, Python, SQL) stay active until
+  replaced by their leveled equivalents, so Verified Skills isn't
+  empty in the meantime. Next step: author real questions per
+  tier/skill, then flip `is_active` on as each is ready.
+- **"Get More Verified Skills" entry point on Profile** — ✅ shipped:
+  a "Verified Skills" card on the Profile page with a button that
+  opens a modal listing every stack in `skill_test_templates`
+  (`lib/skill-test-options.ts` groups all 16 by stack, active or not).
+  Stacks with a live test (currently JavaScript, Python, SQL) are
+  clickable and jump straight to `/dashboard/skills/tests/[slug]`;
+  the other 13 — scaffolded per the difficulty-tier item above but with
+  no question content yet — show as disabled "Coming soon" rather than
+  being hidden, so the modal doubles as an honest preview of what's
+  planned. Available options sort first, then alphabetical. Reuses the
+  same read pattern as the Skills page's own template list
+  (`skill_test_templates` is reference data, read the same way for
+  every account including demo — no fixture needed). Verified the
+  modal's open/close/Escape/backdrop-click mechanics directly; couldn't
+  exercise the live "Available" vs "Coming soon" split against real
+  data in this sandbox specifically because its dev server currently
+  can't reach Supabase at all (confirmed by checking that the
+  already-shipped Skills page shows the same "No skill tests available
+  yet" empty state right now) — not a bug introduced here. Traced the
+  grouping logic by hand against the real table contents (fetched via
+  the Supabase MCP tool, which doesn't go through the dev server) and
+  confirmed it produces the correct 3-available/13-coming-soon split.
+- **Recent project history with GitHub** — ✅ shipped: a "Recent
+  Activity" timeline on the Projects page merging commits/PRs/releases
+  across the top 6 most active repos into one chronological feed, so
+  it shows trajectory (ramping up, going quiet, switching stacks)
+  rather than just the static snapshot the project list gives on its
+  own.
+- **Next position suggestions** — ✅ shipped: the Analytics page now
+  surfaces a "Next Position Suggestions" card with a primary role
+  (e.g. "Staff Backend Engineer"), a match %, a top-language stack tag,
+  and up to two alternates (including "Engineering Lead" when
+  leadership + a strong domain both score highly). Deliberately
+  deterministic/rule-based rather than an AI/Gemini call — domain
+  scores come straight from the skill fingerprint, seniority blends
+  years of work experience (when available) with overall score and a
+  project-quality ratio (tests/CI/README/license across repos), and it
+  degrades gracefully to GitHub-only signals when no work experience is
+  on file. Verified on both the demo account (rich data → "Staff
+  Backend Engineer", 92% match) and the test account (no work
+  experience → correct Mid-Level fallback with an explicit "add work
+  experience for a more precise read" rationale line). Replaces the old
+  "AI Career Recommendations" placeholder.
+- **Developer directory with filters** — ✅ shipped: a searchable
+  Developer Directory (location, primary language, minimum skill
+  score, availability), with a read-only detail view per developer —
+  the recruiter-facing counterpart to the candidate-facing profile
+  screens. Entries are a cached snapshot (`directory_profiles`,
+  refreshed whenever a candidate visits their own Profile page), not a
+  live GitHub fetch, since we only ever hold the signed-in user's own
+  access token. **Update:** now lives inside the premium-gated
+  Recruiter Tools section (`/dashboard/recruiter/*`) rather than being
+  open to every signed-in dev — see "Recruiter Tools is now a separate
+  premium section" below. Still open: no verification-status filter
+  yet (waiting on the candidate-verification layer from `PLAN.md`).
+- **Profile view counter** — ✅ shipped (page-hit version): opening a
+  developer's directory entry records a real `profile_views` row
+  (self-views excluded), and the Analytics screen's "Profile Views"
+  stat now reads actual counts and a genuine month-over-month change%
+  instead of the derived placeholder. Still open: the sustained
+  scroll/dwell signal — this only counts a view on page open, not
+  engaged reading time.
 - **SSO login with Google or GitHub** — GitHub OAuth already works;
   add a real Google sign-in option too (currently a disabled
   placeholder button on the login screen) so candidates without a
@@ -37,32 +96,176 @@ scheduled or scoped yet — just a running list to pull from.
 - **GitLab / Bitbucket connectors** — extend the GitHub-only data
   source to cover SA enterprise/.NET devs who live on those
   platforms instead (already flagged as V2 in `PLAN.md`).
-- **Recruiter shortlists & saved searches** — let recruiters save
-  candidates into named lists per role, and save filter combinations
-  as alerts that notify them when a new matching profile appears.
-- **Peer/verified-engineer endorsements** — lightweight skill
-  endorsements from other verified developers on the platform, as a
-  human signal alongside the automated GitHub-derived fingerprint.
-- **Shareable public profile link** — a candidate-controlled,
-  revocable link (or PDF export) they can send directly to a client
-  outside the platform, with an expiry and view-count on the link
-  itself.
-- **Contribution activity heatmap** — GitHub-style calendar heatmap
-  on the profile, giving an at-a-glance consistency signal that's
-  easier to scan than the weekly commit-count chart.
-- **GitHub data caching/refresh layer** — cache aggregated GitHub API
-  results (with periodic or webhook-triggered refresh) instead of
-  recomputing language/PR/issue stats on every page load — needed
-  before this scales past a handful of users, since the current
-  scaffold hits GitHub's REST/Search API directly per request and
-  will run into rate limits.
-- **Recruiter-side profile engagement dashboard** — the inverse of
-  the candidate's own Analytics screen: which of a recruiter's
-  shortlisted/contacted candidates are most engaged, response rates,
-  time-to-first-view after shortlisting, etc.
-- **Skill freshness indicator** — flag when a listed skill hasn't
-  shown up in recent activity (e.g. "Python — last used 2019") so the
-  fingerprint reflects current ability, not just historical totals.
+- **Recruiter shortlists & saved searches** — ✅ shipped: a new
+  Shortlists page (`shortlists`, `shortlist_candidates`,
+  `saved_searches`, `saved_search_matches` tables) lets any signed-in
+  user bookmark Directory candidates into named lists (via a bookmark
+  button on each card, with inline "create a new list" support) and
+  save the current Directory filter combination by name. Saved
+  searches have a "Run" link that deep-links back into the Directory
+  with those filters pre-applied (`DirectoryBrowser` now accepts
+  `initialFilters`, parsed from the Directory page's URL query
+  params). The matching/notify half is real, not just a re-run
+  button: whenever a candidate's directory profile syncs (on their own
+  Profile page visit), `notifySavedSearchMatches` checks every other
+  user's saved searches with the exact same filter logic the browser
+  uses (`matchesDirectoryFilters`, extracted once and shared by both),
+  and creates a notification for the owner of each newly-matching
+  search — a `saved_search_matches` dedupe ledger (unique on
+  `(saved_search_id, candidate_github_id)`) means a candidate
+  revisiting their own profile never re-notifies the same recruiter
+  twice for the same match. Demo account shows two canned shortlists
+  and two canned saved searches (read-only, writes correctly 403
+  "shared demo account" like every other demo write path). Verified
+  end-to-end via Playwright: bookmark → create-list → shortlist detail
+  page → saved-search "Run" → correct filtered Directory results.
+  Still open: no "already in this shortlist" checkmark on the Directory
+  card itself, and no bulk actions (export shortlist, remove-all).
+  **Update:** now lives inside the premium-gated Recruiter Tools
+  section — see below.
+- **Recruiter Tools is now a separate premium section** — ✅ shipped:
+  the Directory, Shortlists/Saved Searches, and the new Compare view
+  (next bullet) were pulled out of the standard dev-profile sidebar
+  entirely and moved under `/dashboard/recruiter/*`, gated by a single
+  layout (`app/dashboard/recruiter/layout.tsx`) that renders a paywall
+  screen in place of the section for anyone without recruiter access.
+  It's reached from one dedicated sidebar card ("Recruiter Tools")
+  rather than being nav items mixed in with Profile/Skills/Projects —
+  clicking it either opens the section or shows "Upgrade Now".
+  **There is no real payment processor wired up yet** (Stripe is
+  available as a connector but not authorized in this environment).
+  Plans are a `plan` column (`free` | `premium_dev` |
+  `premium_recruiter`) on `candidate_profile` — see the next bullet
+  for why it's two premium tiers and not one boolean. Real accounts
+  self-serve straight to `premium_recruiter` via `/api/premium/upgrade`
+  (a stub — swapping in real billing is exactly the "Free vs. Premium
+  tiers" item further down). The demo account is always
+  `premium_recruiter` (public showcase always shows the full product).
+- **Test-only plan toggle** — ✅ shipped: the dev-only test account
+  (`ALLOW_TEST_LOGIN`) gets a "Test Plan" widget in the sidebar with
+  three buttons — Free / Premium Dev / Premium Recruiter — calling a
+  new `/api/premium/set-plan` route that's rejected (403) for every
+  other account, including demo, so it can never become a real-user
+  "set your own plan for free" backdoor. This exists because the real
+  self-serve upgrade flow is one-directional (free → premium_recruiter
+  only) and can't reach `premium_dev` at all, but QA needs to cycle
+  through all three states — including back down to free — to verify
+  every gate without real billing. This is also why the plan model has
+  two premium tiers instead of one: Premium Dev is reserved for future
+  candidate-side perks (not wired to anything gated yet — see "Free
+  vs. Premium tiers"), Premium Recruiter is the only one that unlocks
+  Recruiter Tools, and they're deliberately not hierarchical (Premium
+  Dev alone does not also grant recruiter access). Verified via
+  Playwright: demo account shows no Test Plan widget at all; test
+  account shows it defaulting to Free (paywalled), and clicking each
+  plan button correctly calls the route (fails gracefully with a toast
+  in this sandbox specifically because outbound Supabase calls aren't
+  allow-listed here — not an app bug); a demo-account request straight
+  to `/api/premium/set-plan` correctly 403s.
+- **Peer/verified-engineer endorsements** — ✅ shipped: a new
+  `endorsements` table (endorser/endorsee/skill_category/comment,
+  unique per endorser+endorsee+skill, self-endorsement blocked by a
+  DB check constraint) backs a lightweight "endorse a skill category"
+  flow: from a candidate's Directory detail page, any other signed-in
+  dev can endorse one of their skill categories with an optional
+  comment. Endorsements show up read-only on the endorsee's own
+  Profile page and on their Directory detail page, and fire a
+  notification (`endorsement_received`) to the endorsee. Endorser
+  display info (name/avatar) is resolved from `directory_profiles` at
+  read time rather than stored on the row, so it stays current and
+  degrades to "A verified developer" if the endorser has no directory
+  snapshot yet. "Verified" here just means "another real signed-in
+  account" — there's no separate identity-verification layer yet (see
+  `PLAN.md`). Because giving an endorsement currently rides on the
+  Directory detail page, it inherits that page's premium-recruiter
+  gate — genuinely open peer endorsement (any dev endorsing any other
+  dev, not just recruiters browsing the Directory) isn't possible
+  until candidates can view each other's profiles outside Recruiter
+  Tools. Demo account: read-only, two canned endorsements (on the demo
+  persona and on one seed candidate); the endorse form is hidden
+  entirely for demo (can't write). Verified via Playwright.
+- **Shareable public profile link** — ✅ shipped: a new
+  `public_profile_links` table (one row per candidate, a `token` uuid
+  swapped on regenerate, `expires_at`, `revoked`, `view_count`) backs a
+  "Share Your Profile" card on the Profile page — Generate, Regenerate
+  (old link stops working immediately), and Revoke, plus a live view
+  count and expiry date (90 days, reset on regenerate). The link
+  itself (`/p/[token]`) is a genuinely unauthenticated route outside
+  `/dashboard` — no login, no session — rendering the same read-only
+  view a recruiter sees on the Directory detail page (avatar, headline,
+  score, skill fingerprint, top languages, availability, endorsements),
+  looked up straight from the `directory_profiles` snapshot. An
+  invalid, revoked, or expired token all 404 identically, on purpose —
+  a dead link shouldn't hint at why. View-count increments are a
+  best-effort read-then-write, not atomic — acceptable for a low-
+  traffic share-link counter, same tradeoff as the rest of the app's
+  view tracking. PDF export (the alternative this bullet originally
+  offered) is still a separate open item below. Demo account shows a
+  read-only canned link; verified via Playwright that Regenerate/Revoke
+  are genuinely disabled for it, and that an invalid token 404s.
+- **Contribution activity heatmap** — ✅ shipped: a GitHub-style
+  calendar grid (`ContributionHeatmap`) on the Profile page, five
+  intensity levels + a "Less/More" legend, matching GitHub's own
+  weeks-as-columns layout. Required a new data source — GitHub's
+  per-day contribution calendar isn't exposed by the REST events
+  endpoint at all, only by the GraphQL API's
+  `contributionsCollection.contributionCalendar` field
+  (`fetchContributionCalendar` in `packages/shared`), the one GraphQL
+  call in an otherwise all-REST client. Cached like the rest of the
+  GitHub data (`lib/github-cache.ts`, a 6-hour TTL since a day's square
+  only changes once a day anyway) and loaded separately from
+  `loadDeveloperHubData` — like the Projects timeline, it's an extra
+  GitHub call only the Profile page needs, not every dashboard page.
+  Verified via Playwright against the demo account's fixture (365 day
+  cells rendered, correct tooltip text, correct total).
+- **GitHub data caching/refresh layer** — ✅ shipped: `loadDeveloperHubData`
+  and `loadProjectActivityTimeline` are now read-through cached in a
+  new `github_data_cache` table (`lib/github-cache.ts`), keyed by
+  `<github_id>:<kind>`. Before this, every one of the four dashboard
+  pages (Profile, Skills, Projects, Analytics) independently triggered
+  the full GitHub fan-out on its own — up to ~30 REST/Search calls for
+  the hub summary (`/user`, `/user/repos`, per-repo languages, PR/issue
+  search, events) plus ~18 more for the Projects timeline
+  (commits/PRs/releases across 6 repos) — meaning simply clicking
+  between dashboard pages repeatedly re-paid that cost per user. Hub
+  data gets a 10-minute TTL (feels stale fastest — skills/score change
+  often), the timeline gets 30 minutes (much more expensive to rebuild,
+  less need to be second-to-second fresh). A cache miss/expiry falls
+  through to a live fetch and repopulates the row; any Supabase error
+  degrades to a live fetch rather than breaking the page. Demo/test
+  accounts bypass the cache entirely since they never hit GitHub.
+  Still open: no manual "refresh now" action yet, and this is still
+  per-request REST calls on a miss rather than GraphQL batching (see
+  "Fewer GitHub round-trips" below) — the cache reduces call *volume*,
+  it doesn't reduce the cost of a single cold fetch.
+- **Recruiter-side profile engagement dashboard** — ✅ shipped: a new
+  "Engagement" tab in Recruiter Tools (`/dashboard/recruiter/engagement`,
+  `lib/recruiter-engagement.ts`) is the inverse of the candidate's own
+  Analytics screen — for the signed-in recruiter, it shows every
+  candidate across all their shortlists with view count, first/last
+  viewed date, and time-to-first-view after shortlisting, plus summary
+  stat tiles (total shortlisted, % viewed at least once, average time
+  to first view). Built entirely from data already tracked —
+  `shortlist_candidates.added_at` joined against `profile_views` rows
+  where the recruiter is the viewer — no new tables needed. Still
+  open: "response rates" from the original ask can't exist until real
+  in-app messaging replaces the current "contacting isn't wired up
+  yet" placeholder, since there's no "contacted" event to measure a
+  response against. Verified via Playwright against demo fixture data
+  (4 shortlisted candidates, 3 viewed, 75%, 11h avg time-to-first-view
+  — all matching the seeded numbers).
+- **Skill freshness indicator** — ✅ shipped: `buildLanguageBreakdown`
+  now tracks, per language, the most recent `updated_at` among repos
+  containing it (a repo-level proxy for "last used" — GitHub doesn't
+  expose per-language commit dates cheaply), exposed as
+  `LanguageBreakdownEntry.lastUsedAt`. The Skills page's Language
+  Breakdown now shows a caption per language
+  (`lib/analysis.ts`'s `describeSkillFreshness`) — "Used this month",
+  "Last used N months ago", or, once past a year, an amber ⚠ "Last
+  used 2024 — 1 yr ago" warning so the fingerprint reads as current
+  ability, not historical totals. Verified via Playwright with a
+  deliberately-stale fixture (Terraform, ~600 days) correctly flagged
+  while fresher languages show plain unstyled captions.
 - **Verification badges on the public profile** — once the
   candidate-verification layer from `PLAN.md` exists, surface exactly
   which checks passed (ID, qualification, employment history) as
@@ -71,36 +274,245 @@ scheduled or scoped yet — just a running list to pull from.
   team to review flagged profiles, manage verification statuses, and
   handle reported abuse (referral fraud, duplicate accounts, etc.).
 
+## North star: the best way to be known as a developer
+
+The end goal is for developers to feel that being on IPSkill is *the*
+way to be known — the canonical link they put in their GitHub bio,
+their résumé, their conference speaker card. Today the product is
+strong on *analysis* (a private dashboard of your GitHub signals) and
+thin on *presence* (being discoverable, having a public identity worth
+sharing). These items close that gap. Roughly ordered by leverage.
+
+### Public identity & discoverability
+
+- **Vanity public profile at a chosen handle** — the current public
+  link (`/p/[token]`) is an unguessable, expiring UUID: great for
+  "share this with one recruiter," useless for "be known." Add an
+  opt-in, permanent public profile at a clean URL
+  (`ipskill.com/@handle`) that the developer chooses. Same read-only
+  view the token page renders, but stable, brandable, and safe to put
+  in a GitHub bio. Keep the token link as the private-share option;
+  this is the public one. Needs a `handle` column (unique, reserved-
+  word list, change-with-redirect), a public/unlisted/private
+  visibility setting, and a decision on what's shown publicly by
+  default (probably: fingerprint, top languages, featured work,
+  verified skills, endorsements — not raw contribution counts or
+  location unless opted in).
+- **SEO-indexable public profiles** — once vanity profiles exist, make
+  them server-rendered with real `<title>`/meta/JSON-LD
+  (`Person` + `knowsAbout`), a per-profile OG image, and a
+  `sitemap.xml` that lists every public profile. The goal: searching a
+  developer's name surfaces their IPSkill profile on page one. This is
+  most of what "be known" actually means in practice.
+- **Auto-generated social share images** — a dynamic OG image per
+  public profile (avatar, name, headline, top-3 languages, overall
+  score, verified-skill count) via `@vercel/og` / Satori, so a link
+  pasted into Slack, X, LinkedIn, or a Discord renders as a rich card
+  instead of a bare URL. Cheap, high-visibility growth lever.
+- **Embeddable profile badge / card** — a small SVG badge
+  ("IPSkill: Backend 92 · 4 verified skills") and a richer iframe/web-
+  component card that a developer drops into their GitHub profile
+  README, personal site, or blog footer, each linking back to the
+  vanity profile. This is the classic developer-tool growth loop
+  (Shields.io, Wakatime, etc.) and turns every active user into a
+  distribution channel.
+- **Public developer index** — a browsable, opt-in public version of
+  the Directory (no recruiter paywall) so profiles are found by
+  browsing and filtering, not only by direct link. Privacy-first:
+  appears only if the developer set their profile public. Recruiter
+  Tools stays premium for the *saved searches / shortlists / compare /
+  engagement* workflow on top of it.
+- **"Claim your profile" for unconnected devs** — optionally
+  pre-generate lightweight stub profiles from public GitHub data for
+  well-known OSS contributors, with a prominent "is this you? claim
+  it" flow. Bootstraps the index and gives new visitors something to
+  land on. Needs care around consent/POPIA and a clean opt-out.
+
+### Proof that can't be faked
+
+- **Proof-of-work links on skill claims** — let a developer attach a
+  specific public artifact (a merged PR, a release, a commit range, an
+  npm package, a talk) to a skill or fingerprint category, so a claim
+  is backed by a concrete, clickable thing rather than only the
+  heatmap-derived score. Recruiters (and peers) can click through and
+  verify.
+- **Verified work history** — confirm a work-experience entry via
+  company-domain email verification (or the eventual third-party
+  employment check from `PLAN.md`), and badge it "Verified employer"
+  so the experience section isn't purely self-asserted.
+- **Signed profile snapshot** — a tamper-evident, dated attestation
+  (signed JSON + matching PDF) of a developer's fingerprint/verified
+  skills at a point in time, verifiable against an IPSkill public key.
+  Lets a profile carry weight even when pasted somewhere IPSkill
+  doesn't control. Extends the existing PDF export.
+- **Credibility-weighted endorsements** — weight an endorsement by the
+  endorser's own verified standing (verified identity, own fingerprint
+  strength, whether they actually share repo history with the
+  endorsee) rather than counting all endorsements equally, so the
+  signal resists reciprocal-endorsement gaming. Surface "endorsed by N
+  developers, M of them verified."
+
+### Narrative & the whole developer
+
+- **Authored "About" / narrative layer** — a developer-written section
+  (what they build, what they care about, what they're looking for)
+  that sits above the auto-derived stats, so the profile reads as a
+  person, not a readout. Markdown, length-capped, with a tasteful
+  default pulled from the GitHub bio.
+- **Featured work with written context** — let a developer pin 3–6
+  projects and write a short blurb for each (their role, why it
+  matters, the hard part), instead of the profile only ranking repos
+  by stars/recency. Curated storytelling beats a raw repo dump for
+  "who is this developer."
+- **Beyond GitHub: writing, talks, packages, OSS** — structured slots
+  for blog posts, conference talks, published packages (npm/PyPI/
+  crates/NuGet), and notable OSS contributions to repos the developer
+  doesn't own, so the profile covers the whole footprint rather than
+  just personal-repo activity. Directly widens who the product is
+  credible for (many strong devs have thin personal GitHubs).
+- **Unified career timeline** — one visual narrative that merges work
+  experience, GitHub trajectory, certifications, and verified skill
+  tests into a single dated story, instead of four separate cards. The
+  "trajectory, not snapshot" idea from the Projects timeline, applied
+  to the whole profile.
+- **"Currently" block** — a short, prominent "what I'm working on /
+  learning / open to right now" line that the developer keeps fresh;
+  makes the profile feel live and gives recruiters a current hook.
+
+### Network effects & staying power
+
+- **Follow / developer activity feed** — let developers follow each
+  other and see a feed of followed devs' milestones (shipped a
+  release, passed a verified skill, big fingerprint jump). Turns
+  IPSkill from a résumé host you visit once into a place developers
+  come back to — the thing that actually makes it "where developers
+  are."
+- **Open peer endorsements** — decouple giving an endorsement from the
+  recruiter-gated Directory detail page so any signed-in developer can
+  endorse any other developer from their public profile. Currently
+  blocked because devs can't view each other outside Recruiter Tools;
+  the vanity-profile + public-index items above remove that blocker.
+- **Team / organisation pages** — a company page that groups its
+  engineers' profiles, so an eng-led org can bring its whole team on
+  at once (and show off its bench). A natural top-of-funnel for
+  bulk sign-ups and, later, for employer branding as a paid feature.
+- **Milestone kudos** — lightweight reactions/congrats on a
+  developer's public milestones, feeding the activity feed and giving
+  a low-effort reason to engage with someone else's profile.
+- **Trending developers** — a public "fastest-growing this month" /
+  "developer spotlight" surface (shares the month-over-month
+  snapshotting that Growth Olympics needs), giving strong-but-unknown
+  developers a discovery path and the platform fresh public content.
+
+### Distribution & portability
+
+- **"Sign in with IPSkill" / portable profile** — an OAuth provider +
+  scoped read API so job boards, dev tools, and ATS systems can let a
+  developer bring their verified IPSkill profile with them, making it
+  the identity layer rather than one more siloed profile. (Overlaps
+  the "Public API for enterprise clients" item under New features —
+  same infrastructure, developer-consented rather than
+  client-purchased.)
+- **Browser extension: IPSkill score on GitHub** — an optional
+  extension that shows a developer's IPSkill fingerprint/verified
+  badges inline on their GitHub profile and on PR author hovercards,
+  putting the signal where recruiters and devs already look.
+
 ## Visual & UI polish
 
-- **Loading states** — real skeleton screens (profile card, radar
-  chart, project list shapes) while GitHub data loads, instead of a
-  blank page (web) or a bare spinner (mobile). Includes a branded
-  splash/loading screen on mobile app cold start.
-- **Real icon set** — swap the emoji placeholders (🔔 🏠 🔍 💬 👤 📊 in
-  the sidebar/tab bar/topbar) for a proper icon library that matches
-  the fingerprint line-art of the IPSkill logo, with consistent
-  sizing and active/inactive states.
-- **Empty states with illustration + copy** — "No projects yet",
-  "No language data yet" etc. are currently plain text; give them a
-  small illustration and a clear next action (e.g. "Push a commit to
-  see this fill in").
-- **Functional light mode** — the Dark Mode toggle in the web sidebar
-  currently just flips visually without restyling anything; either
-  wire up a real light theme or remove the toggle until it does.
-- **Toasts/inline feedback** — confirm actions (login success, sign
-  out, save) with toasts/snackbars instead of silent state changes.
-- **Animated skill radar** — animate the radar chart filling in on
-  first load and transitioning when the underlying data refreshes,
-  rather than snapping straight to final values.
-- **Design token audit** — the web (Tailwind config) and mobile
-  (theme/index.ts) color/spacing tokens are hand-duplicated from
-  `packages/shared`'s theme values; tighten this so both platforms
-  visibly drift less over time as the palette evolves.
-- **Actionable onboarding checklist** — turn the Profile Completion
-  ring into a real checklist ("Connect GitHub ✓", "Add a bio",
-  "Run a skill test") with links straight to the missing step, like
-  LinkedIn's profile-completion nudges.
+- **Loading states** — ✅ shipped on both platforms. Web: every
+  data-fetching dashboard page (Profile, Skills, Projects, Analytics,
+  Experience, Certifications) has a `loading.tsx` skeleton shaped like
+  its real layout, via Next.js's automatic Suspense-boundary
+  convention — the sidebar/topbar stay live, only the content area
+  shows placeholders. Mobile: added a `BrandedLoadingScreen` (logo +
+  spinner) replacing the bare `ActivityIndicator` on Profile and
+  Analytics' full-page loads, and used it to fix a real bug along the
+  way — `App.tsx` ignored `useAuth()`'s `isLoading` entirely, so a
+  returning signed-in user briefly flashed the login screen every cold
+  start while the stored token loaded from SecureStore.
+- **Real icon set** — ✅ shipped: a shared line-icon set (outline style,
+  matching the IPSkill brand's design system) now covers the web
+  sidebar/topbar/nav and the mobile tab bar, replacing the emoji
+  placeholders (🔔 🏠 🔍 💬 👤 📊) that used to be there. Active/inactive
+  *states* beyond color are also shipped on web now (see below) —
+  mobile's tab bar still only differs by tint color, no filled/outline
+  distinction yet.
+- **Empty states with illustration + copy** — ✅ shipped: a shared
+  EmptyState component (icon badge + title + actionable copy) now
+  covers Projects, Skills' language breakdown, Verified Skills,
+  Experience, Certifications, Recent Activity, and the
+  Achievements/Settings stubs — replacing the old plain "No X yet"
+  text.
+- **Functional light mode** — ✅ shipped on both platforms. Web: the
+  Dark Mode toggle actually restyles the app. Structural tokens
+  (background, surfaces, borders, text) flip via CSS variables + a
+  `[data-theme]` attribute; brand/accent colors stay constant across
+  both themes by design. Persists to localStorage with a
+  before-hydration script to avoid a flash of the wrong theme. Mobile:
+  a `ThemeProvider` (persisted via `expo-secure-store`, reusing
+  `packages/shared`'s `lightColors` for the light palette) with a
+  sun/moon toggle on the Profile screen. Since React Native has no CSS
+  variables, every screen's `StyleSheet.create` call became a
+  `createStyles(colors)` function invoked per-render instead of a
+  static module-level object — a bigger refactor than web's version,
+  since the styles themselves needed to become reactive, not just the
+  values they reference.
+- **Toasts/inline feedback** — ✅ shipped, including login/logout: a
+  ToastProvider (bottom-right stack, auto-dismiss) confirms Experience
+  and Certifications save/delete, the profile display-name edit, and
+  now sign-in/sign-out too. The latter two survive their full-page
+  redirects via a small `lib/pending-toast.ts` helper — the message is
+  stashed in sessionStorage right before the redirect and consumed
+  once by whichever page mounts next (DashboardShell for sign-in,
+  LoginCard for sign-out), rather than firing right before navigation
+  and immediately vanishing.
+- **Animated skill radar** — ✅ shipped: each of the 8 skill points
+  extends individually in a staggered wave (100ms offset, ease-out)
+  rather than the whole polygon tweening as one uniform shape, driven
+  by a manual requestAnimationFrame loop instead of recharts' built-in
+  animation. Re-triggers correctly whenever the `fingerprint` prop
+  changes, not just on first mount.
+- **Design token audit** — ✅ shipped: found two real gaps and fixed
+  both. Web's `globals.css` hand-duplicated every dark/light color as
+  separate RGB-triplet CSS custom properties — now generated at
+  render time in `layout.tsx` from `packages/shared`'s `colors`/
+  `lightColors` via a `hexToRgbTriplet` helper, so there's exactly one
+  place these values are ever written (verified byte-identical output
+  before/after). Mobile's `theme/index.ts` retyped `spacing`/`radii`
+  literals that already existed in `packages/shared` (and had quietly
+  drifted — missing the `xxl` step) instead of importing them; now
+  imports directly. One accepted exception: `apps/mobile/app.json`'s
+  splash/background color has to stay a literal hex, since Expo's
+  static JSON manifest can't import from a TS package.
+- **Actionable onboarding checklist** — ✅ shipped: the Profile
+  Completion ring is now driven by a real six-item checklist (Connect
+  GitHub, set a display name, add a GitHub bio, add work experience,
+  add a certification, run a skill test), rendered below the ring with
+  each unfinished item linking straight to where to complete it. Fixes
+  a pre-existing bug in the process — the ring was previously showing
+  the GitHub skill-fingerprint average mislabeled as "Profile
+  Completion," a number unrelated to actual profile completeness.
+- **Mobile-responsive web dashboard** — ✅ shipped: the shell was
+  desktop-only (a permanent 256px sidebar, an 80-wide search bar, zero
+  responsive breakpoints on most pages). The sidebar is now an
+  off-canvas drawer below 1024px, opened via a hamburger button in the
+  topbar with a backdrop and auto-close on navigation; row-style cards
+  (Projects, Verified Skills, Experience, Certifications) stack
+  vertically below `sm` instead of squeezing a title and action
+  buttons into one row. Verified at 375/768/1280px with no horizontal
+  overflow at any width.
+- **Working notification bell** — ✅ shipped: the topbar bell was a
+  static icon with a permanent unread dot and no click behavior. Now
+  backed by a real `notifications` table (same RLS/service-role
+  pattern as the other candidate tables) — a dropdown shows an actual
+  unread count, mark-one/mark-all as read, and click-to-navigate.
+  Notifications are generated by genuine events (adding experience,
+  adding a certification, completing a skill test) rather than
+  fabricated activity. Still open: no notifications yet for things
+  outside the candidate's own actions (e.g. a recruiter viewing their
+  profile), since there's no recruiter-side activity to notify about
+  until that half of the platform exists.
 
 ## Performance
 
@@ -112,14 +524,39 @@ scheduled or scoped yet — just a running list to pull from.
   `useEffect` fetch in `use-developer-hub-data.ts` with React
   Query/SWR so data is cached, revalidated in the background, and
   doesn't re-fetch from scratch on every screen focus.
-- **Streaming/suspense on web** — use Next.js streaming so the
-  dashboard shell (sidebar, topbar) renders immediately while GitHub
-  data for the page body streams in, instead of blocking the whole
-  route on `loadDeveloperHubData`.
-- **Trim the skills bundle** — `recharts` alone accounts for ~94KB of
-  the Skills page's first-load JS; either code-split it behind a
-  dynamic import or swap it for a lighter/custom radar renderer like
-  the one already built for mobile.
+- **Streaming/suspense on web** — ✅ mostly already shipped, now
+  extended: the shell-vs-body split this item describes already exists
+  for every GitHub-data-heavy route (Profile, Skills, Projects,
+  Analytics) via each route's `loading.tsx` — Next's automatic
+  per-segment Suspense boundary — see "Loading states" above, which is
+  the same mechanism under a different heading. What this pass added
+  is *finer-grained* streaming *within* a page: the Analytics page's
+  two sections that need an extra fetch beyond the core
+  `loadDeveloperHubData` result (Next Position Suggestions needs
+  `work_experience`; the Profile Views stat needs `profile_views`) are
+  now separate async Server Components
+  (`NextPositionSuggestionsSection`, `ProfileViewsStat`) each in their
+  own `<Suspense>` with a lightweight skeleton fallback, so the rest of
+  the page — radar chart, category breakdown, strengths/gaps, growth
+  trend — no longer waits on those two extra round trips to appear.
+  Verified via Playwright that both sections still render correctly
+  under Suspense.
+- **Trim the skills bundle** — ✅ shipped: `SkillRadarChart` and
+  `CommitTrendChart` (both recharts-backed) are now lazy-loaded via
+  `next/dynamic` wrapped in small Client Components
+  (`skill-radar-chart-lazy.tsx`, `commit-trend-chart-lazy.tsx`) with
+  `ssr: false` and a skeleton fallback. The first attempt — calling
+  `next/dynamic` directly inside the Server Component pages — compiled
+  fine but didn't actually shrink anything, because Next disallows
+  `ssr: false` in a Server Component, and `ssr: true` dynamic imports
+  still count toward "First Load JS" since the client needs that code
+  immediately to hydrate the SSR'd output. Wrapping the dynamic import
+  in a genuine Client Component (which a Server Component page can
+  still render directly) was what actually deferred the load to after
+  hydration. Measured with `next build`: Analytics 195 kB → 89.1 kB,
+  Skills 198 kB → 100 kB, and the new public profile link page
+  192 kB → 94.2 kB — each chart now flashes a brief skeleton before
+  mounting client-side instead of shipping in the main bundle.
 - **Virtualize long lists** — the web Projects page and the eventual
   developer directory should virtualize rows once candidate/repo
   counts grow past a page or two (mobile's `FlatList` already does
@@ -133,26 +570,62 @@ scheduled or scoped yet — just a running list to pull from.
 - **Push notifications (mobile)** — notify candidates on profile
   views, shortlist activity, and messages via Expo push
   notifications.
-- **Candidate comparison view** — side-by-side skill fingerprints and
-  stats for a recruiter's shortlisted candidates.
+- **Candidate comparison view** — ✅ shipped: a new Compare tab in
+  Recruiter Tools (`/dashboard/recruiter/compare`) shows 2-4 selected
+  candidates side by side — overall score, location, top languages,
+  availability, and a bar-per-category breakdown of the full skill
+  fingerprint (Backend/Frontend/Database/DevOps/Cloud/Problem
+  Solving/Communication/Leadership). Selection happens via a
+  circle-select toggle added to both the Directory and Shortlist
+  candidate cards, with a floating "N selected · Compare" bar that
+  carries the choice into the URL (`?ids=a,b,c`) so the comparison is
+  linkable/shareable. Required extending `directory_profiles` with a
+  `skill_fingerprint` column, synced alongside the rest of the
+  directory row from the candidate's own Profile page visit — the same
+  cached-snapshot constraint as the rest of the Directory (we only
+  ever see a candidate's own most-recent sync, not a live fetch).
+  Verified via Playwright against the demo account's fixture data.
 - **Real two-factor authentication** — the Account Security card
   currently shows "Two-Factor Authentication: Enabled" as static
   copy; wire up an actual TOTP/authenticator flow.
-- **Export profile as PDF** — generate a client-shareable PDF summary
-  of a candidate's verified profile and skill fingerprint (pairs well
-  with the shareable-link idea above).
+- **Export profile as PDF** — ✅ shipped: a "Download PDF" button on
+  the Profile page (new "Export Profile" card, next to the share-link
+  card) hits `GET /api/profile/pdf`, which renders a one-page summary
+  — name/headline/location, overall score, the full skill-fingerprint
+  bar chart, top languages, and endorsements — via
+  `@react-pdf/renderer`'s `renderToBuffer`, returned as a real
+  `application/pdf` download. Chose `@react-pdf/renderer` (a
+  React-component-based PDF layout engine) over a headless-browser
+  approach (Puppeteer/Playwright printing an HTML page) specifically
+  to avoid bundling a Chromium binary into the deployment. Unlike
+  every write-gated route in the app, this one is intentionally open
+  to the demo account too — it's read-only, nothing is persisted.
+  Dropped the candidate's avatar photo from the layout after the
+  library's remote-image fetch silently produced a blank space rather
+  than an error — rather than debug that, left it out on purpose: a
+  photo-free skills summary is arguably the better default for a
+  document meant to leave the platform. Verified end-to-end: fetched
+  the real PDF bytes for the demo account, confirmed a valid `%PDF`
+  header, and inspected the rendered page directly — correct layout,
+  correct data, one page.
 - **Role/job matching module** — connect candidate profiles to open
   client roles from the core ATS/CRM (once built) and surface match
   scores based on the skill fingerprint.
-- **Free vs. Premium tiers** — define what's actually gated behind
-  the "Upgrade to Pro" button already sitting in the web sidebar
-  (currently just UI, not wired to anything). Needs: a concrete
-  feature split (e.g. free = basic profile + GitHub skill
-  fingerprint; premium = skill tests, PDF export, Growth Olympics
-  eligibility, priority placement in the recruiter directory),
-  subscription billing (Stripe is already available as a connector
-  but not yet authorized in this environment), and a `plan` field on
-  the user/profile model that every gated feature checks against.
+- **Free vs. Premium tiers** — 🟡 partially shipped: the mechanism now
+  exists as a `plan` column (`free` | `premium_dev` |
+  `premium_recruiter`, `lib/premium.ts`'s `getPlan()`) plus a self-serve
+  `/api/premium/upgrade` stub, and Recruiter Tools
+  (Directory/Shortlists/Compare) is the first feature actually gated
+  behind it (`premium_recruiter` specifically) — see "Recruiter Tools
+  is now a separate premium section" above. The `premium_dev` tier
+  exists in the schema and the test-plan toggle but isn't wired to any
+  gated feature yet. Still needed: real subscription billing (Stripe
+  is already available as a connector but not yet authorized in this
+  environment) to replace the upgrade stub, a concrete feature split
+  for what `premium_dev` actually unlocks (skill tests, PDF export,
+  Growth Olympics eligibility, etc. — still aren't gated by anything),
+  and a real checkout/plan-selection flow to replace the current
+  one-directional "Upgrade Now" button.
 - **Growth Olympics** — a monthly competition among premium users:
   whoever shows the biggest skill-fingerprint/activity growth over
   the month wins a prize (e.g. a R1000 Takealot voucher). Needs

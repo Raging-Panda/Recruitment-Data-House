@@ -1,22 +1,57 @@
 export const colors = {
-  background: "#0B0B1D",
-  backgroundElevated: "#13132B",
-  surface: "#1A1A35",
-  surfaceBorder: "#2A2A4A",
-  primary: "#7C3AED",
-  primaryGradientFrom: "#4C1D95",
-  primaryGradientTo: "#7C3AED",
+  background: "#05080F",
+  backgroundElevated: "#0A1120",
+  surface: "#111A2E",
+  surfaceBorder: "#1E2A44",
+  primary: "#5A18D6",
+  primaryGradientFrom: "#5A18D6",
+  primaryGradientTo: "#4020C4",
+  navy: "#081C5A",
+  purple: "#5A18D6",
+  violet: "#4020C4",
+  indigo: "#4020C4",
+  midnightBlue: "#081C5A",
+  deepNavy: "#1E293B",
   accentPink: "#EC4899",
-  accentGreen: "#22C55E",
+  accentGreen: "#10B981",
+  accentAmber: "#F59E0B",
+  accentRed: "#EF4444",
+  lightGray: "#F5F7FA",
   textPrimary: "#F5F5FA",
   textSecondary: "#9797B5",
   textMuted: "#5E5E80",
   white: "#FFFFFF",
 } as const;
 
-export const gradients = {
-  primaryButton: `linear-gradient(90deg, ${colors.primaryGradientFrom} 0%, ${colors.primaryGradientTo} 100%)`,
+/**
+ * Web's light-mode structural tokens — the only palette values that flip
+ * with the [data-theme] toggle. Brand/accent colors above stay constant
+ * across both themes by design, so they aren't duplicated here. Mobile
+ * doesn't have a light mode.
+ */
+export const lightColors = {
+  background: "#F5F7FA",
+  backgroundElevated: "#FFFFFF",
+  surface: "#E9ECF1",
+  surfaceBorder: "#DDE2EA",
+  textSecondary: "#5B6472",
+  textMuted: "#8B93A1",
+  heading: "#1E293B",
 } as const;
+
+export const gradients = {
+  primaryButton: `linear-gradient(135deg, ${colors.primaryGradientFrom} 0%, ${colors.primaryGradientTo} 100%)`,
+} as const;
+
+/** "#RRGGBB" -> "R G B", the space-separated triplet format Tailwind's
+ * `rgb(var(--x) / <alpha-value>)` opacity-modifier pattern requires. */
+export function hexToRgbTriplet(hex: string): string {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return `${r} ${g} ${b}`;
+}
 
 export const radii = {
   sm: 8,

@@ -1,21 +1,20 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useMemo } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useDeveloperHubData } from "@/lib/use-developer-hub-data";
-import { theme } from "@/theme";
+import { useTheme, type ThemeColors } from "@/lib/theme-context";
+import { BrandedLoadingScreen } from "@/components/BrandedLoadingScreen";
 import type { ProfileStackParamList } from "@/navigation/types";
 
 type Props = NativeStackScreenProps<ProfileStackParamList, "Analytics">;
 
 export function AnalyticsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { data, isLoading } = useDeveloperHubData();
 
   if (isLoading || !data) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
+    return <BrandedLoadingScreen label="Loading analytics…" />;
   }
 
   const { analytics } = data;
@@ -73,39 +72,41 @@ export function AnalyticsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 20 },
-  center: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-    marginBottom: 20,
-  },
-  back: { color: theme.colors.white, fontSize: 24 },
-  headerTitle: { color: theme.colors.white, fontSize: 18, fontWeight: "700" },
-  headerIcon: { color: theme.colors.textSecondary, fontSize: 12 },
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.surfaceBorder,
-    padding: 16,
-    marginBottom: 14,
-  },
-  cardLabel: { color: theme.colors.textSecondary, fontSize: 13 },
-  cardValueRow: { flexDirection: "row", alignItems: "baseline", gap: 10, marginTop: 6 },
-  cardValue: { color: theme.colors.white, fontSize: 24, fontWeight: "800" },
-  cardChange: { color: theme.colors.accentGreen, fontSize: 12 },
-  countryRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 },
-  countryName: { color: theme.colors.textSecondary, fontSize: 12, width: 90 },
-  barTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: theme.colors.backgroundElevated },
-  barFill: { height: 6, borderRadius: 3, backgroundColor: theme.colors.primary },
-  countryPct: { color: theme.colors.textSecondary, fontSize: 12, width: 32, textAlign: "right" },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: 20 },
+    center: {
+      flex: 1,
+      backgroundColor: colors.background,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingTop: 16,
+      marginBottom: 20,
+    },
+    back: { color: colors.heading, fontSize: 24 },
+    headerTitle: { color: colors.heading, fontSize: 18, fontWeight: "700" },
+    headerIcon: { color: colors.textSecondary, fontSize: 12 },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.surfaceBorder,
+      padding: 16,
+      marginBottom: 14,
+    },
+    cardLabel: { color: colors.textSecondary, fontSize: 13 },
+    cardValueRow: { flexDirection: "row", alignItems: "baseline", gap: 10, marginTop: 6 },
+    cardValue: { color: colors.heading, fontSize: 24, fontWeight: "800" },
+    cardChange: { color: colors.accentGreen, fontSize: 12 },
+    countryRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 },
+    countryName: { color: colors.textSecondary, fontSize: 12, width: 90 },
+    barTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.backgroundElevated },
+    barFill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
+    countryPct: { color: colors.textSecondary, fontSize: 12, width: 32, textAlign: "right" },
+  });
+}

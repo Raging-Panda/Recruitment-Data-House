@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import type { WorkExperience } from "@ipskill/shared";
+import { buttonClass } from "@/lib/button-styles";
+import { EmptyState } from "@/components/empty-state";
+import { LayersIcon } from "@/components/icons";
+import { useToast } from "@/components/toast-provider";
 
 interface FormState {
   company: string;
@@ -12,6 +16,9 @@ interface FormState {
   isCurrent: boolean;
   description: string;
 }
+
+const INPUT_CLASS =
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
 
 const EMPTY_FORM: FormState = {
   company: "",
@@ -40,6 +47,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showToast = useToast();
 
   function startAdd() {
     setForm(EMPTY_FORM);
@@ -66,7 +74,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
     setError(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form.company || !form.role || !form.startDate) {
       setError("Company, role, and start date are required.");
@@ -101,8 +109,11 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
         return prev.map((e) => (e.id === data.entry.id ? data.entry : e));
       });
       setEditingId(null);
+      showToast(isNew ? "Experience added" : "Experience updated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      const message = err instanceof Error ? err.message : "Failed to save";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSaving(false);
     }
@@ -112,15 +123,20 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
     const res = await fetch(`/api/experience/${id}`, { method: "DELETE" });
     if (res.ok) {
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      showToast("Experience deleted");
+    } else {
+      showToast("Failed to delete experience", "error");
     }
   }
 
   return (
     <div className="mt-6">
       {entries.length === 0 && editingId === null && (
-        <div className="rounded-2xl border border-dashed border-surface-border bg-background-elevated p-10 text-center">
-          <p className="text-sm text-text-secondary">No work history added yet.</p>
-        </div>
+        <EmptyState
+          icon={LayersIcon}
+          title="No work history added yet"
+          description="Add your first role to start building your experience timeline."
+        />
       )}
 
       <div className="flex flex-col gap-3">
@@ -129,9 +145,9 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
             key={entry.id}
             className="rounded-2xl border border-surface-border bg-background-elevated p-5"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold text-white">{entry.role}</h3>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-heading">{entry.role}</h3>
                 <p className="text-sm text-text-secondary">
                   {entry.company}
                   {entry.location ? ` · ${entry.location}` : ""}
@@ -143,7 +159,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                   <p className="mt-2 text-sm text-text-secondary">{entry.description}</p>
                 )}
               </div>
-              <div className="flex gap-3 text-xs">
+              <div className="flex shrink-0 gap-3 text-xs">
                 <button
                   onClick={() => startEdit(entry)}
                   className="text-primary hover:underline"
@@ -152,7 +168,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="text-accent-pink hover:underline"
+                  className="text-accent-red hover:underline"
                 >
                   Delete
                 </button>
@@ -163,10 +179,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
       </div>
 
       {editingId === null && (
-        <button
-          onClick={startAdd}
-          className="mt-4 rounded-xl bg-primary-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-        >
+        <button onClick={startAdd} className={buttonClass("primary", "md", "mt-4")}>
           + Add Experience
         </button>
       )}
@@ -181,7 +194,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
               <input
                 value={form.company}
                 onChange={(e) => setForm({ ...form, company: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -189,7 +202,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
               <input
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -197,7 +210,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
               <input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
               />
             </Field>
             <Field label="Start date">
@@ -205,7 +218,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                 type="month"
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="input"
+                className={INPUT_CLASS}
                 required
               />
             </Field>
@@ -215,7 +228,7 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
                 value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                 disabled={form.isCurrent}
-                className="input disabled:opacity-40"
+                className={`${INPUT_CLASS} disabled:opacity-40`}
               />
             </Field>
             <label className="flex items-center gap-2 self-end pb-2 text-sm text-text-secondary">
@@ -232,47 +245,27 @@ export function ExperienceManager({ initialEntries }: { initialEntries: WorkExpe
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input min-h-20"
+              className={`${INPUT_CLASS} min-h-20`}
             />
           </Field>
 
-          {error && <p className="text-sm text-accent-pink">{error}</p>}
+          {error && <p className="text-sm text-accent-red">{error}</p>}
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-primary-gradient px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
+            <button type="submit" disabled={isSaving} className={buttonClass("primary")}>
               {isSaving ? "Saving…" : "Save"}
             </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="rounded-lg border border-surface-border px-4 py-2 text-sm text-text-secondary"
-            >
+            <button type="button" onClick={cancelEdit} className={buttonClass("ghost")}>
               Cancel
             </button>
           </div>
         </form>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border-radius: 0.5rem;
-          border: 1px solid #2a2a4a;
-          background-color: #1a1a35;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-xs text-text-secondary">
       {label}

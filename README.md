@@ -96,18 +96,46 @@ pnpm dev:web      # http://localhost:3000
 pnpm dev:mobile   # Expo dev server
 ```
 
+### Test login (no GitHub OAuth needed)
+
+Set `ALLOW_TEST_LOGIN=true` in `apps/web/.env.local` to register an extra
+"test-account" NextAuth provider and show a "Continue as Test User" button
+on the login page. It logs straight into a fixture developer profile with
+realistic GitHub-shaped data (repos, languages, skill fingerprint, commit
+history) — no real OAuth round trip, no GitHub access token needed — so
+every GitHub-derived page (Profile, Skills, Projects, Analytics) can be
+exercised end to end. Supabase-backed features (Experience, Certifications,
+Verified Skills, the display-name override) still need a real
+`SUPABASE_SERVICE_ROLE_KEY` to read/write data, since those aren't mocked.
+
+Never set `ALLOW_TEST_LOGIN` on a real deployment — it's deliberately not
+gated by `NODE_ENV` (Vercel builds preview deployments with
+`NODE_ENV=production` too), so leaving it unset is what keeps the bypass
+from existing at all outside your own machine.
+
 ## What's real vs. placeholder
 
 - **Real**: GitHub OAuth login (web + mobile), live GitHub data (repos,
   languages, PRs, issues, recent commit activity), skill fingerprint derived
-  from that data.
-- **Also real**: Work history (Experience page), Certifications, and Skill
-  tests (Verified Skills panel on the Skills page) — all backed by
-  Supabase, scoped per-candidate via the authenticated session.
+  from that data, and a Recent Activity timeline (commits/PRs/releases
+  across the top 6 most active repos) on the Projects page.
+- **Also real**: Work history (Experience page), Certifications, Skill
+  tests (Verified Skills panel on the Skills page), and a candidate-editable
+  display name (Profile page — overrides GitHub's optional, often-blank
+  `name` field) — all backed by Supabase, scoped per-candidate via the
+  authenticated session.
+- **Also real, on the My Analysis (Analytics) page**: Overall Score, Skills
+  Strength, Improvement Areas, Career Readiness, and Learning Momentum are
+  computed from the real skill fingerprint and GitHub commit history; the
+  Skill Radar, Skill Category Breakdown, Strengths/Improvement Areas lists,
+  and Growth Trend (weekly commit volume) are all real derived data.
 - **Placeholder**: Profile Views / Search Appearances / Connection Requests
-  on the Analytics screen are derived from account signals, not real
-  platform event tracking (GitHub doesn't expose that data, and IPSkill
-  doesn't have its own analytics pipeline yet). Achievements, Settings,
-  Resume upload, and the Home/Search/Messages tabs are still unbuilt stubs.
+  on the Analytics page are derived from account signals, not real platform
+  event tracking (GitHub doesn't expose that data, and IPSkill doesn't have
+  its own analytics pipeline yet). Skill Gap Analysis (vs. market demand)
+  and AI Career Recommendations have no data source wired up yet and render
+  as explicitly-labeled "coming soon" tiles rather than invented numbers.
+  Achievements, Settings, Resume upload, and the Home/Search/Messages tabs
+  are still unbuilt stubs.
 - **Not started**: the candidate verification layer and core ATS/CRM from
   `PLAN.md` — this repo currently covers the Developer Hub only.

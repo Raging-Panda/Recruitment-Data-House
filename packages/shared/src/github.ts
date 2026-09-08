@@ -1,11 +1,14 @@
 import type {
+  ContributionDay,
   DeveloperActivitySummary,
   DeveloperProject,
   LanguageBreakdownEntry,
+  RepoActivityEvent,
   SkillFingerprint,
 } from "./types";
 
 const GITHUB_API = "https://api.github.com";
+const GITHUB_GRAPHQL_API = "https://api.github.com/graphql";
 
 async function githubFetch<T>(token: string, path: string): Promise<T> {
   const res = await fetch(`${GITHUB_API}${path}`, {
@@ -102,11 +105,17 @@ export async function buildLanguageBreakdown(
   );
 
   const totals = new Map<string, number>();
-  for (const langs of perRepo) {
+  const lastUsedAt = new Map<string, string>();
+  perRepo.forEach((langs, i) => {
+    const repo = nonForks[i];
     for (const [lang, bytes] of Object.entries(langs)) {
       totals.set(lang, (totals.get(lang) ?? 0) + bytes);
+      const existing = lastUsedAt.get(lang);
+      if (!existing || new Date(repo.updated_at) > new Date(existing)) {
+        lastUsedAt.set(lang, repo.updated_at);
+      }
     }
-  }
+  });
 
   const totalBytes = [...totals.values()].reduce((a, b) => a + b, 0) || 1;
   return [...totals.entries()]
@@ -114,6 +123,7 @@ export async function buildLanguageBreakdown(
       language,
       bytes,
       percentage: Math.round((bytes / totalBytes) * 1000) / 10,
+      lastUsedAt: lastUsedAt.get(language) ?? null,
     }))
     .sort((a, b) => b.bytes - a.bytes);
 }
@@ -266,4 +276,194 @@ export function computeSkillFingerprint(
     Communication: Math.round(Math.min(100, activity.codeReviews * 8)) || 20,
     Leadership: Math.round(Math.min(100, testAdoption * 100)) || 15,
   };
+}
+
+interface GithubCommit {
+  sha: string;
+  html_url: string;
+  commit: {
+    message: string;
+    author: { date: string } | null;
+    committer: { date: string } | null;
+  };
+}
+
+interface GithubPullRequest {
+  number: number;
+  title: string;
+  html_url: string;
+  state: "open" | "closed";
+  merged_at: string | null;
+  updated_at: string;
+}
+
+interface GithubRelease {
+  id: number;
+  tag_name: string;
+  name: string | null;
+  html_url: string;
+  published_at: string | null;
+  created_at: string;
+}
+
+/**
+ * Recent commits/PRs/releases for one repo, as a unified event shape. Capped
+ * per event type per repo (5/5/3) to keep this cheap enough to call across
+ * several repos on a single page load.
+ */
+export async function fetchRepoTimelineEvents(
+  token: string,
+  owner: string,
+  repo: string,
+  repoUrl: string
+): Promise<RepoActivityEvent[]> {
+  const [commits, pulls, releases] = await Promise.all([
+    githubFetch<GithubCommit[]>(token, `/repos/${owner}/${repo}/commits?per_page=5`).catch(
+      () => [] as GithubCommit[]
+    ),
+    githubFetch<GithubPullRequest[]>(
+      token,
+      `/repos/${owner}/${repo}/pulls?state=all&sort=updated&direction=desc&per_page=5`
+    ).catch(() => [] as GithubPullRequest[]),
+    githubFetch<GithubRelease[]>(token, `/repos/${owner}/${repo}/releases?per_page=3`).catch(
+      () => [] as GithubRelease[]
+    ),
+  ]);
+
+  const events: RepoActivityEvent[] = [];
+
+  for (const c of commits) {
+    const date = c.commit.author?.date ?? c.commit.committer?.date;
+    if (!date) continue;
+    events.push({
+      id: `commit-${c.sha}`,
+      repoName: repo,
+      repoUrl,
+      type: "commit",
+      title: c.commit.message.split("\n")[0],
+      url: c.html_url,
+      occurredAt: date,
+    });
+  }
+
+  for (const p of pulls) {
+    events.push({
+      id: `pr-${repo}-${p.number}`,
+      repoName: repo,
+      repoUrl,
+      type: "pull_request",
+      title: p.title,
+      url: p.html_url,
+      occurredAt: p.merged_at ?? p.updated_at,
+      state: p.merged_at ? "merged" : p.state,
+    });
+  }
+
+  for (const r of releases) {
+    events.push({
+      id: `release-${r.id}`,
+      repoName: repo,
+      repoUrl,
+      type: "release",
+      title: r.name ?? r.tag_name,
+      url: r.html_url,
+      occurredAt: r.published_at ?? r.created_at,
+    });
+  }
+
+  return events;
+}
+
+/**
+ * Merges recent commits/PRs/releases across a candidate's most active repos
+ * into one chronological feed — a trajectory view (ramping up, going quiet,
+ * switching stacks) rather than the single point-in-time snapshot the
+ * Projects list gives on its own.
+ */
+export async function buildActivityTimeline(
+  token: string,
+  repos: GithubRepo[],
+  maxRepos = 6,
+  maxEvents = 30
+): Promise<RepoActivityEvent[]> {
+  const topRepos = repos
+    .filter((r) => !r.fork)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, maxRepos);
+
+  const perRepoEvents = await Promise.all(
+    topRepos.map((r) => fetchRepoTimelineEvents(token, r.owner.login, r.name, r.html_url))
+  );
+
+  return perRepoEvents
+    .flat()
+    .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+    .slice(0, maxEvents);
+}
+
+const CONTRIBUTION_CALENDAR_QUERY = `
+  query($login: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $login) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          weeks {
+            contributionDays {
+              date
+              contributionCount
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+interface GraphqlContributionResponse {
+  data?: {
+    user?: {
+      contributionsCollection?: {
+        contributionCalendar?: {
+          weeks: { contributionDays: { date: string; contributionCount: number }[] }[];
+        };
+      };
+    };
+  };
+  errors?: { message: string }[];
+}
+
+/**
+ * GitHub's contribution calendar (the squares grid on a profile) isn't
+ * exposed by the REST events endpoint — it only lives behind the GraphQL
+ * API's contributionsCollection field. This is the one GraphQL call in an
+ * otherwise all-REST client, used just for this.
+ */
+export async function fetchContributionCalendar(token: string, login: string): Promise<ContributionDay[]> {
+  const to = new Date();
+  const from = new Date(to.getTime() - 364 * 24 * 60 * 60 * 1000);
+
+  const res = await fetch(GITHUB_GRAPHQL_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: CONTRIBUTION_CALENDAR_QUERY,
+      variables: { login, from: from.toISOString(), to: to.toISOString() },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`GitHub GraphQL contribution calendar failed: ${res.status} ${res.statusText}`);
+  }
+
+  const json = (await res.json()) as GraphqlContributionResponse;
+  if (json.errors?.length) {
+    throw new Error(`GitHub GraphQL contribution calendar failed: ${json.errors[0].message}`);
+  }
+
+  const weeks = json.data?.user?.contributionsCollection?.contributionCalendar?.weeks ?? [];
+  return weeks.flatMap((week) =>
+    week.contributionDays.map((day) => ({ date: day.date, count: day.contributionCount }))
+  );
 }

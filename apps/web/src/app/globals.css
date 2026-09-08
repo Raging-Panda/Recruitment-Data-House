@@ -2,8 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The --color-* custom properties themselves are generated at request time
+   from packages/shared's colors/lightColors (see ThemeVars in layout.tsx) —
+   packages/shared/theme.ts is the single source of values, this file just
+   consumes the resulting variables so it never hand-duplicates a hex value. */
+
 body {
-  background-color: theme("colors.background");
-  color: #f5f5fa;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-heading));
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
 }

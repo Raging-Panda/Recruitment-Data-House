@@ -4,12 +4,15 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAttemptExpired, type AttemptRow, type QuestionRow, type TemplateRow } from "@/lib/skill-tests";
 import type { SkillTestSubmitResult } from "@ipskill/shared";
+import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: NextRequest, { params }: { params: { attemptId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
 
   const supabase = getSupabaseAdmin();
 
@@ -82,6 +85,13 @@ export async function POST(req: NextRequest, { params }: { params: { attemptId: 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
+
+  void createNotification(session.githubId, {
+    type: "skill_test_completed",
+    title: `Scored ${percentage}% on ${templateRow.title}`,
+    body: expired ? "Submitted after time ran out" : null,
+    link: "/dashboard/skills",
+  });
 
   const result: SkillTestSubmitResult = {
     attemptId: (updated as AttemptRow).id,
