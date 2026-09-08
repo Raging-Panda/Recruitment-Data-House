@@ -274,6 +274,150 @@ scheduled or scoped yet — just a running list to pull from.
   team to review flagged profiles, manage verification statuses, and
   handle reported abuse (referral fraud, duplicate accounts, etc.).
 
+## North star: the best way to be known as a developer
+
+The end goal is for developers to feel that being on IPSkill is *the*
+way to be known — the canonical link they put in their GitHub bio,
+their résumé, their conference speaker card. Today the product is
+strong on *analysis* (a private dashboard of your GitHub signals) and
+thin on *presence* (being discoverable, having a public identity worth
+sharing). These items close that gap. Roughly ordered by leverage.
+
+### Public identity & discoverability
+
+- **Vanity public profile at a chosen handle** — the current public
+  link (`/p/[token]`) is an unguessable, expiring UUID: great for
+  "share this with one recruiter," useless for "be known." Add an
+  opt-in, permanent public profile at a clean URL
+  (`ipskill.com/@handle`) that the developer chooses. Same read-only
+  view the token page renders, but stable, brandable, and safe to put
+  in a GitHub bio. Keep the token link as the private-share option;
+  this is the public one. Needs a `handle` column (unique, reserved-
+  word list, change-with-redirect), a public/unlisted/private
+  visibility setting, and a decision on what's shown publicly by
+  default (probably: fingerprint, top languages, featured work,
+  verified skills, endorsements — not raw contribution counts or
+  location unless opted in).
+- **SEO-indexable public profiles** — once vanity profiles exist, make
+  them server-rendered with real `<title>`/meta/JSON-LD
+  (`Person` + `knowsAbout`), a per-profile OG image, and a
+  `sitemap.xml` that lists every public profile. The goal: searching a
+  developer's name surfaces their IPSkill profile on page one. This is
+  most of what "be known" actually means in practice.
+- **Auto-generated social share images** — a dynamic OG image per
+  public profile (avatar, name, headline, top-3 languages, overall
+  score, verified-skill count) via `@vercel/og` / Satori, so a link
+  pasted into Slack, X, LinkedIn, or a Discord renders as a rich card
+  instead of a bare URL. Cheap, high-visibility growth lever.
+- **Embeddable profile badge / card** — a small SVG badge
+  ("IPSkill: Backend 92 · 4 verified skills") and a richer iframe/web-
+  component card that a developer drops into their GitHub profile
+  README, personal site, or blog footer, each linking back to the
+  vanity profile. This is the classic developer-tool growth loop
+  (Shields.io, Wakatime, etc.) and turns every active user into a
+  distribution channel.
+- **Public developer index** — a browsable, opt-in public version of
+  the Directory (no recruiter paywall) so profiles are found by
+  browsing and filtering, not only by direct link. Privacy-first:
+  appears only if the developer set their profile public. Recruiter
+  Tools stays premium for the *saved searches / shortlists / compare /
+  engagement* workflow on top of it.
+- **"Claim your profile" for unconnected devs** — optionally
+  pre-generate lightweight stub profiles from public GitHub data for
+  well-known OSS contributors, with a prominent "is this you? claim
+  it" flow. Bootstraps the index and gives new visitors something to
+  land on. Needs care around consent/POPIA and a clean opt-out.
+
+### Proof that can't be faked
+
+- **Proof-of-work links on skill claims** — let a developer attach a
+  specific public artifact (a merged PR, a release, a commit range, an
+  npm package, a talk) to a skill or fingerprint category, so a claim
+  is backed by a concrete, clickable thing rather than only the
+  heatmap-derived score. Recruiters (and peers) can click through and
+  verify.
+- **Verified work history** — confirm a work-experience entry via
+  company-domain email verification (or the eventual third-party
+  employment check from `PLAN.md`), and badge it "Verified employer"
+  so the experience section isn't purely self-asserted.
+- **Signed profile snapshot** — a tamper-evident, dated attestation
+  (signed JSON + matching PDF) of a developer's fingerprint/verified
+  skills at a point in time, verifiable against an IPSkill public key.
+  Lets a profile carry weight even when pasted somewhere IPSkill
+  doesn't control. Extends the existing PDF export.
+- **Credibility-weighted endorsements** — weight an endorsement by the
+  endorser's own verified standing (verified identity, own fingerprint
+  strength, whether they actually share repo history with the
+  endorsee) rather than counting all endorsements equally, so the
+  signal resists reciprocal-endorsement gaming. Surface "endorsed by N
+  developers, M of them verified."
+
+### Narrative & the whole developer
+
+- **Authored "About" / narrative layer** — a developer-written section
+  (what they build, what they care about, what they're looking for)
+  that sits above the auto-derived stats, so the profile reads as a
+  person, not a readout. Markdown, length-capped, with a tasteful
+  default pulled from the GitHub bio.
+- **Featured work with written context** — let a developer pin 3–6
+  projects and write a short blurb for each (their role, why it
+  matters, the hard part), instead of the profile only ranking repos
+  by stars/recency. Curated storytelling beats a raw repo dump for
+  "who is this developer."
+- **Beyond GitHub: writing, talks, packages, OSS** — structured slots
+  for blog posts, conference talks, published packages (npm/PyPI/
+  crates/NuGet), and notable OSS contributions to repos the developer
+  doesn't own, so the profile covers the whole footprint rather than
+  just personal-repo activity. Directly widens who the product is
+  credible for (many strong devs have thin personal GitHubs).
+- **Unified career timeline** — one visual narrative that merges work
+  experience, GitHub trajectory, certifications, and verified skill
+  tests into a single dated story, instead of four separate cards. The
+  "trajectory, not snapshot" idea from the Projects timeline, applied
+  to the whole profile.
+- **"Currently" block** — a short, prominent "what I'm working on /
+  learning / open to right now" line that the developer keeps fresh;
+  makes the profile feel live and gives recruiters a current hook.
+
+### Network effects & staying power
+
+- **Follow / developer activity feed** — let developers follow each
+  other and see a feed of followed devs' milestones (shipped a
+  release, passed a verified skill, big fingerprint jump). Turns
+  IPSkill from a résumé host you visit once into a place developers
+  come back to — the thing that actually makes it "where developers
+  are."
+- **Open peer endorsements** — decouple giving an endorsement from the
+  recruiter-gated Directory detail page so any signed-in developer can
+  endorse any other developer from their public profile. Currently
+  blocked because devs can't view each other outside Recruiter Tools;
+  the vanity-profile + public-index items above remove that blocker.
+- **Team / organisation pages** — a company page that groups its
+  engineers' profiles, so an eng-led org can bring its whole team on
+  at once (and show off its bench). A natural top-of-funnel for
+  bulk sign-ups and, later, for employer branding as a paid feature.
+- **Milestone kudos** — lightweight reactions/congrats on a
+  developer's public milestones, feeding the activity feed and giving
+  a low-effort reason to engage with someone else's profile.
+- **Trending developers** — a public "fastest-growing this month" /
+  "developer spotlight" surface (shares the month-over-month
+  snapshotting that Growth Olympics needs), giving strong-but-unknown
+  developers a discovery path and the platform fresh public content.
+
+### Distribution & portability
+
+- **"Sign in with IPSkill" / portable profile** — an OAuth provider +
+  scoped read API so job boards, dev tools, and ATS systems can let a
+  developer bring their verified IPSkill profile with them, making it
+  the identity layer rather than one more siloed profile. (Overlaps
+  the "Public API for enterprise clients" item under New features —
+  same infrastructure, developer-consented rather than
+  client-purchased.)
+- **Browser extension: IPSkill score on GitHub** — an optional
+  extension that shows a developer's IPSkill fingerprint/verified
+  badges inline on their GitHub profile and on PR author hovercards,
+  putting the signal where recruiters and devs already look.
+
 ## Visual & UI polish
 
 - **Loading states** — ✅ shipped on both platforms. Web: every
