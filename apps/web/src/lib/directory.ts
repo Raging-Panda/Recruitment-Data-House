@@ -50,7 +50,11 @@ export async function syncDirectoryProfile(
   displayName: string,
   profile: DeveloperProfile,
   activity: DeveloperActivitySummary,
-  skillFingerprint: SkillFingerprint
+  skillFingerprint: SkillFingerprint,
+  /** Developer-authored "About", when set — takes precedence over the
+   * GitHub bio so the directory/public view shows what they actually
+   * wrote about themselves. */
+  aboutOverride?: string | null
 ): Promise<void> {
   try {
     const topLanguages = activity.languageBreakdown.slice(0, 3).map((l) => l.language);
@@ -64,7 +68,7 @@ export async function syncDirectoryProfile(
       overallScore: profile.overallScore,
       topLanguages,
       availableForOpportunities: profile.availableForOpportunities,
-      about: profile.about,
+      about: aboutOverride?.trim() || profile.about,
       lastActiveAt: new Date().toISOString(),
       skillFingerprint,
     };

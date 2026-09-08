@@ -93,9 +93,38 @@ export interface DeveloperActivitySummary {
 
 export interface CandidateProfileOverride {
   githubId: string;
-  displayName: string;
+  /** Null when the row exists only to carry the authored narrative (or
+   * another per-account flag) and no display-name override was ever set. */
+  displayName: string | null;
+  /** Developer-written "About" — layered on top of the GitHub bio, not a
+   * replacement for it. Null when they haven't written one. */
+  aboutAuthored: string | null;
+  /** Short "what I'm working on / open to right now" line the developer
+   * keeps fresh. Null when unset. */
+  currently: string | null;
+  currentlyUpdatedAt: string | null;
   updatedAt: string;
 }
+
+/** A curated, ordered pin on the Profile page — one of the developer's
+ * repos plus a written blurb (their role, why it matters, the hard part).
+ * Distinct from the auto-ranked project list, which is stars/recency only. */
+export interface FeaturedProject {
+  id: string;
+  githubId: string;
+  repoName: string;
+  repoUrl: string | null;
+  blurb: string;
+  languages: string[];
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type FeaturedProjectInput = Pick<
+  FeaturedProject,
+  "repoName" | "repoUrl" | "blurb" | "languages" | "sortOrder"
+>;
 
 export interface WorkExperience {
   id: string;

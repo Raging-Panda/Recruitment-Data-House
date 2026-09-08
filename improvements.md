@@ -354,16 +354,43 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ### Narrative & the whole developer
 
-- **Authored "About" / narrative layer** — a developer-written section
-  (what they build, what they care about, what they're looking for)
-  that sits above the auto-derived stats, so the profile reads as a
-  person, not a readout. Markdown, length-capped, with a tasteful
-  default pulled from the GitHub bio.
-- **Featured work with written context** — let a developer pin 3–6
-  projects and write a short blurb for each (their role, why it
-  matters, the hard part), instead of the profile only ranking repos
-  by stars/recency. Curated storytelling beats a raw repo dump for
-  "who is this developer."
+- **Authored "About" / narrative layer** — ✅ shipped: a
+  `ProfileNarrativeEditor` on the dashboard Profile page with an
+  inline-editable **About** (developer-written, 1200-char cap, sits
+  above the auto-derived stats, falls back to showing the GitHub bio
+  when blank) and a short **Currently** line (140-char cap, stamped
+  with a "Updated N days ago"). Both persist to two new
+  `candidate_profile` columns (`about_authored`, `currently` +
+  `currently_updated_at`) via an extended `PUT /api/profile` that now
+  takes a partial update of any of display-name / about / currently.
+  `syncDirectoryProfile` prefers `about_authored` over the GitHub bio,
+  so the Directory and public `/p/[token]` view show what the
+  developer actually wrote. Plain text, not markdown yet (the cap +
+  `whitespace-pre-line` covers the common case; a markdown pass is a
+  later refinement). Demo account renders it read-only from
+  `DEMO_PROFILE_OVERRIDE`. Not folded into the PDF export yet.
+- **Featured work with written context** — ✅ shipped: a
+  `FeaturedProjectsManager` on the Profile page lets a developer pin
+  up to 6 of their own repos (chosen from the real GitHub-derived
+  project list) and write a blurb per pin (400-char cap), with
+  inline edit, remove, and up/down reorder. Backed by a new
+  `featured_projects` table (`github_id`, `repo_name`, `repo_url`,
+  `blurb`, `languages[]`, `sort_order`, unique on
+  `(github_id, repo_name)`; RLS on, no policies — service-role only,
+  same posture as `work_experience`) and a REST-style
+  `/api/featured-projects` (+ `/[id]`) pair following the existing
+  experience/certifications route pattern (demo writes 403). Distinct
+  from the auto-ranked Projects list, which stays stars/recency only.
+  Still open: no drag-reorder (up/down buttons only), and the pins
+  don't surface on the public profile / Directory detail view yet.
+- **Unified career timeline** — ✅ shipped (first slice): a
+  `CareerTimeline` on the Profile page interleaves work experience and
+  certifications into one date-sorted list (role vs. certification
+  dot colour, role rows show a start–end range). Deliberately *not*
+  folding in day-level GitHub commits/PRs — those keep their own feed
+  on the Projects page; this is the career spine at role/credential
+  resolution. Still open: GitHub trajectory and verified-skill passes
+  as timeline entries, and a denser visual treatment.
 - **Beyond GitHub: writing, talks, packages, OSS** — structured slots
   for blog posts, conference talks, published packages (npm/PyPI/
   crates/NuGet), and notable OSS contributions to repos the developer
@@ -375,9 +402,11 @@ sharing). These items close that gap. Roughly ordered by leverage.
   tests into a single dated story, instead of four separate cards. The
   "trajectory, not snapshot" idea from the Projects timeline, applied
   to the whole profile.
-- **"Currently" block** — a short, prominent "what I'm working on /
-  learning / open to right now" line that the developer keeps fresh;
-  makes the profile feel live and gives recruiters a current hook.
+- **"Currently" block** — ✅ shipped as part of the "Authored About /
+  narrative layer" item above: a 140-char, inline-editable line on the
+  Profile page, persisted to `candidate_profile.currently` and stamped
+  with a relative "Updated N days ago". Still open: it isn't surfaced
+  on the public `/p/[token]` view or Directory card yet.
 
 ### Network effects & staying power
 

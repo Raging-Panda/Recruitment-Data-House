@@ -9,6 +9,7 @@ import type {
   WorkExperience,
   Certification,
   CandidateProfileOverride,
+  FeaturedProject,
   NotificationItem,
   DirectoryEntry,
   Shortlist,
@@ -31,8 +32,54 @@ export const DEMO_DISPLAY_NAME = "Naledi Khumalo";
 export const DEMO_PROFILE_OVERRIDE: CandidateProfileOverride = {
   githubId: DEMO_GITHUB_ID,
   displayName: DEMO_DISPLAY_NAME,
-  updatedAt: new Date(NOW - 40 * DAY).toISOString(),
+  aboutAuthored:
+    "I build payments infrastructure that has to be right every time — idempotent ledgers, exactly-once semantics, the boring reliability work under the hood of things people never think about. Ten years in, mostly Go and Postgres, most of it on systems where an outage means someone doesn't get paid. Lately I spend as much time mentoring and unblocking the team as writing code myself, and I like it that way. Open to staff-level backend or platform roles where correctness actually matters.",
+  currently: "Leading a multi-currency settlement rebuild · learning Rust on the side",
+  currentlyUpdatedAt: new Date(NOW - 6 * DAY).toISOString(),
+  updatedAt: new Date(NOW - 6 * DAY).toISOString(),
 };
+
+/** Curated pins for the demo persona — a subset of buildDemoDeveloperHubData's
+ * repo list, each with a written blurb the auto-ranked project list can't
+ * carry. */
+export const DEMO_FEATURED_PROJECTS: FeaturedProject[] = [
+  {
+    id: "demo-fp-1",
+    githubId: DEMO_GITHUB_ID,
+    repoName: "payments-gateway-core",
+    repoUrl: "https://github.com/naledi-khumalo/payments-gateway-core",
+    blurb:
+      "The system I've spent the most of my career on. An idempotent transaction ledger and orchestration layer doing 2M+ payments/day. I designed the idempotency-key model and the reconciliation job that catches the 0.001% of cases where a downstream processor lies about whether a charge went through.",
+    languages: ["Go", "SQL"],
+    sortOrder: 0,
+    createdAt: new Date(NOW - 30 * DAY).toISOString(),
+    updatedAt: new Date(NOW - 8 * DAY).toISOString(),
+  },
+  {
+    id: "demo-fp-2",
+    githubId: DEMO_GITHUB_ID,
+    repoName: "distributed-task-queue",
+    repoUrl: "https://github.com/naledi-khumalo/distributed-task-queue",
+    blurb:
+      "A weekend project that turned into infrastructure three teams now depend on. At-least-once delivery with dead-letter handling and backpressure. The hard part was making the retry logic provably not lose or duplicate work under a partition — there's a property-based test suite for exactly that.",
+    languages: ["Go"],
+    sortOrder: 1,
+    createdAt: new Date(NOW - 28 * DAY).toISOString(),
+    updatedAt: new Date(NOW - 12 * DAY).toISOString(),
+  },
+  {
+    id: "demo-fp-3",
+    githubId: DEMO_GITHUB_ID,
+    repoName: "react-analytics-dashboard",
+    repoUrl: "https://github.com/naledi-khumalo/react-analytics-dashboard",
+    blurb:
+      "Proof to myself that I can still ship a frontend. Server-driven charts, role-based access, and a query layer that keeps a heavy dashboard under a 200ms p95. Not my main lane, but I wanted one thing on here that isn't a backend service.",
+    languages: ["TypeScript", "CSS"],
+    sortOrder: 2,
+    createdAt: new Date(NOW - 20 * DAY).toISOString(),
+    updatedAt: new Date(NOW - 20 * DAY).toISOString(),
+  },
+];
 
 /**
  * Fixture data for the public "admin@admin.com" demo account — a fully
