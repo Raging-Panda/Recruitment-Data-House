@@ -4,6 +4,8 @@ import { IPSkillLogo } from "@/components/ipskill-logo";
 import { PagedDirectoryGrid } from "@/components/paged-directory-grid";
 
 export const metadata = { title: "Developer Directory — IPSkill" };
+// Unauthenticated route — see the same note on app/u/[handle]/page.tsx.
+export const dynamic = "force-dynamic";
 
 /**
  * The public, unauthenticated counterpart to the premium-gated Recruiter

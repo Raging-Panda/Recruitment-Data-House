@@ -10,6 +10,12 @@ import { EndorsementList } from "@/components/endorsement-list";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
 
+// Unauthenticated route — no cookies()/session read, so Next won't treat
+// it as dynamic automatically and the fetch data-cache can otherwise
+// serve a stale snapshot after the first request. Confirmed live: a
+// newly-added external link didn't show up on reload without this.
+export const dynamic = "force-dynamic";
+
 /**
  * The permanent, ownable, SEO-indexable public profile — distinct from
  * /p/[token] (a private, expiring, unguessable share link). This is the

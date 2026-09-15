@@ -3,6 +3,9 @@ import Link from "next/link";
 import { getPublicDirectoryEntriesByCompany } from "@/lib/directory";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 
+// Unauthenticated route — see the same note on app/u/[handle]/page.tsx.
+export const dynamic = "force-dynamic";
+
 export default async function TeamPage({ params }: { params: { company: string } }) {
   const company = decodeURIComponent(params.company);
   const entries = await getPublicDirectoryEntriesByCompany(company).catch(() => []);

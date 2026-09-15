@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getPublicDirectoryEntries } from "@/lib/directory";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   const entries = await getPublicDirectoryEntries().catch(() => []);

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDirectoryEntryByHandle } from "@/lib/directory";
 
+// No dynamic request API used (just the [handle] param), so without this
+// Next can cache a stale badge per handle across requests.
+export const dynamic = "force-dynamic";
+
 /**
  * Embeddable SVG badge for a public handle — e.g.
  * ![IPSkill](https://ipskill.com/api/badge/alice.svg) in a GitHub README.

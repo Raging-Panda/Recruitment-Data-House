@@ -3,6 +3,14 @@ import Image from "next/image";
 import type { Endorsement } from "@ipskill/shared";
 import { getDirectoryEntryByPublicToken } from "@/lib/public-profile-link";
 import { getEndorsementsFor } from "@/lib/endorsements";
+
+// Unauthenticated route — no cookies()/session read to make Next treat it
+// as dynamic automatically (that's what protects every /dashboard page),
+// so without this, Next's fetch data-cache can serve a stale snapshot
+// after the first request: a revoked/regenerated link or an edited
+// profile wouldn't show as changed. Found live while verifying the
+// sibling /u/[handle] route.
+export const dynamic = "force-dynamic";
 import { ScoreRing } from "@/components/score-ring";
 import { EndorsementList } from "@/components/endorsement-list";
 import { IPSkillLogo } from "@/components/ipskill-logo";
