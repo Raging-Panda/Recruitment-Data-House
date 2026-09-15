@@ -42,6 +42,18 @@ function LinkedInProvider(options: {
     id: "linkedin",
     name: "LinkedIn",
     type: "oauth",
+    // Because the "openid" scope is requested, LinkedIn's token response
+    // includes a signed id_token, and openid-client validates its `iss`
+    // claim against this value regardless of the provider `type` — without
+    // it, next-auth defaults to expecting `iss: undefined` and every
+    // callback fails with "unexpected iss value". Confirmed against a real
+    // LinkedIn app's actual id_token.
+    issuer: "https://www.linkedin.com/oauth",
+    // Needed once `issuer` is set — openid-client verifies the id_token's
+    // signature against this JWKS. Both values confirmed directly against
+    // LinkedIn's real discovery document:
+    // curl https://www.linkedin.com/oauth/.well-known/openid-configuration
+    jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
     authorization: {
       url: "https://www.linkedin.com/oauth/v2/authorization",
       params: { scope: "openid profile email" },
@@ -49,6 +61,14 @@ function LinkedInProvider(options: {
     token: "https://www.linkedin.com/oauth/v2/accessToken",
     userinfo: "https://api.linkedin.com/v2/userinfo",
     checks: ["state"],
+    // LinkedIn's token endpoint requires the client secret as a POST body
+    // param, not an HTTP Basic Auth header — openid-client's default for a
+    // plain "oauth" provider. Without this it 302s straight back to /login
+    // with a swallowed server-side error: "invalid_request (A required
+    // parameter "client_secret" is missing)". Confirmed against a real
+    // LinkedIn app; this exact setting is the one thing the (otherwise
+    // API-stale) built-in next-auth/providers/linkedin had right.
+    client: { token_endpoint_auth_method: "client_secret_post" },
     clientId: options.clientId,
     clientSecret: options.clientSecret,
     profile(profile: LinkedInOIDCProfile) {

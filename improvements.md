@@ -168,8 +168,26 @@ scheduled or scoped yet — just a running list to pull from.
   a real LinkedIn account** — that needs a real LinkedIn OAuth app,
   which also has a real-world wrinkle the others didn't: it must be
   associated with a LinkedIn Company Page before LinkedIn will issue
-  credentials at all. Real LinkedIn credentials aren't configured
-  anywhere yet.
+  credentials at all.
+  **Update:** verified end-to-end against a real LinkedIn app and
+  account — `media.licdn.com` was in fact the right avatar host, no
+  further `next.config.mjs` fix needed. Getting a real login working
+  took three more rounds fixing the hand-rolled provider, each found
+  from the actual server-side error rather than guessed: (1) LinkedIn's
+  token endpoint needs the client secret as a POST body param —
+  `client: { token_endpoint_auth_method: "client_secret_post" }` — not
+  openid-client's default HTTP Basic Auth header; (2) requesting the
+  `openid` scope means LinkedIn's token response includes a signed
+  `id_token`, which `openid-client` validates regardless of the
+  provider's declared `type`, so `issuer: "https://www.linkedin.com/oauth"`
+  had to be set explicitly; (3) once `issuer` is set, `openid-client`
+  verifies that token's signature too, which needs `jwks_endpoint` —
+  confirmed against LinkedIn's real discovery document
+  (`https://www.linkedin.com/oauth/.well-known/openid-configuration`)
+  rather than guessed, same as the other two endpoint values. All
+  three are exactly the kind of gap that's invisible from the code and
+  only shows up against a real OAuth app — worth remembering if
+  LinkedIn ever needs re-verifying after a next-auth upgrade.
 - **Account linking (GitHub, Google, and soon LinkedIn)** — the
   schema is in place (`linked_accounts`: `owner_id`, `provider`,
   `provider_account_id`, `provider_login`, `access_token`,
