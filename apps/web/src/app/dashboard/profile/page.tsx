@@ -15,7 +15,7 @@ import { rowToWorkExperience } from "@/lib/experience";
 import { rowToCertification } from "@/lib/certifications";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
-import { hasGithubConnection } from "@/lib/github-connection";
+import { getGithubAccessToken } from "@/lib/github-connection";
 import {
   DEMO_ENDORSEMENTS,
   DEMO_PUBLIC_LINK_STATUS,
@@ -138,10 +138,10 @@ async function ThinProfile({ session }: { session: Session }) {
         className="mt-6"
         icon={CodeIcon}
         title="No GitHub-derived signal yet"
-        description="Your skill fingerprint, project list, contribution heatmap, and Analytics all come from GitHub activity. Connect it to generate them — note this starts a separate IPSkill profile for now, since account linking isn't built yet."
+        description="Your skill fingerprint, project list, contribution heatmap, and Analytics all come from GitHub activity. Connect it in Settings to generate them, right here on this profile."
         action={
-          <a href="/api/auth/signin/github" className={buttonClass("primary", "sm")}>
-            Sign in with GitHub
+          <a href="/dashboard/settings" className={buttonClass("primary", "sm")}>
+            Connect GitHub
           </a>
         }
       />
@@ -188,13 +188,14 @@ export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
 
-  if (!hasGithubConnection(session)) {
+  const githubToken = await getGithubAccessToken(session);
+  if (!githubToken) {
     return <ThinProfile session={session!} />;
   }
 
   const [{ profile, activity, projects, skillFingerprint }, override, featuredProjects, career] =
     await Promise.all([
-      loadDeveloperHubData(session!.accessToken!, session!.githubId!),
+      loadDeveloperHubData(githubToken, session!.githubId!),
       getCandidateProfileOverrideSafe(session!.githubId!),
       getFeaturedProjectsSafe(session!.githubId!),
       loadCareerHistory(session!.githubId!, isDemo),
@@ -237,7 +238,7 @@ export default async function ProfilePage() {
   let contributionDays: ContributionDay[] = [];
   try {
     contributionDays = await loadContributionCalendar(
-      session!.accessToken!,
+      githubToken,
       session!.githubId!,
       profile.githubLogin
     );

@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
-import { hasGithubConnection } from "@/lib/github-connection";
+import { getGithubAccessToken } from "@/lib/github-connection";
 import { ConnectGithubPrompt } from "@/components/connect-github-prompt";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
@@ -15,10 +15,11 @@ import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar
 
 export default async function SkillsPage() {
   const session = await getServerSession(authOptions);
-  if (!hasGithubConnection(session)) return <ConnectGithubPrompt page="Skills" />;
+  const githubToken = await getGithubAccessToken(session);
+  if (!githubToken) return <ConnectGithubPrompt page="Skills" />;
 
   const { profile, skillFingerprint, activity } = await loadDeveloperHubData(
-    session!.accessToken!,
+    githubToken,
     session!.githubId!
   );
 

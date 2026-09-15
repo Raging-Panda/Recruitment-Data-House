@@ -120,13 +120,14 @@ scheduled or scoped yet — just a running list to pull from.
   Google account chooser and rendered `ThinProfile` on callback;
   needed one follow-up fix — `lh3.googleusercontent.com` wasn't in
   `next.config.mjs`'s image `remotePatterns`, so a Google avatar
-  500'd on first real login). Still open: account linking (the actual
-  fix for the two-separate-identities problem above), Verified Skills
-  / featured-work-style content staying independent enough that a
-  later-connected GitHub account could plausibly merge in, and Google
-  users never appearing in the Directory (only ever populated by a
-  GitHub-connected profile sync) — expected given the scope above, not
-  bugs.
+  500'd on first real login). **Update 2:** account linking has since
+  shipped (see "Account linking" below) — a Google sign-in can now
+  attach GitHub from Settings without starting a separate identity.
+  Still open: Verified Skills / featured-work-style content staying
+  independent enough that a later-connected GitHub account could
+  plausibly merge in, and Google users never appearing in the
+  Directory (only ever populated by a GitHub-connected profile sync)
+  — expected given the scope above, not bugs.
 - **Regular (email/password) login** — ✅ shipped: a real `users`
   table (`email`, `password_hash`, `display_name`) backs a `credentials`
   NextAuth provider, with a proper two-step flow — `POST
@@ -188,23 +189,52 @@ scheduled or scoped yet — just a running list to pull from.
   three are exactly the kind of gap that's invisible from the code and
   only shows up against a real OAuth app — worth remembering if
   LinkedIn ever needs re-verifying after a next-auth upgrade.
-- **Account linking (GitHub, Google, and soon LinkedIn)** — the
-  schema is in place (`linked_accounts`: `owner_id`, `provider`,
-  `provider_account_id`, `provider_login`, `access_token`,
-  `avatar_url` — provider is a checked enum already including
-  `linkedin`) but nothing reads or writes it yet. This is the real
-  fix for the "signing in with GitHub starts a separate profile"
-  papercut on both the Google and regular-login paths above. Deferred
-  deliberately rather than rushed in alongside login, because it's a
-  different kind of work: a hand-rolled OAuth "connect" flow (NextAuth
-  v4's JWT-strategy sessions don't support multi-provider account
-  linking out of the box — that needs a database Adapter, which this
-  app deliberately doesn't use) with its own state/CSRF handling, plus
-  rewiring every page that currently reads `session.accessToken`
-  directly (`developer-data.ts` call sites) to instead resolve a
-  GitHub token through `linked_accounts` by the session's owner id.
-  Worth designing once for all three providers together rather than
-  building GitHub-linking now and reworking it when LinkedIn lands.
+- **Account linking (GitHub, Google, LinkedIn)** — ✅ shipped: a
+  Settings page ("Connected Accounts") lets any Google/LinkedIn/
+  regular-login account attach a real GitHub connection — and GitHub-
+  primary accounts attach Google/LinkedIn — without switching
+  identities, closing the "signing in with GitHub starts a separate
+  profile" papercut every non-GitHub login path had until now.
+  Entirely hand-rolled rather than reusing NextAuth's `signIn()` —
+  JWT-strategy sessions have no supported way to run an OAuth round
+  trip that attaches to the *current* session instead of starting a
+  new one (that needs a database Adapter, which this app deliberately
+  doesn't use). So `app/api/link/{start,callback}/[provider]` speak
+  OAuth directly: a signed, expiring `state` (HMAC over
+  `NEXTAUTH_SECRET`, `lib/link-state.ts`) paired with a same-value
+  httpOnly cookie (the standard double-submit CSRF defense), each
+  provider's authorize/token/userinfo calls hand-written in
+  `lib/link-providers.ts`, reusing the exact endpoint knowledge/quirks
+  already proven out building the Google and LinkedIn sign-in
+  providers (LinkedIn's `client_secret_post` requirement included).
+  GitHub needs its own third OAuth App — GitHub OAuth Apps allow
+  exactly one callback URL each, and this flow's callback
+  (`/api/link/callback/github`) is a different route from both the
+  primary sign-in app's and the mobile app's — while Google and
+  LinkedIn reuse their existing sign-in app/client (both allow
+  multiple redirect URIs), just needing the new callback URL added.
+  `lib/github-connection.ts`'s `getGithubAccessToken()` now resolves a
+  token from the session *or* a linked account, and every page that
+  used to read `session.accessToken` directly (Profile, Skills,
+  Projects, Analytics, the PDF export route) goes through it instead —
+  so a linked GitHub account unlocks the exact same fingerprint/
+  projects/heatmap/PDF a primary GitHub sign-in gets, while Career
+  Timeline, About/Currently, and endorsements stay tied to the
+  original identity throughout. A `(provider, provider_account_id)`
+  unique constraint stops the same external account from being linked
+  to two different IPSkill identities. Verified end-to-end against
+  real Supabase using a dev-only `test-simulate` route (same
+  `ALLOW_TEST_LOGIN` gate as the test sign-in providers) that links the
+  `TEST_ACCESS_TOKEN` sentinel — `loadDeveloperHubData` already
+  special-cases that exact token to fixture data, so this genuinely
+  exercises "GitHub connected via a linked account" end to end, not
+  just the database write: link → Skills/Profile/PDF all unlock with
+  real data → unlink → they correctly re-lock, all while the identity
+  stayed the Google/LinkedIn/local one throughout. Real GitHub/Google/
+  LinkedIn OAuth apps for this flow aren't configured anywhere yet —
+  needs a third GitHub OAuth App (alongside the existing primary-login
+  and mobile apps) plus one new redirect URI each on the existing
+  Google/LinkedIn apps.
 
 ## Additional ideas
 

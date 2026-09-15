@@ -1,17 +1,23 @@
 import type { Session } from "next-auth";
+import { getLinkedAccessToken } from "./linked-accounts";
 
 /**
- * True for every sign-in method that carries a real GitHub OAuth token
- * (GitHub itself, the demo account, the test account — all three stand in
- * for "GitHub-shaped data exists"). False for Google, the one provider
- * that authenticates a person without ever producing a GitHub token — see
- * the comment on the Google branch of the jwt callback in lib/auth.ts.
- *
- * Every page that calls loadDeveloperHubData / loadContributionCalendar /
- * loadProjectActivityTimeline must check this first: those functions call
- * the GitHub API directly with session.accessToken, which is undefined for
- * a Google-only account.
+ * Resolves a usable GitHub API token for the signed-in session — from the
+ * session itself (GitHub/demo/test sign-in) if present, otherwise from a
+ * linked GitHub account (see app/api/link/*), otherwise null. Every page
+ * that calls loadDeveloperHubData / loadContributionCalendar /
+ * loadProjectActivityTimeline should get its token from here rather than
+ * reading session.accessToken directly, so a linked account works
+ * anywhere a primary GitHub sign-in did.
  */
-export function hasGithubConnection(session: Session | null | undefined): boolean {
-  return Boolean(session?.accessToken);
+export async function getGithubAccessToken(
+  session: Session | null | undefined
+): Promise<string | null> {
+  if (session?.accessToken) return session.accessToken;
+  if (!session?.githubId) return null;
+  return getLinkedAccessToken(session.githubId, "github");
+}
+
+export async function hasGithubConnection(session: Session | null | undefined): Promise<boolean> {
+  return Boolean(await getGithubAccessToken(session));
 }

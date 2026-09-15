@@ -141,7 +141,7 @@ export function LoginCard() {
 
         <button
           onClick={signInWithGoogle}
-          title="Your fingerprint, projects, and heatmap come from GitHub — Google gets you a lighter profile for now, and there's no account linking yet"
+          title="Your fingerprint, projects, and heatmap come from GitHub — Google gets you a lighter profile for now — connect GitHub afterward from Settings"
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GoogleMark /> Continue with Google
@@ -156,7 +156,7 @@ export function LoginCard() {
 
         <button
           onClick={signInWithLinkedIn}
-          title="Your fingerprint, projects, and heatmap come from GitHub — LinkedIn gets you a lighter profile for now, and there's no account linking yet"
+          title="Your fingerprint, projects, and heatmap come from GitHub — LinkedIn gets you a lighter profile for now — connect GitHub afterward from Settings"
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <LinkedInMark /> Continue with LinkedIn

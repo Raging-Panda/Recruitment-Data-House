@@ -5,6 +5,7 @@ import type { Endorsement } from "@ipskill/shared";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
+import { getGithubAccessToken } from "@/lib/github-connection";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
@@ -21,8 +22,9 @@ export async function GET() {
   if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-  if (!session.accessToken) {
-    // Google sign-ins have no GitHub token, and this export is entirely
+  const githubToken = await getGithubAccessToken(session);
+  if (!githubToken) {
+    // No GitHub connection, primary or linked — this export is entirely
     // GitHub-fingerprint content — see lib/github-connection.ts.
     return NextResponse.json(
       { error: "Connect GitHub to export a profile PDF" },
@@ -32,7 +34,7 @@ export async function GET() {
 
   try {
     const [{ profile, activity, skillFingerprint }, override] = await Promise.all([
-      loadDeveloperHubData(session.accessToken, session.githubId),
+      loadDeveloperHubData(githubToken, session.githubId),
       getCandidateProfileOverrideSafe(session.githubId),
     ]);
     const displayName = override?.displayName ?? profile.name;
