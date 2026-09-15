@@ -1,7 +1,8 @@
 import type { NextAuthOptions } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { isTestModeEnabled, TEST_ACCESS_TOKEN, TEST_GITHUB_ID } from "./test-mode";
+import { isTestModeEnabled, TEST_ACCESS_TOKEN, TEST_GITHUB_ID, TEST_GOOGLE_ID } from "./test-mode";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_ACCESS_TOKEN, DEMO_GITHUB_ID } from "./demo-mode";
 import { DEMO_DISPLAY_NAME } from "./demo-data";
 
@@ -14,6 +15,20 @@ const providers: NextAuthOptions["providers"] = [
         scope: "read:user user:email repo",
       },
     },
+  }),
+  // For candidates without a GitHub-first workflow. Deliberately a second-
+  // class citizen next to GitHub: IPSkill's core value (skill fingerprint,
+  // contribution heatmap, project list) is computed from the GitHub API
+  // using the GitHub OAuth token, which a Google sign-in has no equivalent
+  // of. A Google-only account gets the manually-entered parts of a profile
+  // (About/Currently, experience, certifications, skill tests) and sees a
+  // "Connect GitHub" prompt in place of every GitHub-derived page — see
+  // lib/github-connection.ts. There is no account linking yet: signing in
+  // with GitHub afterwards starts a separate identity rather than upgrading
+  // this one (see the "Google login" item in improvements.md).
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   }),
   // Public, always-on proof-of-concept login — a fully populated fixture
   // profile anyone evaluating the product can see without a real GitHub
@@ -60,6 +75,24 @@ if (isTestModeEnabled()) {
       },
     })
   );
+  // Simulates a real Google sign-in — no GitHub token, "google:"-prefixed
+  // id — without needing a real Google OAuth app in dev. Exercises the
+  // ThinProfile / ConnectGithubPrompt paths (see lib/github-connection.ts).
+  providers.push(
+    CredentialsProvider({
+      id: "test-google-account",
+      name: "Test Google Account",
+      credentials: {},
+      async authorize() {
+        return {
+          id: TEST_GOOGLE_ID,
+          name: "Test Google User",
+          email: "test-google-user@gmail.com",
+          image: "https://i.pravatar.cc/300?img=68",
+        };
+      },
+    })
+  );
 }
 
 export const authOptions: NextAuthOptions = {
@@ -72,9 +105,24 @@ export const authOptions: NextAuthOptions = {
         // their GitHub username, unlike the login string.
         token.githubId = account.providerAccountId;
       }
+      if (account?.provider === "google") {
+        // Deliberately NOT storing Google's access_token as token.accessToken
+        // — every GitHub-derived page passes that field straight to the
+        // GitHub API, and a Google token there would either 401 or (far
+        // worse) silently authenticate as whoever else's GitHub app it
+        // happens to resemble. Leaving it unset is what
+        // hasGithubConnection() keys off of. The "google:" prefix keeps
+        // this id from ever colliding with a real numeric GitHub id in the
+        // same github_id column.
+        token.githubId = `google:${account.providerAccountId}`;
+      }
       if (account?.provider === "test-account") {
         token.accessToken = TEST_ACCESS_TOKEN;
         token.githubId = TEST_GITHUB_ID;
+      }
+      if (account?.provider === "test-google-account") {
+        // No accessToken, same as the real Google branch above.
+        token.githubId = TEST_GOOGLE_ID;
       }
       if (account?.provider === "demo-account") {
         token.accessToken = DEMO_ACCESS_TOKEN;

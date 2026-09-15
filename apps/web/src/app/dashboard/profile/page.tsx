@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import Image from "next/image";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData, loadContributionCalendar } from "@/lib/developer-data";
@@ -14,6 +15,7 @@ import { rowToWorkExperience } from "@/lib/experience";
 import { rowToCertification } from "@/lib/certifications";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestAccount } from "@/lib/test-mode";
+import { hasGithubConnection } from "@/lib/github-connection";
 import {
   DEMO_ENDORSEMENTS,
   DEMO_PUBLIC_LINK_STATUS,
@@ -31,6 +33,8 @@ import { EndorsementList } from "@/components/endorsement-list";
 import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
 import { ContributionHeatmap } from "@/components/contribution-heatmap";
 import { GetVerifiedSkillButton } from "@/components/get-verified-skill-modal";
+import { EmptyState } from "@/components/empty-state";
+import { CodeIcon } from "@/components/icons";
 import { buttonClass } from "@/lib/button-styles";
 import type { ContributionDay, Endorsement, WorkExperience, Certification } from "@ipskill/shared";
 
@@ -74,9 +78,119 @@ async function loadCareerHistory(
   }
 }
 
+/**
+ * Profile for an account with no GitHub connection (currently: Google
+ * sign-ins only — demo/test/github all carry a GitHub token). Everything
+ * here is Supabase-only: the authored narrative, career timeline,
+ * endorsements, and Verified Skills all work exactly the same as the full
+ * profile. What's missing is anything derived from a GitHub API call —
+ * the fingerprint, avatar/headline/location, featured-project picker
+ * (nothing to pick from), contribution heatmap, PDF export, and the public
+ * share link (built from the directory snapshot, which is itself only
+ * ever synced from the GitHub-connected profile page below).
+ */
+async function ThinProfile({ session }: { session: Session }) {
+  const githubId = session.githubId!;
+  const [override, career, skillTestOptions] = await Promise.all([
+    getCandidateProfileOverrideSafe(githubId),
+    loadCareerHistory(githubId, false),
+    getSkillTestOptions().catch(() => [] as SkillTestOption[]),
+  ]);
+
+  let endorsements: Endorsement[] = [];
+  if (!isTestAccount(githubId)) {
+    try {
+      endorsements = await getEndorsementsFor(githubId);
+    } catch {
+      endorsements = [];
+    }
+  }
+
+  const displayName = override?.displayName ?? session.user?.name ?? "Developer";
+
+  return (
+    <div className="mx-auto max-w-5xl">
+      <h1 className="text-2xl font-bold text-heading">My Profile</h1>
+      <p className="mt-1 text-sm text-text-secondary">
+        Signed in with Google — the parts only you can tell, plus GitHub-derived analysis once you
+        connect it.
+      </p>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 rounded-2xl border border-surface-border bg-background-elevated p-6 md:grid-cols-[auto_1fr]">
+        {session.user?.image ? (
+          <Image
+            src={session.user.image}
+            alt={displayName}
+            width={88}
+            height={88}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="h-[88px] w-[88px] rounded-full bg-primary-gradient" />
+        )}
+        <div>
+          <DisplayNameEditor initialName={displayName} />
+          <p className="text-sm text-text-secondary">{session.user?.email}</p>
+        </div>
+      </div>
+
+      <EmptyState
+        className="mt-6"
+        icon={CodeIcon}
+        title="No GitHub-derived signal yet"
+        description="Your skill fingerprint, project list, contribution heatmap, and Analytics all come from GitHub activity. Connect it to generate them — note this starts a separate IPSkill profile for now, since account linking isn't built yet."
+        action={
+          <a href="/api/auth/signin/github" className={buttonClass("primary", "sm")}>
+            Sign in with GitHub
+          </a>
+        }
+      />
+
+      <div className="mt-6">
+        <ProfileNarrativeEditor
+          initialAbout={override?.aboutAuthored ?? null}
+          githubBio={null}
+          initialCurrently={override?.currently ?? null}
+          initialCurrentlyUpdatedAt={override?.currentlyUpdatedAt ?? null}
+        />
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+        <h2 className="text-sm font-semibold text-heading">Verified Skills</h2>
+        <p className="mt-1 text-sm text-text-muted">
+          Proctored-free knowledge checks — don&apos;t need GitHub, a good way to build signal in
+          the meantime.
+        </p>
+        <div className="mt-2">
+          <GetVerifiedSkillButton options={skillTestOptions} />
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
+        <p className="mt-1 text-xs text-text-muted">Roles and certifications as one dated story.</p>
+        <div className="mt-4">
+          <CareerTimeline experience={career.experience} certifications={career.certifications} />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
+        <div className="mt-4">
+          <EndorsementList endorsements={endorsements} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
+
+  if (!hasGithubConnection(session)) {
+    return <ThinProfile session={session!} />;
+  }
 
   const [{ profile, activity, projects, skillFingerprint }, override, featuredProjects, career] =
     await Promise.all([

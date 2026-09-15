@@ -18,8 +18,16 @@ import { ProfilePdfDocument } from "@/lib/profile-pdf-document";
  */
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.githubId || !session.accessToken) {
+  if (!session?.githubId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+  if (!session.accessToken) {
+    // Google sign-ins have no GitHub token, and this export is entirely
+    // GitHub-fingerprint content — see lib/github-connection.ts.
+    return NextResponse.json(
+      { error: "Connect GitHub to export a profile PDF" },
+      { status: 400 }
+    );
   }
 
   try {

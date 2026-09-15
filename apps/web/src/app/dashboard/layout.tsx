@@ -9,7 +9,10 @@ import { DashboardShell } from "@/components/dashboard-shell";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.accessToken) {
+  // githubId (not accessToken) is the right gate here — a Google sign-in
+  // has no GitHub token but is still a real, signed-in account. See
+  // lib/github-connection.ts for where the accessToken distinction matters.
+  if (!session || !session.githubId) {
     redirect("/login");
   }
 

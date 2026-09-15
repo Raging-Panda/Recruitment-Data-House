@@ -86,10 +86,42 @@ scheduled or scoped yet — just a running list to pull from.
   instead of the derived placeholder. Still open: the sustained
   scroll/dwell signal — this only counts a view on page open, not
   engaged reading time.
-- **SSO login with Google or GitHub** — GitHub OAuth already works;
-  add a real Google sign-in option too (currently a disabled
-  placeholder button on the login screen) so candidates without a
-  GitHub-first workflow can still sign up.
+- **SSO login with Google or GitHub** — 🟡 partially shipped. GitHub
+  OAuth was already wired in code; it just needed real credentials
+  (`GITHUB_CLIENT_ID`/`SECRET` from a GitHub OAuth App) — those are
+  now in this environment's `.env.local`, not something a future
+  session can re-verify without them. Google is genuinely new: a
+  `GoogleProvider` in `lib/auth.ts` (env vars `GOOGLE_CLIENT_ID`/
+  `SECRET`, documented in `.env.example`), a `hasGithubConnection()`
+  gate (`lib/github-connection.ts`) keyed on whether the session
+  carries a GitHub access token, and a `ConnectGithubPrompt` shown in
+  place of every GitHub-derived page (Skills, Projects, Analytics, and
+  the PDF export route, which now 400s with a clear message) for an
+  account that fails that check. The Profile page gets a dedicated
+  `ThinProfile` render path instead of a blanket lockout: a Google
+  sign-in can still use the About/Currently narrative, the career
+  timeline (experience + certifications), Verified Skills, and
+  endorsements — everything that's Supabase-only rather than
+  GitHub-derived — with a CTA card explaining what's missing and why.
+  A Google account's identity is `google:<sub>` stored straight in the
+  existing `github_id` text columns, so no schema change was needed.
+  **Deliberately not account linking**: signing in with GitHub from a
+  Google session starts a *separate* identity (different `github_id`),
+  not an upgrade of the same one — every prompt says this explicitly
+  rather than implying a seamless connect flow. Added a dev-only
+  `test-google-account` credentials provider (same `ALLOW_TEST_LOGIN`
+  gate as the existing test account) simulating the no-GitHub-token
+  path without needing a real Google Cloud OAuth app — used to verify
+  all of the above end-to-end (page renders, the About/Currently write
+  path against real Supabase, the PDF 400) without touching the real
+  Google provider, which needs an OAuth app only a human can create.
+  Real Google credentials aren't configured anywhere yet. Still open:
+  account linking (the actual fix for the two-separate-identities
+  problem above), Verified Skills / featured-work-style content
+  staying independent enough that a later-connected GitHub account
+  could plausibly merge in, and Google users never appearing in the
+  Directory (which is only ever populated by a GitHub-connected
+  profile sync) — both expected given the scope above, not bugs.
 
 ## Additional ideas
 

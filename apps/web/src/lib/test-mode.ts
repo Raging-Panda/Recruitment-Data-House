@@ -12,6 +12,12 @@ export function isTestModeEnabled(): boolean {
 export const TEST_ACCESS_TOKEN = "test-mode";
 export const TEST_GITHUB_ID = "900000001";
 
+/** Same dev bypass, but for exercising the no-GitHub-connection path (see
+ * lib/github-connection.ts) without a real Google OAuth app — the "google:"
+ * prefix and the total absence of an access token mirror exactly what a
+ * real Google sign-in produces. */
+export const TEST_GOOGLE_ID = "google:test-900000003";
+
 export function isTestAccount(githubId: string | null | undefined): boolean {
   return githubId === TEST_GITHUB_ID;
 }

@@ -2,6 +2,8 @@ import { getServerSession } from "next-auth";
 import { Suspense } from "react";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData } from "@/lib/developer-data";
+import { hasGithubConnection } from "@/lib/github-connection";
+import { ConnectGithubPrompt } from "@/components/connect-github-prompt";
 import { splitStrengthsAndGaps, sortedSkillEntries, computeLearningMomentum } from "@/lib/analysis";
 import { StatTile } from "@/components/stat-tile";
 import { BentoPlaceholder } from "@/components/bento-placeholder";
@@ -13,6 +15,8 @@ import { CommitTrendChartLazy as CommitTrendChart } from "@/components/commit-tr
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
+  if (!hasGithubConnection(session)) return <ConnectGithubPrompt page="Analytics" />;
+
   const { profile, skillFingerprint, activity, analytics, projects } = await loadDeveloperHubData(
     session!.accessToken!,
     session!.githubId!

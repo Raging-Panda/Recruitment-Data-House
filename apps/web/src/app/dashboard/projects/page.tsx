@@ -1,12 +1,16 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { loadDeveloperHubData, loadProjectActivityTimeline } from "@/lib/developer-data";
+import { hasGithubConnection } from "@/lib/github-connection";
+import { ConnectGithubPrompt } from "@/components/connect-github-prompt";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { StarIcon, EyeIcon, BriefcaseIcon } from "@/components/icons";
 import { EmptyState } from "@/components/empty-state";
 
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions);
+  if (!hasGithubConnection(session)) return <ConnectGithubPrompt page="Projects" />;
+
   const [{ projects }, timeline] = await Promise.all([
     loadDeveloperHubData(session!.accessToken!, session!.githubId!),
     loadProjectActivityTimeline(session!.accessToken!, session!.githubId!),
