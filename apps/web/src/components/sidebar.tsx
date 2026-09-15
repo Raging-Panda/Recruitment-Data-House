@@ -24,6 +24,7 @@ import {
   ActivityIcon,
   UsersIcon,
   BellIcon,
+  SearchIcon,
 } from "./icons";
 
 const NAV_ITEMS = [
@@ -35,6 +36,10 @@ const NAV_ITEMS = [
   { href: "/dashboard/certifications", label: "Certifications", icon: ShieldCheckIcon },
   { href: "/dashboard/achievements", label: "Achievements", icon: StarIcon },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChartIcon },
+  // The public developer index (/directory) — unauthenticated, outside
+  // the /dashboard route tree entirely, so this is a genuine "leave the
+  // dashboard shell" link, not an active-state-tracked internal page.
+  { href: "/directory", label: "Discover", icon: SearchIcon },
   { href: "/dashboard/feed", label: "Feed", icon: ActivityIcon },
   { href: "/dashboard/roles", label: "Open Roles", icon: BriefcaseIcon },
   { href: "/dashboard/messages", label: "Messages", icon: BellIcon },
