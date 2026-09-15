@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
-import { getMessages, sendMessage, markConversationRead, isParticipant } from "@/lib/messaging";
+import {
+  getMessages,
+  sendMessage,
+  markConversationRead,
+  isParticipant,
+  getConversationMeta,
+} from "@/lib/messaging";
 
 export async function GET(_req: NextRequest, { params }: { params: { conversationId: string } }) {
   const session = await getServerSession(authOptions);
@@ -25,6 +31,15 @@ export async function POST(req: NextRequest, { params }: { params: { conversatio
   if (!(await isParticipant(params.conversationId, session.githubId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  // The person a request is pending on must accept (or decline) it before
+  // they can reply — the person who sent it can keep messaging into a
+  // still-pending thread, same as a DM request on most social apps.
+  const meta = await getConversationMeta(params.conversationId);
+  if (meta?.status === "pending" && meta.pendingAcceptanceBy === session.githubId) {
+    return NextResponse.json({ error: "Accept or decline this request first" }, { status: 403 });
+  }
+
   const body = await req.json().catch(() => null);
   const text = typeof body?.body === "string" ? body.body.trim() : "";
   if (!text) return NextResponse.json({ error: "body is required" }, { status: 400 });

@@ -2,12 +2,14 @@ import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getLinkedAccountsSafe, type LinkProvider } from "@/lib/linked-accounts";
+import { getMessagePreference } from "@/lib/message-preference";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestModeEnabled } from "@/lib/test-mode";
 import { ConnectedAccountsCard } from "@/components/connected-accounts-card";
 import { LinkStatusToast } from "@/components/link-status-toast";
 import { ReferralCard } from "@/components/referral-card";
 import { ApiKeysCard } from "@/components/api-keys-card";
+import { DirectMessagesCard } from "@/components/direct-messages-card";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -19,7 +21,10 @@ function primaryProviderOf(session: { accessToken?: string; githubId?: string })
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
-  const linked = await getLinkedAccountsSafe(session!.githubId!);
+  const [linked, messagePreference] = await Promise.all([
+    getLinkedAccountsSafe(session!.githubId!),
+    getMessagePreference(session!.githubId!),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -38,6 +43,7 @@ export default async function SettingsPage() {
           isDemo={isDemo}
           testLinkAvailable={isTestModeEnabled()}
         />
+        <DirectMessagesCard initialPreference={messagePreference} isDemo={isDemo} />
         <ReferralCard />
         <ApiKeysCard isDemo={isDemo} />
       </div>

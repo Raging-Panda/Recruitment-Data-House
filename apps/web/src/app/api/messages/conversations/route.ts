@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
   if (!targetId) return NextResponse.json({ error: "targetId is required" }, { status: 400 });
 
   try {
-    const id = await getOrCreateConversation(session.githubId, targetId);
-    return NextResponse.json({ conversationId: id }, { status: 201 });
+    const conversation = await getOrCreateConversation(session.githubId, targetId);
+    return NextResponse.json({ conversationId: conversation.id, status: conversation.status }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 400 });
   }

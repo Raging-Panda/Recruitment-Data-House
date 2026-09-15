@@ -7,6 +7,7 @@ import { listConversations } from "@/lib/messaging";
 import { getDirectoryEntriesByIds } from "@/lib/directory";
 import { EmptyState } from "@/components/empty-state";
 import { BellIcon } from "@/components/icons";
+import { MessageRequestRow } from "@/components/message-request-row";
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -19,29 +20,65 @@ function timeAgo(iso: string | null): string {
 export default async function MessagesPage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
-  const conversations = isDemo ? [] : await listConversations(session!.githubId!).catch(() => []);
-  const others = await getDirectoryEntriesByIds(conversations.map((c) => c.otherId)).catch(() => []);
+  const allConversations = isDemo ? [] : await listConversations(session!.githubId!).catch(() => []);
+  const others = await getDirectoryEntriesByIds(allConversations.map((c) => c.otherId)).catch(() => []);
   const otherMap = new Map(others.map((o) => [o.githubId, o]));
+
+  // Incoming requests (I owe the accept/decline) surface separately and
+  // up top — everything else, including a request I sent that's still
+  // awaiting the other person, shows in the normal list.
+  const requests = allConversations.filter((c) => c.isIncomingRequest);
+  const conversations = allConversations.filter((c) => !c.isIncomingRequest);
 
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="text-2xl font-bold text-heading">Messages</h1>
       <p className="mt-1 text-sm text-text-secondary">
         Talk directly with developers/recruiters on IPSkill — start a conversation from a Directory
-        profile.
+        profile. Whether it lands in your inbox directly or as a request first depends on their
+        Settings.
       </p>
 
+      {requests.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Requests ({requests.length})
+          </h2>
+          <ul className="mt-2 space-y-2">
+            {requests.map((c) => {
+              const other = otherMap.get(c.otherId);
+              return (
+                <MessageRequestRow
+                  key={c.id}
+                  conversationId={c.id}
+                  name={other?.displayName ?? "A developer"}
+                  avatarUrl={other?.avatarUrl ?? null}
+                  preview={c.lastMessage}
+                />
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       {isDemo || conversations.length === 0 ? (
-        <EmptyState
-          className="mt-6"
-          icon={BellIcon}
-          title="No conversations yet"
-          description={isDemo ? "Messaging is disabled for the shared demo account." : "Message someone from their Directory profile to start one."}
-        />
+        requests.length === 0 && (
+          <EmptyState
+            className="mt-6"
+            icon={BellIcon}
+            title="No conversations yet"
+            description={
+              isDemo
+                ? "Messaging is disabled for the shared demo account."
+                : "Message someone from their Directory profile to start one."
+            }
+          />
+        )
       ) : (
         <ul className="mt-6 space-y-2">
           {conversations.map((c) => {
             const other = otherMap.get(c.otherId);
+            const pendingOnThem = c.status === "pending";
             return (
               <li key={c.id}>
                 <Link
@@ -61,7 +98,11 @@ export default async function MessagesPage() {
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="text-xs text-text-muted">{timeAgo(c.lastMessageAt)}</span>
-                    {c.unread && <span className="h-2 w-2 rounded-full bg-primary" />}
+                    {pendingOnThem ? (
+                      <span className="text-[10px] uppercase tracking-wide text-text-muted">Pending</span>
+                    ) : (
+                      c.unread && <span className="h-2 w-2 rounded-full bg-primary" />
+                    )}
                   </div>
                 </Link>
               </li>
