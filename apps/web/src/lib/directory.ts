@@ -84,7 +84,7 @@ export async function syncDirectoryProfile(
       company: identity?.company ?? null,
     };
     const supabase = getSupabaseAdmin();
-    await supabase.from("directory_profiles").upsert({
+    const baseRow = {
       github_id: entry.githubId,
       github_login: entry.githubLogin,
       display_name: entry.displayName,
@@ -97,10 +97,20 @@ export async function syncDirectoryProfile(
       about: entry.about,
       last_active_at: entry.lastActiveAt,
       skill_fingerprint: entry.skillFingerprint,
-      handle: entry.handle,
-      visibility: entry.visibility,
-      company: entry.company,
-    });
+    };
+    // handle/visibility/company only exist once migration 0003 has run —
+    // until then PostgREST 400s on the unknown columns (PGRST204) and
+    // fails the *entire* upsert, not just those fields, which would
+    // silently break directory sync altogether for every account. Try
+    // the full row first so those fields populate the moment the
+    // migration lands; fall back to the pre-migration column set rather
+    // than losing sync entirely in the meantime.
+    const { error: upsertError } = await supabase
+      .from("directory_profiles")
+      .upsert({ ...baseRow, handle: entry.handle, visibility: entry.visibility, company: entry.company });
+    if (upsertError?.code === "PGRST204") {
+      await supabase.from("directory_profiles").upsert(baseRow);
+    }
     void notifySavedSearchMatches(entry);
     // One point-in-time score sample per sync — Growth Olympics and
     // "trending developers" both compute a delta over these rather than
