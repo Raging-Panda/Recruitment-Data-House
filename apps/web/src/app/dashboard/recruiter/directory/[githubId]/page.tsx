@@ -7,6 +7,7 @@ import { getDirectoryEntry } from "@/lib/directory";
 import { recordProfileView } from "@/lib/profile-views";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { isDemoAccount } from "@/lib/demo-mode";
+import { getMessagePreference } from "@/lib/message-preference";
 import { DEMO_DIRECTORY_ENTRIES, DEMO_ENDORSEMENTS } from "@/lib/demo-data";
 import { ScoreRing } from "@/components/score-ring";
 import { ArrowRightIcon } from "@/components/icons";
@@ -56,6 +57,11 @@ export default async function DirectoryProfilePage({
     !isDemo && viewerGithubId !== entry.githubId
       ? await isFollowing(viewerGithubId, entry.githubId).catch(() => false)
       : false;
+
+  const messagePreference =
+    !isDemo && viewerGithubId !== entry.githubId
+      ? await getMessagePreference(entry.githubId).catch(() => "open" as const)
+      : "open";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -147,7 +153,7 @@ export default async function DirectoryProfilePage({
       <div className="mt-6 rounded-2xl border border-dashed border-surface-border bg-background-elevated p-5 text-center">
         {!isDemo && viewerGithubId !== entry.githubId ? (
           <div className="flex justify-center">
-            <MessageButton targetId={entry.githubId} />
+            <MessageButton targetId={entry.githubId} preference={messagePreference} />
           </div>
         ) : (
           <p className="text-sm text-text-secondary">
