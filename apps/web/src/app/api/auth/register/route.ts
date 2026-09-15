@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashPassword } from "@/lib/password";
+import { attributeReferral } from "@/lib/referrals";
+import { LOCAL_ID_PREFIX } from "@/lib/local-account";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -43,14 +45,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { error: insertError } = await supabase.from("users").insert({
-    email,
-    password_hash: hashPassword(password),
-    display_name: displayName || null,
-  });
+  const { data: created, error: insertError } = await supabase
+    .from("users")
+    .insert({
+      email,
+      password_hash: hashPassword(password),
+      display_name: displayName || null,
+    })
+    .select("id")
+    .single();
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
+
+  const ref = typeof body?.ref === "string" ? body.ref.trim() : "";
+  if (ref) void attributeReferral(ref, `${LOCAL_ID_PREFIX}${created.id}`);
 
   return NextResponse.json({ success: true }, { status: 201 });
 }

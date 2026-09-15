@@ -13,6 +13,7 @@ import { ArrowRightIcon } from "@/components/icons";
 import { EndorsementList } from "@/components/endorsement-list";
 import { EndorsementForm } from "@/components/endorsement-form";
 import { FollowButton } from "@/components/follow-button";
+import { MessageButton } from "@/components/message-button";
 import { isFollowing } from "@/lib/social";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
 
@@ -140,9 +141,15 @@ export default async function DirectoryProfilePage({
       </div>
 
       <div className="mt-6 rounded-2xl border border-dashed border-surface-border bg-background-elevated p-5 text-center">
-        <p className="text-sm text-text-secondary">
-          Contacting candidates directly isn&apos;t wired up yet — this is the read-only view.
-        </p>
+        {!isDemo && viewerGithubId !== entry.githubId ? (
+          <div className="flex justify-center">
+            <MessageButton targetId={entry.githubId} />
+          </div>
+        ) : (
+          <p className="text-sm text-text-secondary">
+            {isDemo ? "Messaging isn't available on the shared demo account." : "This is your own profile."}
+          </p>
+        )}
         <Link
           href="/dashboard/recruiter/directory"
           className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"

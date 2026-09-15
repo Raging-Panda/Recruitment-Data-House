@@ -24,11 +24,19 @@ export function LoginCard() {
   const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
 
   const [authMode, setAuthMode] = useState<"closed" | "login" | "signup">("closed");
+  const [refCode, setRefCode] = useState("");
   const [authName, setAuthName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+
+  // Read via window.location rather than useSearchParams() so this
+  // component doesn't need a <Suspense> boundary just for a referral code.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) setRefCode(ref);
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/providers")
@@ -86,7 +94,12 @@ export function LoginCard() {
         const res = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: authEmail, password: authPassword, displayName: authName }),
+          body: JSON.stringify({
+            email: authEmail,
+            password: authPassword,
+            displayName: authName,
+            ref: refCode || undefined,
+          }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Could not create account");

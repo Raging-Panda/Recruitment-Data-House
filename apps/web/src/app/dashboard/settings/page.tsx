@@ -6,6 +6,8 @@ import { isDemoAccount } from "@/lib/demo-mode";
 import { isTestModeEnabled } from "@/lib/test-mode";
 import { ConnectedAccountsCard } from "@/components/connected-accounts-card";
 import { LinkStatusToast } from "@/components/link-status-toast";
+import { ReferralCard } from "@/components/referral-card";
+import { ApiKeysCard } from "@/components/api-keys-card";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -29,13 +31,15 @@ export default async function SettingsPage() {
         Manage how you sign in and what's connected to your profile.
       </p>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         <ConnectedAccountsCard
           primaryProvider={primaryProviderOf(session!)}
           initialLinked={linked}
           isDemo={isDemo}
           testLinkAvailable={isTestModeEnabled()}
         />
+        <ReferralCard />
+        <ApiKeysCard isDemo={isDemo} />
       </div>
     </div>
   );
