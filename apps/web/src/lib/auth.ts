@@ -5,6 +5,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { isTestModeEnabled, TEST_ACCESS_TOKEN, TEST_GITHUB_ID, TEST_GOOGLE_ID } from "./test-mode";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_ACCESS_TOKEN, DEMO_GITHUB_ID } from "./demo-mode";
 import { DEMO_DISPLAY_NAME } from "./demo-data";
+import { getSupabaseAdmin } from "./supabase";
+import { verifyPassword } from "./password";
+import { LOCAL_ID_PREFIX } from "./local-account";
 
 const providers: NextAuthOptions["providers"] = [
   GitHubProvider({
@@ -29,6 +32,39 @@ const providers: NextAuthOptions["providers"] = [
   GoogleProvider({
     clientId: process.env.GOOGLE_CLIENT_ID ?? "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  }),
+  // Real email/password accounts (users table, apps/web/src/lib/password.ts
+  // for hashing). Same "second-class citizen" status as Google — a regular
+  // account has no GitHub token and gets the ThinProfile / ConnectGithubPrompt
+  // treatment (lib/github-connection.ts) until account linking exists.
+  // Registration is a separate step: POST /api/auth/register, then the
+  // client calls signIn("credentials", ...) itself.
+  CredentialsProvider({
+    id: "credentials",
+    name: "Email",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = credentials?.email?.trim().toLowerCase();
+      if (!email || !credentials?.password) return null;
+
+      const { data: user, error } = await getSupabaseAdmin()
+        .from("users")
+        .select("id, email, password_hash, display_name")
+        .eq("email", email)
+        .maybeSingle();
+      if (error || !user) return null;
+      if (!verifyPassword(credentials.password, user.password_hash)) return null;
+
+      return {
+        id: `${LOCAL_ID_PREFIX}${user.id}`,
+        name: user.display_name ?? user.email,
+        email: user.email,
+        image: null,
+      };
+    },
   }),
   // Public, always-on proof-of-concept login — a fully populated fixture
   // profile anyone evaluating the product can see without a real GitHub
@@ -98,7 +134,13 @@ if (isTestModeEnabled()) {
 export const authOptions: NextAuthOptions = {
   providers,
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
+      if (account?.provider === "credentials" && user) {
+        // No accessToken — same as Google, this is a no-GitHub-connection
+        // identity until account linking exists. user.id is already
+        // "local:<users.id>", set by the authorize() callback above.
+        token.githubId = user.id;
+      }
       if (account?.provider === "github" && account.access_token) {
         token.accessToken = account.access_token;
         // GitHub's numeric account ID — stable even if the user renames

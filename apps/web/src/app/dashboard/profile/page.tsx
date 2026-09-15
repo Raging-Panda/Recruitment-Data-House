@@ -112,8 +112,8 @@ async function ThinProfile({ session }: { session: Session }) {
     <div className="mx-auto max-w-5xl">
       <h1 className="text-2xl font-bold text-heading">My Profile</h1>
       <p className="mt-1 text-sm text-text-secondary">
-        Signed in with Google — the parts only you can tell, plus GitHub-derived analysis once you
-        connect it.
+        No GitHub connected yet — the parts only you can tell, plus GitHub-derived analysis once
+        you connect it.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 rounded-2xl border border-surface-border bg-background-elevated p-6 md:grid-cols-[auto_1fr]">

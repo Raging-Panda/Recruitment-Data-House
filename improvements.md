@@ -115,13 +115,51 @@ scheduled or scoped yet — just a running list to pull from.
   all of the above end-to-end (page renders, the About/Currently write
   path against real Supabase, the PDF 400) without touching the real
   Google provider, which needs an OAuth app only a human can create.
-  Real Google credentials aren't configured anywhere yet. Still open:
-  account linking (the actual fix for the two-separate-identities
-  problem above), Verified Skills / featured-work-style content
-  staying independent enough that a later-connected GitHub account
-  could plausibly merge in, and Google users never appearing in the
-  Directory (which is only ever populated by a GitHub-connected
-  profile sync) — both expected given the scope above, not bugs.
+  **Update:** GitHub and Google are now both configured with real
+  credentials and verified end-to-end (Google: redirected to a real
+  Google account chooser and rendered `ThinProfile` on callback;
+  needed one follow-up fix — `lh3.googleusercontent.com` wasn't in
+  `next.config.mjs`'s image `remotePatterns`, so a Google avatar
+  500'd on first real login). Still open: account linking (the actual
+  fix for the two-separate-identities problem above), Verified Skills
+  / featured-work-style content staying independent enough that a
+  later-connected GitHub account could plausibly merge in, and Google
+  users never appearing in the Directory (only ever populated by a
+  GitHub-connected profile sync) — expected given the scope above, not
+  bugs.
+- **Regular (email/password) login** — ✅ shipped: a real `users`
+  table (`email`, `password_hash`, `display_name`) backs a `credentials`
+  NextAuth provider, with a proper two-step flow — `POST
+  /api/auth/register` (validates + hashes with Node's built-in
+  `crypto.scrypt`, no new dependency) creates the row, then the client
+  calls `signIn("credentials", ...)` itself. The login card's old "Log
+  in" button was a placeholder that silently signed you in with GitHub
+  regardless — replaced with a real Log in / Sign up toggle and form.
+  A regular account is a `local:<users.id>` identity, same "second-
+  class citizen" treatment as Google (`ThinProfile`,
+  `ConnectGithubPrompt` on Skills/Projects/Analytics, PDF 400s) since
+  it likewise has no GitHub token. Verified end-to-end through the
+  real UI/API against Supabase: signup → write (Currently) → log out →
+  log back in with the same password → data persists under the same
+  identity; duplicate email correctly 409s; wrong password correctly
+  401s. Test rows cleaned up afterward.
+- **Account linking (GitHub, Google, and soon LinkedIn)** — the
+  schema is in place (`linked_accounts`: `owner_id`, `provider`,
+  `provider_account_id`, `provider_login`, `access_token`,
+  `avatar_url` — provider is a checked enum already including
+  `linkedin`) but nothing reads or writes it yet. This is the real
+  fix for the "signing in with GitHub starts a separate profile"
+  papercut on both the Google and regular-login paths above. Deferred
+  deliberately rather than rushed in alongside login, because it's a
+  different kind of work: a hand-rolled OAuth "connect" flow (NextAuth
+  v4's JWT-strategy sessions don't support multi-provider account
+  linking out of the box — that needs a database Adapter, which this
+  app deliberately doesn't use) with its own state/CSRF handling, plus
+  rewiring every page that currently reads `session.accessToken`
+  directly (`developer-data.ts` call sites) to instead resolve a
+  GitHub token through `linked_accounts` by the session's owner id.
+  Worth designing once for all three providers together rather than
+  building GitHub-linking now and reworking it when LinkedIn lands.
 
 ## Additional ideas
 

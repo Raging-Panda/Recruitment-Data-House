@@ -11,6 +11,9 @@ import { setPendingToast, consumePendingToast } from "@/lib/pending-toast";
 const DEMO_EMAIL = "admin@admin.com";
 const DEMO_PASSWORD = "1234";
 
+const AUTH_INPUT_CLASS =
+  "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
+
 export function LoginCard() {
   const router = useRouter();
   const showToast = useToast();
@@ -19,6 +22,13 @@ export function LoginCard() {
   const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
   const [demoError, setDemoError] = useState<string | null>(null);
   const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
+
+  const [authMode, setAuthMode] = useState<"closed" | "login" | "signup">("closed");
+  const [authName, setAuthName] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/providers")
@@ -59,6 +69,35 @@ export function LoginCard() {
     } else {
       setPendingToast("Viewing the demo profile");
       router.push("/dashboard/profile");
+    }
+  }
+
+  async function handleAuthSubmit(e: FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setIsSubmittingAuth(true);
+    try {
+      if (authMode === "signup") {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: authEmail, password: authPassword, displayName: authName }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error ?? "Could not create account");
+      }
+      const result = await signIn("credentials", {
+        email: authEmail,
+        password: authPassword,
+        redirect: false,
+      });
+      if (result?.error) throw new Error("Incorrect email or password");
+      setPendingToast(authMode === "signup" ? "Account created" : "Signed in");
+      router.push("/dashboard/profile");
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsSubmittingAuth(false);
     }
   }
 
@@ -105,12 +144,86 @@ export function LoginCard() {
           <GithubMark /> Continue with GitHub
         </button>
 
-        <button
-          onClick={signInWithGithub}
-          className="rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
-        >
-          Log in
-        </button>
+        {authMode === "closed" && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setAuthMode("login");
+                setAuthError(null);
+              }}
+              className="flex-1 rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => {
+                setAuthMode("signup");
+                setAuthError(null);
+              }}
+              className="flex-1 rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
+            >
+              Sign up
+            </button>
+          </div>
+        )}
+
+        {authMode !== "closed" && (
+          <form onSubmit={handleAuthSubmit} className="flex flex-col gap-2 text-left">
+            {authMode === "signup" && (
+              <input
+                type="text"
+                value={authName}
+                onChange={(e) => setAuthName(e.target.value)}
+                placeholder="Full name"
+                className={AUTH_INPUT_CLASS}
+              />
+            )}
+            <input
+              type="email"
+              required
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              placeholder="Email"
+              className={AUTH_INPUT_CLASS}
+            />
+            <input
+              type="password"
+              required
+              minLength={authMode === "signup" ? 8 : undefined}
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              placeholder={authMode === "signup" ? "Password (min. 8 characters)" : "Password"}
+              className={AUTH_INPUT_CLASS}
+            />
+            {authError && <p className="text-xs text-accent-red">{authError}</p>}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAuthMode("closed")}
+                className="flex-1 rounded-full border border-surface-border px-4 py-2.5 text-sm font-medium text-text-secondary transition hover:text-heading"
+                disabled={isSubmittingAuth}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingAuth}
+                className="flex-1 rounded-full bg-primary-gradient px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                {isSubmittingAuth
+                  ? "Please wait…"
+                  : authMode === "signup"
+                    ? "Create account"
+                    : "Log in"}
+              </button>
+            </div>
+            <p className="text-center text-xs text-text-muted">
+              {authMode === "signup"
+                ? "No GitHub or Google — a lighter profile until you connect one."
+                : ""}
+            </p>
+          </form>
+        )}
 
         {testLoginAvailable && (
           <button
