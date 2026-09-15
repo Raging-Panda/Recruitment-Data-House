@@ -6,30 +6,60 @@ scheduled or scoped yet — just a running list to pull from.
 ## Autonomous sprint — 2026-09-15
 
 A single unattended pass through most of the "north star", monetization,
-and performance sections below, run entirely from committed code (no
-further user input). Two migrations exist for all of it
+and performance sections below. Two migrations
 (`db/migrations/0003_public_identity_and_growth.sql`,
-`db/migrations/0004_video_intro.sql`) — **not applied in this
-environment**, so most of what's listed here is typecheck-and-build
-verified but not live-tested against real Supabase, unlike the two
-schema-independent items (signed attestations, credibility-weighted
-endorsements) which were driven through the real UI/API against the demo
-account. Full detail is inline on each bullet below; this is the map of
-what to look at first.
+`db/migrations/0004_video_intro.sql`) shipped alongside the code and were
+run in this environment shortly after — everything below is now
+**live-verified end to end**, not just typecheck-and-build, driven
+through the real UI/API against real Supabase with two distinct test
+identities (not just the demo account, which bypasses real writes
+entirely). That verification pass caught and fixed three real bugs
+(documented on their own commits, not just this summary):
 
-**Shipped, code-complete, needs the migration to go live:**
-vanity public profiles (`/u/[handle]`) + SEO + OG images + embeddable
-badge, the public developer index (`/directory`) + team pages, follow +
-kudos + activity feed, Growth Olympics (Premium Dev's first real gate),
-trending developers, "Beyond GitHub" external links, referral program,
-public API keys for enterprise clients, real in-app messaging, minimal
-job/role matching, async video-intro link.
+1. **Directory sync would have silently broken for everyone** the moment
+   the migration ran — the upsert started including the new handle/
+   visibility/company columns unconditionally, and PostgREST rejects an
+   entire upsert over one unknown column pre-migration. Fixed with a
+   full-row-then-fallback-row attempt.
+2. **Every public, unauthenticated page could serve stale data** —
+   `/u/[handle]`, `/directory`, `/team/[company]`, the badge, the OG
+   image, the sitemap, and the pre-existing `/p/[token]` share link —
+   because none of them call a Next.js "dynamic" API, unlike every
+   `/dashboard` page (protected for free by `getServerSession` reading
+   cookies internally). Fixed with `export const dynamic = "force-dynamic"`
+   on all of them.
+3. **`score_snapshots` — and therefore Growth Olympics and trending
+   developers — never actually got written.** `void
+   supabase.from(...).insert(...)` looks like fire-and-forget but isn't:
+   supabase-js query builders are lazy thenables that only dispatch their
+   `fetch()` when something calls `.then()`/awaits them, so the `void`
+   discarded the *construction* of the request without ever sending it.
+   Fixed by awaiting it directly.
 
-**Shipped and live-verified now** (no schema change needed): signed
-JSON profile attestations (HMAC, tamper-evident), credibility-weighted
-endorsement sorting/badging, deterministic "AI" candidate summaries, a
-windowed/"load more" public Directory, an in-memory TTL cache for the
-mobile hub-data fetch.
+A fourth issue (linking GitHub as a second test account 500'd) turned out
+to be a dev-tooling-only bug in the `test-simulate` route, not a real one
+— fixed alongside the above.
+
+**Shipped and live-verified, needed the migration:** vanity public
+profiles (`/u/[handle]`) + SEO + dynamic OG images + embeddable badge,
+the public developer index (`/directory`) + team pages, follow + kudos +
+activity feed, Growth Olympics (Premium Dev's first real gate, correct
+weighted scoring confirmed), trending developers, "Beyond GitHub"
+external links, referral codes, public API keys for enterprise clients
+(generate/use/revoke all confirmed), real two-way in-app messaging,
+minimal job/role matching (match-score math confirmed exact).
+
+**Shipped and live-verified, no schema needed:** signed JSON profile
+attestations (HMAC, tamper-evident — genuine and tampered payloads both
+confirmed), credibility-weighted endorsement sorting/badging,
+deterministic "AI" candidate summaries, a windowed/"load more" public
+Directory, an in-memory TTL cache for the mobile hub-data fetch (typecheck-
+verified only — no simulator session run).
+
+**Not independently re-verified this pass** (async video-intro link,
+company-based team-page matching beyond the one live case above) — built
+and exercised incidentally but not each given its own dedicated check;
+low-risk, simple field/query additions.
 
 **Explicitly deferred, with reasons** (not attempted this pass):
 GraphQL batching for GitHub calls — real production traffic behavior
