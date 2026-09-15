@@ -36,6 +36,10 @@ import { GetVerifiedSkillButton } from "@/components/get-verified-skill-modal";
 import { EmptyState } from "@/components/empty-state";
 import { CodeIcon } from "@/components/icons";
 import { buttonClass } from "@/lib/button-styles";
+import { getPublicIdentitySafe } from "@/lib/public-identity";
+import { PublicIdentityCard } from "@/components/public-identity-card";
+import { ExternalLinksManager } from "@/components/external-links-manager";
+import { getExternalLinksSafe } from "@/lib/external-links";
 import type { ContributionDay, Endorsement, WorkExperience, Certification } from "@ipskill/shared";
 
 const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
@@ -193,12 +197,14 @@ export default async function ProfilePage() {
     return <ThinProfile session={session!} />;
   }
 
-  const [{ profile, activity, projects, skillFingerprint }, override, featuredProjects, career] =
+  const [{ profile, activity, projects, skillFingerprint }, override, featuredProjects, career, identity, externalLinks] =
     await Promise.all([
       loadDeveloperHubData(githubToken, session!.githubId!),
       getCandidateProfileOverrideSafe(session!.githubId!),
       getFeaturedProjectsSafe(session!.githubId!),
       loadCareerHistory(session!.githubId!, isDemo),
+      getPublicIdentitySafe(session!.githubId!),
+      getExternalLinksSafe(session!.githubId!),
     ]);
 
   const displayName = override?.displayName ?? profile.name;
@@ -221,7 +227,8 @@ export default async function ProfilePage() {
       profile,
       activity,
       skillFingerprint,
-      aboutAuthored
+      aboutAuthored,
+      identity
     );
     try {
       endorsements = await getEndorsementsFor(session!.githubId!);
@@ -305,6 +312,19 @@ export default async function ProfilePage() {
           initialEntries={featuredProjects}
           availableRepos={availableRepos}
           maxEntries={MAX_FEATURED_PROJECTS}
+          readOnly={isDemo}
+        />
+      </div>
+
+      <div className="mt-8">
+        <ExternalLinksManager initialEntries={externalLinks} readOnly={isDemo} />
+      </div>
+
+      <div className="mt-8">
+        <PublicIdentityCard
+          initialHandle={identity.handle}
+          initialVisibility={identity.visibility}
+          initialCompany={identity.company}
           readOnly={isDemo}
         />
       </div>

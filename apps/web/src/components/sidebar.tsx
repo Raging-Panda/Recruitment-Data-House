@@ -21,6 +21,9 @@ import {
   GearIcon,
   ArrowRightIcon,
   CloseIcon,
+  ActivityIcon,
+  UsersIcon,
+  BellIcon,
 } from "./icons";
 
 const NAV_ITEMS = [
@@ -32,6 +35,9 @@ const NAV_ITEMS = [
   { href: "/dashboard/certifications", label: "Certifications", icon: ShieldCheckIcon },
   { href: "/dashboard/achievements", label: "Achievements", icon: StarIcon },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChartIcon },
+  { href: "/dashboard/feed", label: "Feed", icon: ActivityIcon },
+  { href: "/dashboard/messages", label: "Messages", icon: BellIcon },
+  { href: "/dashboard/growth", label: "Growth Olympics", icon: UsersIcon },
   { href: "/dashboard/settings", label: "Settings", icon: GearIcon },
 ];
 

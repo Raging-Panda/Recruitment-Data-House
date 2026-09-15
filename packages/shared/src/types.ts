@@ -288,6 +288,14 @@ export interface DirectoryEntry {
   /** Snapshot of the candidate's own skill fingerprint, synced alongside
    * the rest of this row — powers the recruiter-side Compare view. */
   skillFingerprint: SkillFingerprint;
+  /** Vanity handle (public profile at /u/<handle>) and whether this row
+   * should appear in the public developer index — undefined/"private"
+   * unless the candidate opted in from Settings. Optional rather than
+   * required so existing DirectoryEntry literals (demo fixtures) don't
+   * all need updating for a feature that postdates them. */
+  handle?: string | null;
+  visibility?: "private" | "public";
+  company?: string | null;
 }
 
 export interface ProfileViewStats {

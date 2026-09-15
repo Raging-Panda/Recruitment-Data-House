@@ -20,3 +20,13 @@ export const PLAN_LABELS: Record<Plan, string> = {
 export function hasRecruiterAccess(plan: Plan): boolean {
   return plan === "premium_recruiter";
 }
+
+/**
+ * Premium Dev's first real gated feature: Growth Olympics eligibility
+ * (see app/dashboard/growth). Deliberately not "any paid plan" — a
+ * premium_recruiter account is a recruiter's plan, not a developer's, so
+ * it doesn't imply Growth Olympics eligibility either.
+ */
+export function hasPremiumDevAccess(plan: Plan): boolean {
+  return plan === "premium_dev";
+}

@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToCertification } from "@/lib/certifications";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createNotification } from "@/lib/notifications";
+import { recordActivityEvent } from "@/lib/social";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
     body: name,
     link: "/dashboard/certifications",
   });
+  void recordActivityEvent(session.githubId, { type: "certification_added", title: name });
 
   return NextResponse.json({ entry: rowToCertification(data) }, { status: 201 });
 }

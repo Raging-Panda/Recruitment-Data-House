@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createEndorsement } from "@/lib/endorsements";
 import { createNotification } from "@/lib/notifications";
+import { recordActivityEvent } from "@/lib/social";
 
 const VALID_SKILLS: SkillCategory[] = [
   "Backend",
@@ -43,6 +44,10 @@ export async function POST(req: NextRequest) {
       title: `New endorsement — ${skillCategory}`,
       body: comment ? `"${comment}"` : "A developer endorsed one of your skills.",
       link: "/dashboard/profile",
+    });
+    void recordActivityEvent(endorseeGithubId, {
+      type: "endorsement_received",
+      title: `Endorsed for ${skillCategory}`,
     });
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {

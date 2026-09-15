@@ -6,6 +6,7 @@ import { isAttemptExpired, type AttemptRow, type QuestionRow, type TemplateRow }
 import type { SkillTestSubmitResult } from "@ipskill/shared";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createNotification } from "@/lib/notifications";
+import { recordActivityEvent } from "@/lib/social";
 
 export async function POST(req: NextRequest, { params }: { params: { attemptId: string } }) {
   const session = await getServerSession(authOptions);
@@ -92,6 +93,13 @@ export async function POST(req: NextRequest, { params }: { params: { attemptId: 
     body: expired ? "Submitted after time ran out" : null,
     link: "/dashboard/skills",
   });
+  if (percentage >= 70) {
+    void recordActivityEvent(session.githubId, {
+      type: "skill_test_completed",
+      title: templateRow.title,
+      body: `Scored ${percentage}%`,
+    });
+  }
 
   const result: SkillTestSubmitResult = {
     attemptId: (updated as AttemptRow).id,

@@ -20,6 +20,9 @@ export interface DirectoryRow {
   about: string | null;
   last_active_at: string;
   skill_fingerprint: SkillFingerprint;
+  handle: string | null;
+  visibility: "private" | "public" | null;
+  company: string | null;
 }
 
 export function rowToDirectoryEntry(row: DirectoryRow): DirectoryEntry {
@@ -36,6 +39,9 @@ export function rowToDirectoryEntry(row: DirectoryRow): DirectoryEntry {
     about: row.about,
     lastActiveAt: row.last_active_at,
     skillFingerprint: row.skill_fingerprint,
+    handle: row.handle,
+    visibility: row.visibility ?? "private",
+    company: row.company,
   };
 }
 
@@ -54,7 +60,9 @@ export async function syncDirectoryProfile(
   /** Developer-authored "About", when set — takes precedence over the
    * GitHub bio so the directory/public view shows what they actually
    * wrote about themselves. */
-  aboutOverride?: string | null
+  aboutOverride?: string | null,
+  /** Vanity handle / public-index opt-in / company — see lib/public-identity.ts. */
+  identity?: { handle: string | null; visibility: "private" | "public"; company: string | null }
 ): Promise<void> {
   try {
     const topLanguages = activity.languageBreakdown.slice(0, 3).map((l) => l.language);
@@ -71,8 +79,12 @@ export async function syncDirectoryProfile(
       about: aboutOverride?.trim() || profile.about,
       lastActiveAt: new Date().toISOString(),
       skillFingerprint,
+      handle: identity?.handle ?? null,
+      visibility: identity?.visibility ?? "private",
+      company: identity?.company ?? null,
     };
-    await getSupabaseAdmin().from("directory_profiles").upsert({
+    const supabase = getSupabaseAdmin();
+    await supabase.from("directory_profiles").upsert({
       github_id: entry.githubId,
       github_login: entry.githubLogin,
       display_name: entry.displayName,
@@ -85,8 +97,16 @@ export async function syncDirectoryProfile(
       about: entry.about,
       last_active_at: entry.lastActiveAt,
       skill_fingerprint: entry.skillFingerprint,
+      handle: entry.handle,
+      visibility: entry.visibility,
+      company: entry.company,
     });
     void notifySavedSearchMatches(entry);
+    // One point-in-time score sample per sync — Growth Olympics and
+    // "trending developers" both compute a delta over these rather than
+    // needing a cron job. A few extra rows per profile visit is cheap;
+    // deliberately no de-dupe/throttle here, simplicity over storage.
+    void supabase.from("score_snapshots").insert({ owner_id: githubId, overall_score: profile.overallScore });
   } catch {
     // directory freshness is a nice-to-have side effect, not worth failing the profile page over
   }
@@ -111,6 +131,41 @@ export async function getDirectoryEntry(githubId: string): Promise<DirectoryEntr
 
   if (error) throw new Error(error.message);
   return data ? rowToDirectoryEntry(data as DirectoryRow) : null;
+}
+
+/** Only returns a row that's both found by handle AND opted into public
+ * visibility — a handle that exists but was later made private should
+ * 404 exactly like one that never existed. */
+export async function getDirectoryEntryByHandle(handle: string): Promise<DirectoryEntry | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("directory_profiles")
+    .select("*")
+    .eq("handle", handle)
+    .eq("visibility", "public")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? rowToDirectoryEntry(data as DirectoryRow) : null;
+}
+
+export async function getPublicDirectoryEntries(): Promise<DirectoryEntry[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("directory_profiles")
+    .select("*")
+    .eq("visibility", "public")
+    .order("overall_score", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as DirectoryRow[]).map(rowToDirectoryEntry);
+}
+
+export async function getPublicDirectoryEntriesByCompany(company: string): Promise<DirectoryEntry[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("directory_profiles")
+    .select("*")
+    .eq("visibility", "public")
+    .ilike("company", company)
+    .order("overall_score", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as DirectoryRow[]).map(rowToDirectoryEntry);
 }
 
 export async function getDirectoryEntriesByIds(githubIds: string[]): Promise<DirectoryEntry[]> {

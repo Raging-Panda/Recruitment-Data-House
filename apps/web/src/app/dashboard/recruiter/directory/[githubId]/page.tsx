@@ -12,6 +12,8 @@ import { ScoreRing } from "@/components/score-ring";
 import { ArrowRightIcon } from "@/components/icons";
 import { EndorsementList } from "@/components/endorsement-list";
 import { EndorsementForm } from "@/components/endorsement-form";
+import { FollowButton } from "@/components/follow-button";
+import { isFollowing } from "@/lib/social";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
 
 export default async function DirectoryProfilePage({
@@ -48,6 +50,11 @@ export default async function DirectoryProfilePage({
     notFound();
   }
 
+  const alreadyFollowing =
+    !isDemo && viewerGithubId !== entry.githubId
+      ? await isFollowing(viewerGithubId, entry.githubId).catch(() => false)
+      : false;
+
   return (
     <div className="mx-auto max-w-3xl">
       <Link
@@ -77,7 +84,16 @@ export default async function DirectoryProfilePage({
             {entry.about ?? "No bio provided."}
           </p>
         </div>
-        <ScoreRing score={entry.overallScore} label="Overall Score" />
+        <div className="flex flex-col items-center gap-3">
+          <ScoreRing score={entry.overallScore} label="Overall Score" />
+          {viewerGithubId !== entry.githubId && (
+            <FollowButton
+              targetId={entry.githubId}
+              initialFollowing={alreadyFollowing}
+              readOnly={isDemo}
+            />
+          )}
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
