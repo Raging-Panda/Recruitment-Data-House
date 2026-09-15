@@ -631,11 +631,23 @@ sharing). These items close that gap. Roughly ordered by leverage.
   IPSkill from a résumé host you visit once into a place developers
   come back to — the thing that actually makes it "where developers
   are."
-- **Open peer endorsements** — decouple giving an endorsement from the
-  recruiter-gated Directory detail page so any signed-in developer can
-  endorse any other developer from their public profile. Currently
-  blocked because devs can't view each other outside Recruiter Tools;
-  the vanity-profile + public-index items above remove that blocker.
+- **Open peer endorsements** — ✅ shipped: the vanity public profile
+  (`/u/[handle]`) now renders the same `EndorsementForm` the recruiter-
+  gated Directory detail page uses, so any signed-in dev viewing
+  another dev's public profile can endorse them — no Recruiter Tools
+  needed. The API route (`/api/endorsements`) already had no
+  recruiter/premium gate; the only blocker was that the form lived
+  exclusively on the paywalled page. `/u/[handle]` already forces
+  `dynamic = "force-dynamic"` for its own caching reasons, so reading
+  the session there to know the viewer's identity doesn't change its
+  caching behavior. An anonymous visitor sees a "Sign in to endorse
+  {name}" prompt instead of the form; the demo account and
+  self-endorsement are still correctly blocked (same checks as
+  before). Verified end-to-end: anonymous fetch shows the sign-in
+  prompt and no form, a signed-in test account's fetch includes the
+  form, submitting a real endorsement persisted it and it rendered
+  immediately on the public profile (confirmed in-browser), self-
+  endorse 400s, demo 403s. Test data cleaned up afterward.
 - **Team / organisation pages** — a company page that groups its
   engineers' profiles, so an eng-led org can bring its whole team on
   at once (and show off its bench). A natural top-of-funnel for

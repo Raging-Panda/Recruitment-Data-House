@@ -1,12 +1,17 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import type { Endorsement } from "@ipskill/shared";
+import { authOptions } from "@/lib/auth";
+import { isDemoAccount } from "@/lib/demo-mode";
 import { getDirectoryEntryByHandle } from "@/lib/directory";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { getExternalLinksSafe } from "@/lib/external-links";
 import { ScoreRing } from "@/components/score-ring";
 import { EndorsementList } from "@/components/endorsement-list";
+import { EndorsementForm } from "@/components/endorsement-form";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
 
@@ -50,6 +55,14 @@ export default async function PublicHandleProfilePage({
 }) {
   const entry = await getDirectoryEntryByHandle(params.handle).catch(() => null);
   if (!entry) notFound();
+
+  // Reading the session here is safe re: the stale-cache concern the
+  // comment above documents — `dynamic` is already forced, so this
+  // doesn't change whether Next treats the route as dynamic.
+  const session = await getServerSession(authOptions);
+  const viewerGithubId = session?.githubId ?? null;
+  const canEndorse =
+    !!viewerGithubId && !isDemoAccount(viewerGithubId) && viewerGithubId !== entry.githubId;
 
   let endorsements: Endorsement[] = [];
   try {
@@ -130,6 +143,18 @@ export default async function PublicHandleProfilePage({
           <div className="mt-3">
             <EndorsementList endorsements={endorsements} />
           </div>
+          {canEndorse ? (
+            <EndorsementForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
+          ) : (
+            !viewerGithubId && (
+              <p className="mt-3 text-xs text-text-muted">
+                <Link href="/login" className="text-primary hover:underline">
+                  Sign in
+                </Link>{" "}
+                to endorse {entry.displayName.split(" ")[0]}.
+              </p>
+            )
+          )}
         </div>
 
         <p className="mt-8 text-center text-xs text-text-muted">
