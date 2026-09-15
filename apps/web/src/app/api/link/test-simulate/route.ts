@@ -34,14 +34,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unknown provider" }, { status: 400 });
   }
 
-  await upsertLinkedAccount({
-    ownerId: session.githubId,
-    provider,
-    providerAccountId: `test-${provider}-linked`,
-    providerLogin: `test-linked-${provider}`,
-    accessToken: provider === "github" ? TEST_ACCESS_TOKEN : "test-simulated-token",
-    avatarUrl: "https://i.pravatar.cc/300?img=33",
-  });
+  try {
+    await upsertLinkedAccount({
+      ownerId: session.githubId,
+      provider,
+      // Scoped to the calling session, not a fixed string — a fixed id
+      // meant every test account trying to simulate-link the same
+      // provider tripped the real (provider, provider_account_id)
+      // uniqueness constraint against each other (found live: linking as
+      // a second test account 500'd with ALREADY_LINKED_ELSEWHERE).
+      providerAccountId: `test-${provider}-linked-${session.githubId}`,
+      providerLogin: `test-linked-${provider}`,
+      accessToken: provider === "github" ? TEST_ACCESS_TOKEN : "test-simulated-token",
+      avatarUrl: "https://i.pravatar.cc/300?img=33",
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed";
+    const status = message === "ALREADY_LINKED_ELSEWHERE" ? 409 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
 
   return NextResponse.json({ success: true });
 }
