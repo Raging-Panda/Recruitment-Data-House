@@ -116,7 +116,18 @@ export async function syncDirectoryProfile(
     // "trending developers" both compute a delta over these rather than
     // needing a cron job. A few extra rows per profile visit is cheap;
     // deliberately no de-dupe/throttle here, simplicity over storage.
-    void supabase.from("score_snapshots").insert({ owner_id: githubId, overall_score: profile.overallScore });
+    //
+    // Genuinely awaited, not "void"'d like notifySavedSearchMatches above —
+    // supabase-js query builders are lazy thenables that only actually
+    // dispatch their fetch() when something calls .then()/awaits them;
+    // `void builder.insert(...)` discards the *result* of constructing the
+    // request but never triggers it, so the row silently never gets
+    // written. (notifySavedSearchMatches is safe to void because it's a
+    // real async function that awaits its own Supabase calls internally —
+    // the bug is specific to voiding a raw query-builder chain directly.)
+    // syncDirectoryProfile itself is already called fire-and-forget from
+    // its caller, so awaiting here doesn't block anything upstream.
+    await supabase.from("score_snapshots").insert({ owner_id: githubId, overall_score: profile.overallScore });
   } catch {
     // directory freshness is a nice-to-have side effect, not worth failing the profile page over
   }
