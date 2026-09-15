@@ -512,11 +512,6 @@ sharing). These items close that gap. Roughly ordered by leverage.
   doesn't own, so the profile covers the whole footprint rather than
   just personal-repo activity. Directly widens who the product is
   credible for (many strong devs have thin personal GitHubs).
-- **Unified career timeline** — one visual narrative that merges work
-  experience, GitHub trajectory, certifications, and verified skill
-  tests into a single dated story, instead of four separate cards. The
-  "trajectory, not snapshot" idea from the Projects timeline, applied
-  to the whole profile.
 - **"Currently" block** — ✅ shipped as part of the "Authored About /
   narrative layer" item above: a 140-char, inline-editable line on the
   Profile page, persisted to `candidate_profile.currently` and stamped
