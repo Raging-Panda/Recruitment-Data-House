@@ -15,6 +15,7 @@ import { DEMO_DISPLAY_NAME } from "./demo-data";
 import { getSupabaseAdmin } from "./supabase";
 import { verifyPassword } from "./password";
 import { LOCAL_ID_PREFIX } from "./local-account";
+import { verifyTotpOrBackupCode } from "./two-factor";
 
 interface LinkedInOIDCProfile {
   sub: string;
@@ -125,6 +126,12 @@ const providers: NextAuthOptions["providers"] = [
     credentials: {
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
+      // Only present once the login form's own pre-check (POST
+      // /api/auth/login-check) says the account has 2FA enabled — but
+      // that pre-check is just a UX hint, not a trust boundary. This
+      // authorize() re-verifies the password AND the code independently
+      // below, so a forged/skipped pre-check can't bypass 2FA.
+      totpCode: { label: "Authenticator code", type: "text" },
     },
     async authorize(credentials) {
       const email = credentials?.email?.trim().toLowerCase();
@@ -132,11 +139,16 @@ const providers: NextAuthOptions["providers"] = [
 
       const { data: user, error } = await getSupabaseAdmin()
         .from("users")
-        .select("id, email, password_hash, display_name")
+        .select("id, email, password_hash, display_name, totp_enabled")
         .eq("email", email)
         .maybeSingle();
       if (error || !user) return null;
       if (!verifyPassword(credentials.password, user.password_hash)) return null;
+
+      if (user.totp_enabled) {
+        const code = credentials?.totpCode?.trim();
+        if (!code || !(await verifyTotpOrBackupCode(user.id, code))) return null;
+      }
 
       return {
         id: `${LOCAL_ID_PREFIX}${user.id}`,

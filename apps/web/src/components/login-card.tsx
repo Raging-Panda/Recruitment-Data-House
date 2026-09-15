@@ -30,6 +30,11 @@ export function LoginCard() {
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+  // Set once the login pre-check says this account has 2FA enabled —
+  // switches the form to a second "enter your code" step rather than
+  // completing sign-in immediately.
+  const [needsTotp, setNeedsTotp] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
 
   // Read via window.location rather than useSearchParams() so this
   // component doesn't need a <Suspense> boundary just for a referral code.
@@ -103,6 +108,21 @@ export function LoginCard() {
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Could not create account");
+      } else {
+        // Login pre-check: is this account 2FA-protected? Purely a UX
+        // decision (whether to show the code field) — sign-in below still
+        // independently re-verifies everything.
+        const check = await fetch("/api/auth/login-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: authEmail, password: authPassword }),
+        }).then((r) => r.json());
+        if (!check.ok) throw new Error("Incorrect email or password");
+        if (check.requires2FA) {
+          setNeedsTotp(true);
+          setIsSubmittingAuth(false);
+          return;
+        }
       }
       const result = await signIn("credentials", {
         email: authEmail,
@@ -111,6 +131,27 @@ export function LoginCard() {
       });
       if (result?.error) throw new Error("Incorrect email or password");
       setPendingToast(authMode === "signup" ? "Account created" : "Signed in");
+      router.push("/dashboard/profile");
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  }
+
+  async function handleTotpSubmit(e: FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setIsSubmittingAuth(true);
+    try {
+      const result = await signIn("credentials", {
+        email: authEmail,
+        password: authPassword,
+        totpCode,
+        redirect: false,
+      });
+      if (result?.error) throw new Error("Invalid code — check your authenticator app and try again.");
+      setPendingToast("Signed in");
       router.push("/dashboard/profile");
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Something went wrong");
@@ -181,6 +222,8 @@ export function LoginCard() {
               onClick={() => {
                 setAuthMode("login");
                 setAuthError(null);
+                setNeedsTotp(false);
+                setTotpCode("");
               }}
               className="flex-1 rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
             >
@@ -190,6 +233,8 @@ export function LoginCard() {
               onClick={() => {
                 setAuthMode("signup");
                 setAuthError(null);
+                setNeedsTotp(false);
+                setTotpCode("");
               }}
               className="flex-1 rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
             >
@@ -198,7 +243,46 @@ export function LoginCard() {
           </div>
         )}
 
-        {authMode !== "closed" && (
+        {authMode === "login" && needsTotp && (
+          <form onSubmit={handleTotpSubmit} className="flex flex-col gap-2 text-left">
+            <p className="text-xs text-text-secondary">
+              Enter the 6-digit code from your authenticator app (or a backup code).
+            </p>
+            <input
+              type="text"
+              autoFocus
+              required
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value)}
+              placeholder="123456"
+              className={AUTH_INPUT_CLASS}
+            />
+            {authError && <p className="text-xs text-accent-red">{authError}</p>}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setNeedsTotp(false);
+                  setTotpCode("");
+                  setAuthError(null);
+                }}
+                className="flex-1 rounded-full border border-surface-border px-4 py-2.5 text-sm font-medium text-text-secondary transition hover:text-heading"
+                disabled={isSubmittingAuth}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingAuth}
+                className="flex-1 rounded-full bg-primary-gradient px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                {isSubmittingAuth ? "Verifying…" : "Verify"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {authMode !== "closed" && !(authMode === "login" && needsTotp) && (
           <form onSubmit={handleAuthSubmit} className="flex flex-col gap-2 text-left">
             {authMode === "signup" && (
               <input

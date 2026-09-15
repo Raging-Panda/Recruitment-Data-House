@@ -10,6 +10,8 @@ import { LinkStatusToast } from "@/components/link-status-toast";
 import { ReferralCard } from "@/components/referral-card";
 import { ApiKeysCard } from "@/components/api-keys-card";
 import { DirectMessagesCard } from "@/components/direct-messages-card";
+import { TwoFactorCard } from "@/components/two-factor-card";
+import { getTotpStatus } from "@/lib/two-factor";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -21,9 +23,11 @@ function primaryProviderOf(session: { accessToken?: string; githubId?: string })
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
-  const [linked, messagePreference] = await Promise.all([
+  const primaryProvider = primaryProviderOf(session!);
+  const [linked, messagePreference, totpStatus] = await Promise.all([
     getLinkedAccountsSafe(session!.githubId!),
     getMessagePreference(session!.githubId!),
+    getTotpStatus(session!.githubId!),
   ]);
 
   return (
@@ -38,11 +42,23 @@ export default async function SettingsPage() {
 
       <div className="mt-6 space-y-6">
         <ConnectedAccountsCard
-          primaryProvider={primaryProviderOf(session!)}
+          primaryProvider={primaryProvider}
           initialLinked={linked}
           isDemo={isDemo}
           testLinkAvailable={isTestModeEnabled()}
         />
+        {totpStatus.supported ? (
+          <TwoFactorCard initiallyEnabled={totpStatus.enabled} isDemo={isDemo} />
+        ) : (
+          <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h3 className="text-sm font-semibold text-heading">Two-Factor Authentication</h3>
+            <p className="mt-1 text-xs text-text-muted">
+              Handled by {primaryProvider === "github" ? "GitHub" : primaryProvider === "google" ? "Google" : "LinkedIn"}
+              's own sign-in — enable it there. IPSkill's own 2FA only applies to email/password
+              accounts.
+            </p>
+          </div>
+        )}
         <DirectMessagesCard initialPreference={messagePreference} isDemo={isDemo} />
         <ReferralCard />
         <ApiKeysCard isDemo={isDemo} />
