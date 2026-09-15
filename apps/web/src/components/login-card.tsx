@@ -54,6 +54,11 @@ export function LoginCard() {
     signIn("google", { callbackUrl: "/dashboard/profile" });
   }
 
+  function signInWithLinkedIn() {
+    setPendingToast("Signed in with LinkedIn");
+    signIn("linkedin", { callbackUrl: "/dashboard/profile" });
+  }
+
   async function handleDemoSubmit(e: FormEvent) {
     e.preventDefault();
     setDemoError(null);
@@ -111,6 +116,11 @@ export function LoginCard() {
     signIn("test-google-account", { callbackUrl: "/dashboard/profile" });
   }
 
+  function signInAsTestLinkedInUser() {
+    setPendingToast("Signed in as Test LinkedIn User");
+    signIn("test-linkedin-account", { callbackUrl: "/dashboard/profile" });
+  }
+
   return (
     <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-background-elevated p-8 text-center">
       <div className="flex justify-center">
@@ -142,6 +152,14 @@ export function LoginCard() {
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GithubMark /> Continue with GitHub
+        </button>
+
+        <button
+          onClick={signInWithLinkedIn}
+          title="Your fingerprint, projects, and heatmap come from GitHub — LinkedIn gets you a lighter profile for now, and there's no account linking yet"
+          className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
+        >
+          <LinkedInMark /> Continue with LinkedIn
         </button>
 
         {authMode === "closed" && (
@@ -243,6 +261,16 @@ export function LoginCard() {
             Continue as Test Google User (dev only)
           </button>
         )}
+
+        {testLoginAvailable && (
+          <button
+            onClick={signInAsTestLinkedInUser}
+            title="Simulates a LinkedIn sign-in with no GitHub connection — no real LinkedIn app needed"
+            className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
+          >
+            Continue as Test LinkedIn User (dev only)
+          </button>
+        )}
       </div>
 
       <div className="mt-6 flex items-center gap-3 text-[11px] uppercase tracking-widest text-text-muted">
@@ -301,6 +329,14 @@ function GoogleMark() {
         fill="#1976D2"
         d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.5C41.3 35.9 44 30.4 44 24c0-1.3-.1-2.7-.4-3.5z"
       />
+    </svg>
+  );
+}
+
+function LinkedInMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden>
+      <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z" />
     </svg>
   );
 }

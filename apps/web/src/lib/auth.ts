@@ -1,13 +1,66 @@
 import type { NextAuthOptions } from "next-auth";
+import type { OAuthConfig } from "next-auth/providers/oauth";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { isTestModeEnabled, TEST_ACCESS_TOKEN, TEST_GITHUB_ID, TEST_GOOGLE_ID } from "./test-mode";
+import {
+  isTestModeEnabled,
+  TEST_ACCESS_TOKEN,
+  TEST_GITHUB_ID,
+  TEST_GOOGLE_ID,
+  TEST_LINKEDIN_ID,
+} from "./test-mode";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_ACCESS_TOKEN, DEMO_GITHUB_ID } from "./demo-mode";
 import { DEMO_DISPLAY_NAME } from "./demo-data";
 import { getSupabaseAdmin } from "./supabase";
 import { verifyPassword } from "./password";
 import { LOCAL_ID_PREFIX } from "./local-account";
+
+interface LinkedInOIDCProfile {
+  sub: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+}
+
+/**
+ * Hand-rolled rather than next-auth/providers/linkedin — that built-in
+ * provider (still shipped as of next-auth 4.24.x) calls LinkedIn's legacy
+ * /v2/me + a separate /v2/emailAddress endpoint, which need the
+ * r_liteprofile/r_emailaddress product. LinkedIn stopped granting that
+ * product to new apps years ago; every app created today only gets "Sign
+ * In with LinkedIn using OpenID Connect", which serves the profile from
+ * the standard OIDC /v2/userinfo endpoint instead — a single call, a
+ * flat {sub, name, email, picture} shape, no legacy scopes. Using the
+ * package's provider as-is would 403 on the first real login.
+ */
+function LinkedInProvider(options: {
+  clientId: string;
+  clientSecret: string;
+}): OAuthConfig<LinkedInOIDCProfile> {
+  return {
+    id: "linkedin",
+    name: "LinkedIn",
+    type: "oauth",
+    authorization: {
+      url: "https://www.linkedin.com/oauth/v2/authorization",
+      params: { scope: "openid profile email" },
+    },
+    token: "https://www.linkedin.com/oauth/v2/accessToken",
+    userinfo: "https://api.linkedin.com/v2/userinfo",
+    checks: ["state"],
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    profile(profile: LinkedInOIDCProfile) {
+      return {
+        id: profile.sub,
+        name: profile.name ?? null,
+        email: profile.email ?? null,
+        image: profile.picture ?? null,
+      };
+    },
+  };
+}
 
 const providers: NextAuthOptions["providers"] = [
   GitHubProvider({
@@ -32,6 +85,13 @@ const providers: NextAuthOptions["providers"] = [
   GoogleProvider({
     clientId: process.env.GOOGLE_CLIENT_ID ?? "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  }),
+  // Same second-class-citizen status as Google — no GitHub token, so
+  // ThinProfile / ConnectGithubPrompt again. See the LinkedInProvider
+  // comment above for why this isn't next-auth's built-in provider.
+  LinkedInProvider({
+    clientId: process.env.LINKEDIN_CLIENT_ID ?? "",
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET ?? "",
   }),
   // Real email/password accounts (users table, apps/web/src/lib/password.ts
   // for hashing). Same "second-class citizen" status as Google — a regular
@@ -129,6 +189,22 @@ if (isTestModeEnabled()) {
       },
     })
   );
+  // Simulates a real LinkedIn sign-in — same idea as test-google-account.
+  providers.push(
+    CredentialsProvider({
+      id: "test-linkedin-account",
+      name: "Test LinkedIn Account",
+      credentials: {},
+      async authorize() {
+        return {
+          id: TEST_LINKEDIN_ID,
+          name: "Test LinkedIn User",
+          email: "test-linkedin-user@ipskill.dev",
+          image: "https://i.pravatar.cc/300?img=15",
+        };
+      },
+    })
+  );
 }
 
 export const authOptions: NextAuthOptions = {
@@ -162,9 +238,16 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = TEST_ACCESS_TOKEN;
         token.githubId = TEST_GITHUB_ID;
       }
+      if (account?.provider === "linkedin") {
+        // No accessToken — same reasoning as the Google branch above.
+        token.githubId = `linkedin:${account.providerAccountId}`;
+      }
       if (account?.provider === "test-google-account") {
         // No accessToken, same as the real Google branch above.
         token.githubId = TEST_GOOGLE_ID;
+      }
+      if (account?.provider === "test-linkedin-account") {
+        token.githubId = TEST_LINKEDIN_ID;
       }
       if (account?.provider === "demo-account") {
         token.accessToken = DEMO_ACCESS_TOKEN;

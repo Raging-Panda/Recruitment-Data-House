@@ -143,6 +143,33 @@ scheduled or scoped yet — just a running list to pull from.
   log back in with the same password → data persists under the same
   identity; duplicate email correctly 409s; wrong password correctly
   401s. Test rows cleaned up afterward.
+- **LinkedIn login** — ✅ shipped, same "second-class citizen" tier as
+  Google/regular login (`ThinProfile`, `ConnectGithubPrompt`, PDF
+  400s, `linkedin:<sub>` identity in the existing `github_id`
+  columns, no schema change). The one real finding: next-auth's
+  built-in `providers/linkedin` (still shipped as of the installed
+  4.24.15) targets LinkedIn's *legacy* API — a `/v2/me` call plus a
+  separate `/v2/emailAddress` call, both gated behind the
+  `r_liteprofile`/`r_emailaddress` product that LinkedIn stopped
+  granting to new apps years ago. Every LinkedIn app created today
+  only gets "Sign In with LinkedIn using OpenID Connect", which serves
+  the profile from the standard OIDC `/v2/userinfo` endpoint instead —
+  a flat `{sub, name, email, picture}`, one call, no legacy scopes.
+  Using the package's provider unmodified would have 403'd on the
+  first real login, so `lib/auth.ts` hand-rolls a small custom
+  `OAuthConfig` pointed at `/v2/userinfo` rather than importing the
+  built-in one. Verified against a dev-only `test-linkedin-account`
+  provider (`ALLOW_TEST_LOGIN`, same shape as `test-google-account`):
+  session identity, the About/Currently write path against real
+  Supabase, and the Skills-page `ConnectGithubPrompt` all correct.
+  `media.licdn.com` was added to `next.config.mjs`'s image
+  `remotePatterns` preemptively (the Google avatar host was missing
+  and 500'd on first real login last time) but **is unverified against
+  a real LinkedIn account** — that needs a real LinkedIn OAuth app,
+  which also has a real-world wrinkle the others didn't: it must be
+  associated with a LinkedIn Company Page before LinkedIn will issue
+  credentials at all. Real LinkedIn credentials aren't configured
+  anywhere yet.
 - **Account linking (GitHub, Google, and soon LinkedIn)** — the
   schema is in place (`linked_accounts`: `owner_id`, `provider`,
   `provider_account_id`, `provider_login`, `access_token`,

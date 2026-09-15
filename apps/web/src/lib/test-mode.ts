@@ -18,6 +18,9 @@ export const TEST_GITHUB_ID = "900000001";
  * real Google sign-in produces. */
 export const TEST_GOOGLE_ID = "google:test-900000003";
 
+/** Same idea, for the LinkedIn no-GitHub-connection path. */
+export const TEST_LINKEDIN_ID = "linkedin:test-900000004";
+
 export function isTestAccount(githubId: string | null | undefined): boolean {
   return githubId === TEST_GITHUB_ID;
 }
