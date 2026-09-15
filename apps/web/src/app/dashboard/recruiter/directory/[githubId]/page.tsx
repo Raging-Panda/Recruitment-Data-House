@@ -15,6 +15,7 @@ import { EndorsementForm } from "@/components/endorsement-form";
 import { FollowButton } from "@/components/follow-button";
 import { MessageButton } from "@/components/message-button";
 import { isFollowing } from "@/lib/social";
+import { generateCandidateSummary } from "@/lib/candidate-summary";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
 
 export default async function DirectoryProfilePage({
@@ -81,6 +82,9 @@ export default async function DirectoryProfilePage({
           <h1 className="text-lg font-semibold text-heading">{entry.displayName}</h1>
           <p className="text-sm text-text-secondary">{entry.headline}</p>
           {entry.location && <p className="mt-1 text-xs text-text-muted">📍 {entry.location}</p>}
+          <p className="mt-2 max-w-md text-xs italic text-text-muted">
+            {generateCandidateSummary(entry.displayName, entry.overallScore, entry.skillFingerprint, entry.topLanguages)}
+          </p>
           <p className="mt-3 max-w-md text-sm text-text-secondary">
             {entry.about ?? "No bio provided."}
           </p>

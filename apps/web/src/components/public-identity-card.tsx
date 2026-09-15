@@ -11,6 +11,7 @@ interface Props {
   initialHandle: string | null;
   initialVisibility: "private" | "public";
   initialCompany: string | null;
+  initialVideoIntroUrl?: string | null;
   readOnly?: boolean;
 }
 
@@ -18,12 +19,14 @@ export function PublicIdentityCard({
   initialHandle,
   initialVisibility,
   initialCompany,
+  initialVideoIntroUrl = null,
   readOnly = false,
 }: Props) {
   const showToast = useToast();
   const [handle, setHandle] = useState(initialHandle ?? "");
   const [visibility, setVisibility] = useState(initialVisibility);
   const [company, setCompany] = useState(initialCompany ?? "");
+  const [videoIntroUrl, setVideoIntroUrl] = useState(initialVideoIntroUrl ?? "");
   const [savedHandle, setSavedHandle] = useState(initialHandle);
   const [busy, setBusy] = useState(false);
 
@@ -114,6 +117,30 @@ export function PublicIdentityCard({
           />
           {!readOnly && (
             <button onClick={() => save({ company })} disabled={busy} className={buttonClass("subtle", "sm")}>
+              Save
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <label className="text-xs font-medium text-text-secondary">
+          Async video intro (Loom, YouTube, etc.)
+        </label>
+        <div className="mt-1 flex gap-2">
+          <input
+            value={videoIntroUrl}
+            onChange={(e) => setVideoIntroUrl(e.target.value)}
+            placeholder="https://loom.com/…"
+            disabled={readOnly}
+            className={INPUT_CLASS}
+          />
+          {!readOnly && (
+            <button
+              onClick={() => save({ videoIntroUrl })}
+              disabled={busy}
+              className={buttonClass("subtle", "sm")}
+            >
               Save
             </button>
           )}

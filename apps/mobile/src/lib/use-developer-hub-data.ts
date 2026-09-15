@@ -16,6 +16,7 @@ import {
   type SkillFingerprint,
 } from "@ipskill/shared";
 import { useAuth } from "./auth-context";
+import { getCachedHubData, setCachedHubData } from "./hub-data-cache";
 
 export interface DeveloperHubData {
   profile: DeveloperProfile;
@@ -33,6 +34,13 @@ export function useDeveloperHubData() {
 
   useEffect(() => {
     if (!accessToken) {
+      setIsLoading(false);
+      return;
+    }
+
+    const cached = getCachedHubData(accessToken);
+    if (cached) {
+      setData(cached);
       setIsLoading(false);
       return;
     }
@@ -91,7 +99,7 @@ export function useDeveloperHubData() {
         };
 
         if (cancelled) return;
-        setData({
+        const hubData: DeveloperHubData = {
           profile,
           skillFingerprint,
           projects: reposToProjects(repos, new Map(), new Map()),
@@ -100,7 +108,9 @@ export function useDeveloperHubData() {
             followers: user.followers,
             publicRepoCount: user.public_repos,
           }),
-        });
+        };
+        setCachedHubData(accessToken, hubData);
+        setData(hubData);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load GitHub data");
       } finally {

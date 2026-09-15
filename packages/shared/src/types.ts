@@ -346,6 +346,12 @@ export interface Endorsement {
   skillCategory: SkillCategory;
   comment: string | null;
   createdAt: string;
+  /** The endorser's own overall score, when resolvable — a lightweight
+   * credibility signal ("endorsed by a 90%+ developer") that resists pure
+   * reciprocal-endorsement gaming better than an unweighted count.
+   * Optional so existing Endorsement literals (demo fixtures) don't need
+   * updating for a feature that postdates them. */
+  endorserScore?: number | null;
 }
 
 export interface AnalyticsSnapshot {

@@ -30,6 +30,18 @@ export async function PUT(req: NextRequest) {
     update.company = body.company.trim() || null;
   }
 
+  if (typeof body?.videoIntroUrl === "string") {
+    const url = body.videoIntroUrl.trim();
+    if (url) {
+      try {
+        new URL(url);
+      } catch {
+        return NextResponse.json({ error: "videoIntroUrl must be a valid URL" }, { status: 400 });
+      }
+    }
+    update.video_intro_url = url || null;
+  }
+
   if (Object.keys(update).length === 1) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
@@ -37,7 +49,7 @@ export async function PUT(req: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from("candidate_profile")
     .upsert({ github_id: session.githubId, ...update }, { onConflict: "github_id" })
-    .select("handle, visibility, company")
+    .select("handle, visibility, company, video_intro_url")
     .single();
 
   if (error) {

@@ -651,6 +651,7 @@ export const DEMO_ENDORSEMENTS: Record<string, Endorsement[]> = {
       skillCategory: "Backend",
       comment: "Naledi redesigned our payments retry logic — rock solid under load.",
       createdAt: new Date(NOW - 6 * DAY).toISOString(),
+      endorserScore: 88,
     },
     {
       id: "demo-endorsement-2",
@@ -660,6 +661,7 @@ export const DEMO_ENDORSEMENTS: Record<string, Endorsement[]> = {
       skillCategory: "Leadership",
       comment: "Great at unblocking the team during incidents.",
       createdAt: new Date(NOW - 15 * DAY).toISOString(),
+      endorserScore: 85,
     },
   ],
   "seed-2": [

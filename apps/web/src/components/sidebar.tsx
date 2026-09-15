@@ -36,6 +36,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/achievements", label: "Achievements", icon: StarIcon },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChartIcon },
   { href: "/dashboard/feed", label: "Feed", icon: ActivityIcon },
+  { href: "/dashboard/roles", label: "Open Roles", icon: BriefcaseIcon },
   { href: "/dashboard/messages", label: "Messages", icon: BellIcon },
   { href: "/dashboard/growth", label: "Growth Olympics", icon: UsersIcon },
   { href: "/dashboard/settings", label: "Settings", icon: GearIcon },

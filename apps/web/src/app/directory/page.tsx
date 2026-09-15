@@ -1,8 +1,7 @@
-import Image from "next/image";
-import Link from "next/link";
 import { getPublicDirectoryEntries } from "@/lib/directory";
 import { getPublicTrendingDevelopers } from "@/lib/growth";
 import { IPSkillLogo } from "@/components/ipskill-logo";
+import { PagedDirectoryGrid } from "@/components/paged-directory-grid";
 
 export const metadata = { title: "Developer Directory — IPSkill" };
 
@@ -45,35 +44,7 @@ export default async function PublicDirectoryPage() {
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {entries.map((entry) => (
-            <Link
-              key={entry.githubId}
-              href={`/u/${entry.handle}`}
-              className="rounded-2xl border border-surface-border bg-background-elevated p-5 transition hover:border-primary"
-            >
-              <div className="flex items-center gap-3">
-                {entry.avatarUrl ? (
-                  <Image src={entry.avatarUrl} alt={entry.displayName} width={44} height={44} className="rounded-full" />
-                ) : (
-                  <div className="h-11 w-11 rounded-full bg-primary-gradient" />
-                )}
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-heading">{entry.displayName}</p>
-                  <p className="truncate text-xs text-text-secondary">{entry.headline}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {entry.topLanguages.slice(0, 3).map((lang) => (
-                  <span key={lang} className="rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-secondary">
-                    {lang}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-3 text-xs font-medium text-primary">{entry.overallScore}% overall score</p>
-            </Link>
-          ))}
-        </div>
+        <PagedDirectoryGrid entries={entries} />
 
         {entries.length === 0 && (
           <p className="mt-10 text-center text-sm text-text-muted">

@@ -43,6 +43,7 @@ export async function getEndorsementsFor(githubId: string): Promise<Endorsement[
       skillCategory: row.skill_category,
       comment: row.comment,
       createdAt: row.created_at,
+      endorserScore: endorser?.overallScore ?? null,
     };
   });
 }

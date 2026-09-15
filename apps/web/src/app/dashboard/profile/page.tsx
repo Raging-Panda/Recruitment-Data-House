@@ -325,6 +325,7 @@ export default async function ProfilePage() {
           initialHandle={identity.handle}
           initialVisibility={identity.visibility}
           initialCompany={identity.company}
+          initialVideoIntroUrl={identity.videoIntroUrl}
           readOnly={isDemo}
         />
       </div>
@@ -373,6 +374,17 @@ export default async function ProfilePage() {
             className={`${buttonClass("primary", "sm")} mt-2 inline-flex`}
           >
             Download PDF
+          </a>
+          <p className="mt-3 pt-1 text-sm text-text-muted">
+            A signed JSON attestation of your score — tamper-evident, verifiable by anyone at{" "}
+            <code className="text-xs">/api/profile/attestation/verify</code>.
+          </p>
+          <a
+            href="/api/profile/attestation"
+            download={`ipskill-${profile.githubLogin}-attestation.json`}
+            className={`${buttonClass("subtle", "sm")} mt-2 inline-flex`}
+          >
+            Download Signed Snapshot
           </a>
         </InfoCard>
 
