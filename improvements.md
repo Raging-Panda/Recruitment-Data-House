@@ -841,9 +841,39 @@ sharing). These items close that gap. Roughly ordered by leverage.
   cached-snapshot constraint as the rest of the Directory (we only
   ever see a candidate's own most-recent sync, not a live fetch).
   Verified via Playwright against the demo account's fixture data.
-- **Real two-factor authentication** — the Account Security card
-  currently shows "Two-Factor Authentication: Enabled" as static
-  copy; wire up an actual TOTP/authenticator flow.
+- **Real two-factor authentication** — ✅ shipped, scoped to regular
+  (email/password) accounts: GitHub/Google/LinkedIn sign-ins delegate
+  MFA to the OAuth provider itself, so IPSkill's own second factor
+  only makes sense for the accounts whose primary credential is a
+  password it controls — those see a "Handled by GitHub/Google/
+  LinkedIn's own sign-in" explainer in Settings instead of a dead-end
+  toggle. Hand-rolled RFC 6238 TOTP (HMAC-SHA1, 30s step, 6 digits)
+  using Node's built-in `crypto` — same "avoid a new dependency" call
+  `lib/password.ts` already made for scrypt — checked against the
+  official RFC 6238 Appendix B test vector before it ever touched the
+  app. No QR-code library either: setup shows the base32 secret as
+  copy/paste manual-entry text (every authenticator app accepts this
+  as an alternative to scanning) plus the raw `otpauth://` URI. A new
+  Settings card (`TwoFactorCard`) drives enable → confirm-with-a-
+  live-code → one-time display of 8 single-use backup codes (scrypt-
+  hashed like the password itself) → disable-with-a-code. The login
+  form gets a genuine two-step flow: a pre-check endpoint
+  (`/api/auth/login-check`) tells it whether to show the code field,
+  but that's a UX hint only — the `credentials` provider's
+  `authorize()` independently re-verifies the password and the code
+  together, so a forged or skipped pre-check can't bypass 2FA.
+  Verified end-to-end against real Supabase with a real signup (no
+  mocking): enable → confirm → 8 backup codes shown once → sign out →
+  sign back in prompts for a code → wrong code rejected (401, no
+  session) → correct code (computed by hand with the same RFC 6238
+  math a real authenticator app uses) signs in → a backup code also
+  works → the same backup code rejected on reuse (single-use enforced)
+  → disable rejects a wrong code, succeeds with a correct one → login
+  no longer prompts afterward. Also confirmed Settings renders the
+  right thing per account type: a local account gets the live
+  enable/disable card, a GitHub-primary test account gets the "Handled
+  by GitHub" explainer, and the demo account's card is correctly
+  non-editable. Test account and data cleaned up afterward.
 - **Export profile as PDF** — ✅ shipped: a "Download PDF" button on
   the Profile page (new "Export Profile" card, next to the share-link
   card) hits `GET /api/profile/pdf`, which renders a one-page summary
