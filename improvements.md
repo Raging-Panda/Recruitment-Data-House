@@ -3,6 +3,51 @@
 Ideas for the IPSkill Developer Hub beyond the current scaffold. Not
 scheduled or scoped yet — just a running list to pull from.
 
+## Autonomous sprint — 2026-09-15
+
+A single unattended pass through most of the "north star", monetization,
+and performance sections below, run entirely from committed code (no
+further user input). Two migrations exist for all of it
+(`db/migrations/0003_public_identity_and_growth.sql`,
+`db/migrations/0004_video_intro.sql`) — **not applied in this
+environment**, so most of what's listed here is typecheck-and-build
+verified but not live-tested against real Supabase, unlike the two
+schema-independent items (signed attestations, credibility-weighted
+endorsements) which were driven through the real UI/API against the demo
+account. Full detail is inline on each bullet below; this is the map of
+what to look at first.
+
+**Shipped, code-complete, needs the migration to go live:**
+vanity public profiles (`/u/[handle]`) + SEO + OG images + embeddable
+badge, the public developer index (`/directory`) + team pages, follow +
+kudos + activity feed, Growth Olympics (Premium Dev's first real gate),
+trending developers, "Beyond GitHub" external links, referral program,
+public API keys for enterprise clients, real in-app messaging, minimal
+job/role matching, async video-intro link.
+
+**Shipped and live-verified now** (no schema change needed): signed
+JSON profile attestations (HMAC, tamper-evident), credibility-weighted
+endorsement sorting/badging, deterministic "AI" candidate summaries, a
+windowed/"load more" public Directory, an in-memory TTL cache for the
+mobile hub-data fetch.
+
+**Explicitly deferred, with reasons** (not attempted this pass):
+GraphQL batching for GitHub calls — real production traffic behavior
+can't be verified without a live GitHub token in this environment, and
+touching the core data-fetch path unverified risked breaking what
+already works; GitLab/Bitbucket connectors — a full second/third data
+source integration, too large for this pass; interview scheduling/
+calendar sync — needs a calendar OAuth integration this environment
+doesn't have; salary/market-rate insights — no market-data source
+available; real Stripe billing — explicitly out of scope per instruction,
+the plan mechanism was extended (Premium Dev now has a real gate) but no
+payment processor was touched; referral attribution for OAuth signups
+(Google/GitHub/LinkedIn) — only wired for regular email/password signup,
+since OAuth attribution would need the same custom-state plumbing account
+linking required; true virtualization of the premium recruiter Directory
+and Projects page — only the new public Directory got the lighter-weight
+windowed treatment.
+
 ## Requested
 
 - **Skill tests** — ✅ shipped as a lightweight, in-house MCQ version
