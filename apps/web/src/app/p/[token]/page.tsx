@@ -3,6 +3,8 @@ import Image from "next/image";
 import type { Endorsement } from "@ipskill/shared";
 import { getDirectoryEntryByPublicToken } from "@/lib/public-profile-link";
 import { getEndorsementsFor } from "@/lib/endorsements";
+import { getSkillProofsForSafe } from "@/lib/skill-proofs";
+import { SkillProofsList } from "@/components/skill-proofs-list";
 
 // Unauthenticated route — no cookies()/session read to make Next treat it
 // as dynamic automatically (that's what protects every /dashboard page),
@@ -33,6 +35,7 @@ export default async function PublicProfilePage({ params }: { params: { token: s
   } catch {
     endorsements = [];
   }
+  const skillProofs = await getSkillProofsForSafe(entry.githubId);
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -99,6 +102,15 @@ export default async function PublicProfilePage({ params }: { params: { token: s
             </div>
           </div>
         </div>
+
+        {skillProofs.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h2 className="text-sm font-semibold text-heading">Proof of Work</h2>
+            <div className="mt-3">
+              <SkillProofsList proofs={skillProofs} />
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
           <h2 className="text-sm font-semibold text-heading">Endorsements</h2>

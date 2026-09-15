@@ -8,6 +8,8 @@ import { recordProfileView } from "@/lib/profile-views";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { getMessagePreference } from "@/lib/message-preference";
+import { getSkillProofsForSafe } from "@/lib/skill-proofs";
+import { SkillProofsList } from "@/components/skill-proofs-list";
 import { DEMO_DIRECTORY_ENTRIES, DEMO_ENDORSEMENTS } from "@/lib/demo-data";
 import { ScoreRing } from "@/components/score-ring";
 import { ArrowRightIcon } from "@/components/icons";
@@ -62,6 +64,8 @@ export default async function DirectoryProfilePage({
     !isDemo && viewerGithubId !== entry.githubId
       ? await getMessagePreference(entry.githubId).catch(() => "open" as const)
       : "open";
+
+  const skillProofs = await getSkillProofsForSafe(entry.githubId);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -135,6 +139,15 @@ export default async function DirectoryProfilePage({
           </p>
         </div>
       </div>
+
+      {skillProofs.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <h2 className="text-sm font-semibold text-heading">Proof of Work</h2>
+          <div className="mt-3">
+            <SkillProofsList proofs={skillProofs} />
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
         <h2 className="text-sm font-semibold text-heading">Endorsements</h2>

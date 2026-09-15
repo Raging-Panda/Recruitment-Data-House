@@ -9,9 +9,11 @@ import { isDemoAccount } from "@/lib/demo-mode";
 import { getDirectoryEntryByHandle } from "@/lib/directory";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { getExternalLinksSafe } from "@/lib/external-links";
+import { getSkillProofsForSafe } from "@/lib/skill-proofs";
 import { ScoreRing } from "@/components/score-ring";
 import { EndorsementList } from "@/components/endorsement-list";
 import { EndorsementForm } from "@/components/endorsement-form";
+import { SkillProofsList } from "@/components/skill-proofs-list";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
 
@@ -71,6 +73,7 @@ export default async function PublicHandleProfilePage({
     endorsements = [];
   }
   const externalLinks = await getExternalLinksSafe(entry.githubId);
+  const skillProofs = await getSkillProofsForSafe(entry.githubId);
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -122,6 +125,18 @@ export default async function PublicHandleProfilePage({
             </div>
           </div>
         </div>
+
+        {skillProofs.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h2 className="text-sm font-semibold text-heading">Proof of Work</h2>
+            <p className="mt-1 text-xs text-text-muted">
+              Concrete artifacts backing the fingerprint above.
+            </p>
+            <div className="mt-3">
+              <SkillProofsList proofs={skillProofs} />
+            </div>
+          </div>
+        )}
 
         {externalLinks.length > 0 && (
           <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">

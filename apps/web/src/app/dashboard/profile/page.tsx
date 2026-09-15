@@ -40,6 +40,8 @@ import { getPublicIdentitySafe } from "@/lib/public-identity";
 import { PublicIdentityCard } from "@/components/public-identity-card";
 import { ExternalLinksManager } from "@/components/external-links-manager";
 import { getExternalLinksSafe } from "@/lib/external-links";
+import { SkillProofsManager } from "@/components/skill-proofs-manager";
+import { getSkillProofsForSafe } from "@/lib/skill-proofs";
 import type { ContributionDay, Endorsement, WorkExperience, Certification } from "@ipskill/shared";
 
 const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
@@ -197,15 +199,23 @@ export default async function ProfilePage() {
     return <ThinProfile session={session!} />;
   }
 
-  const [{ profile, activity, projects, skillFingerprint }, override, featuredProjects, career, identity, externalLinks] =
-    await Promise.all([
-      loadDeveloperHubData(githubToken, session!.githubId!),
-      getCandidateProfileOverrideSafe(session!.githubId!),
-      getFeaturedProjectsSafe(session!.githubId!),
-      loadCareerHistory(session!.githubId!, isDemo),
-      getPublicIdentitySafe(session!.githubId!),
-      getExternalLinksSafe(session!.githubId!),
-    ]);
+  const [
+    { profile, activity, projects, skillFingerprint },
+    override,
+    featuredProjects,
+    career,
+    identity,
+    externalLinks,
+    skillProofs,
+  ] = await Promise.all([
+    loadDeveloperHubData(githubToken, session!.githubId!),
+    getCandidateProfileOverrideSafe(session!.githubId!),
+    getFeaturedProjectsSafe(session!.githubId!),
+    loadCareerHistory(session!.githubId!, isDemo),
+    getPublicIdentitySafe(session!.githubId!),
+    getExternalLinksSafe(session!.githubId!),
+    getSkillProofsForSafe(session!.githubId!),
+  ]);
 
   const displayName = override?.displayName ?? profile.name;
   const aboutAuthored = override?.aboutAuthored ?? null;
@@ -318,6 +328,10 @@ export default async function ProfilePage() {
 
       <div className="mt-8">
         <ExternalLinksManager initialEntries={externalLinks} readOnly={isDemo} />
+      </div>
+
+      <div className="mt-8">
+        <SkillProofsManager initialEntries={skillProofs} readOnly={isDemo} />
       </div>
 
       <div className="mt-8">
