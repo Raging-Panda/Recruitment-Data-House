@@ -238,7 +238,8 @@ export default async function ProfilePage() {
       activity,
       skillFingerprint,
       aboutAuthored,
-      identity
+      identity,
+      { text: override?.currently ?? null, updatedAt: override?.currentlyUpdatedAt ?? null }
     );
     try {
       endorsements = await getEndorsementsFor(session!.githubId!);

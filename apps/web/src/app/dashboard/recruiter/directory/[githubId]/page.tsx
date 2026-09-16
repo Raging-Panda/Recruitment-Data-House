@@ -10,6 +10,9 @@ import { isDemoAccount } from "@/lib/demo-mode";
 import { getMessagePreference } from "@/lib/message-preference";
 import { getSkillProofsForSafe } from "@/lib/skill-proofs";
 import { SkillProofsList } from "@/components/skill-proofs-list";
+import { getFeaturedProjectsSafe, MAX_FEATURED_PROJECTS } from "@/lib/featured-projects";
+import { FeaturedProjectsManager } from "@/components/featured-projects-manager";
+import { relativeDate } from "@/lib/time-ago";
 import { DEMO_DIRECTORY_ENTRIES, DEMO_ENDORSEMENTS } from "@/lib/demo-data";
 import { ScoreRing } from "@/components/score-ring";
 import { ArrowRightIcon } from "@/components/icons";
@@ -66,6 +69,7 @@ export default async function DirectoryProfilePage({
       : "open";
 
   const skillProofs = await getSkillProofsForSafe(entry.githubId);
+  const featuredProjects = await getFeaturedProjectsSafe(entry.githubId);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -98,6 +102,14 @@ export default async function DirectoryProfilePage({
           <p className="mt-3 max-w-md text-sm text-text-secondary">
             {entry.about ?? "No bio provided."}
           </p>
+          {entry.currently && (
+            <p className="mt-2 max-w-md text-xs text-text-secondary">
+              <span className="font-medium text-heading">Currently:</span> {entry.currently}
+              {entry.currentlyUpdatedAt && (
+                <span className="text-text-muted"> · updated {relativeDate(entry.currentlyUpdatedAt)}</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex flex-col items-center gap-3">
           <ScoreRing score={entry.overallScore} label="Overall Score" />
@@ -139,6 +151,17 @@ export default async function DirectoryProfilePage({
           </p>
         </div>
       </div>
+
+      {featuredProjects.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <FeaturedProjectsManager
+            initialEntries={featuredProjects}
+            availableRepos={[]}
+            maxEntries={MAX_FEATURED_PROJECTS}
+            readOnly
+          />
+        </div>
+      )}
 
       {skillProofs.length > 0 && (
         <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">

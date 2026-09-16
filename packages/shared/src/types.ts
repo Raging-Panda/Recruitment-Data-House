@@ -296,6 +296,11 @@ export interface DirectoryEntry {
   handle?: string | null;
   visibility?: "private" | "public";
   company?: string | null;
+  /** The authored "Currently" one-liner, mirrored from candidate_profile —
+   * optional/undefined for the same reason as handle/visibility/company
+   * above (existing DirectoryEntry literals predate this field). */
+  currently?: string | null;
+  currentlyUpdatedAt?: string | null;
 }
 
 export interface ProfileViewStats {

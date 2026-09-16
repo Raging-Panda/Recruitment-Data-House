@@ -10,12 +10,15 @@ import { getDirectoryEntryByHandle } from "@/lib/directory";
 import { getEndorsementsFor } from "@/lib/endorsements";
 import { getExternalLinksSafe } from "@/lib/external-links";
 import { getSkillProofsForSafe } from "@/lib/skill-proofs";
+import { getFeaturedProjectsSafe, MAX_FEATURED_PROJECTS } from "@/lib/featured-projects";
 import { ScoreRing } from "@/components/score-ring";
 import { EndorsementList } from "@/components/endorsement-list";
 import { EndorsementForm } from "@/components/endorsement-form";
 import { SkillProofsList } from "@/components/skill-proofs-list";
+import { FeaturedProjectsManager } from "@/components/featured-projects-manager";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
+import { relativeDate } from "@/lib/time-ago";
 
 // Unauthenticated route — no cookies()/session read, so Next won't treat
 // it as dynamic automatically and the fetch data-cache can otherwise
@@ -74,6 +77,7 @@ export default async function PublicHandleProfilePage({
   }
   const externalLinks = await getExternalLinksSafe(entry.githubId);
   const skillProofs = await getSkillProofsForSafe(entry.githubId);
+  const featuredProjects = await getFeaturedProjectsSafe(entry.githubId);
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -97,6 +101,14 @@ export default async function PublicHandleProfilePage({
             <p className="mt-3 max-w-md whitespace-pre-line text-sm text-text-secondary">
               {entry.about ?? "No bio provided."}
             </p>
+            {entry.currently && (
+              <p className="mt-2 max-w-md text-xs text-text-secondary">
+                <span className="font-medium text-heading">Currently:</span> {entry.currently}
+                {entry.currentlyUpdatedAt && (
+                  <span className="text-text-muted"> · updated {relativeDate(entry.currentlyUpdatedAt)}</span>
+                )}
+              </p>
+            )}
           </div>
           <ScoreRing score={entry.overallScore} label="Overall Score" />
         </div>
@@ -125,6 +137,17 @@ export default async function PublicHandleProfilePage({
             </div>
           </div>
         </div>
+
+        {featuredProjects.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <FeaturedProjectsManager
+              initialEntries={featuredProjects}
+              availableRepos={[]}
+              maxEntries={MAX_FEATURED_PROJECTS}
+              readOnly
+            />
+          </div>
+        )}
 
         {skillProofs.length > 0 && (
           <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">

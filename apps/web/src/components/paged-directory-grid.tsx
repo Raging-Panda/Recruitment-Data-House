@@ -39,6 +39,9 @@ export function PagedDirectoryGrid({ entries }: { entries: DirectoryEntry[] }) {
                 <p className="truncate text-xs text-text-secondary">{entry.headline}</p>
               </div>
             </div>
+            {entry.currently && (
+              <p className="mt-2 truncate text-xs italic text-text-muted">{entry.currently}</p>
+            )}
             <div className="mt-3 flex flex-wrap gap-1.5">
               {entry.topLanguages.slice(0, 3).map((lang) => (
                 <span key={lang} className="rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-secondary">

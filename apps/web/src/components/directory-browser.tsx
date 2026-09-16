@@ -189,6 +189,9 @@ export function DirectoryBrowser({
               </div>
 
               {entry.location && <p className="text-xs text-text-muted">📍 {entry.location}</p>}
+              {entry.currently && (
+                <p className="truncate text-xs italic text-text-muted">{entry.currently}</p>
+              )}
 
               <div className="flex flex-wrap gap-1.5">
                 {entry.topLanguages.map((lang) => (

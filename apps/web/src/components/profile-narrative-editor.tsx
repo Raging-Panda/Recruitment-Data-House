@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { buttonClass } from "@/lib/button-styles";
 import { useToast } from "@/components/toast-provider";
+import { relativeDate } from "@/lib/time-ago";
 
 const MAX_ABOUT = 1200;
 const MAX_CURRENTLY = 140;
@@ -20,15 +21,6 @@ interface Props {
   initialCurrentlyUpdatedAt: string | null;
   /** Demo account can't persist — render read-only. */
   readOnly?: boolean;
-}
-
-function relativeDate(iso: string): string {
-  const days = Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days} days ago`;
-  const months = Math.round(days / 30);
-  return months === 1 ? "a month ago" : `${months} months ago`;
 }
 
 export function ProfileNarrativeEditor({

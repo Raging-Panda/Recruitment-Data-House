@@ -23,6 +23,8 @@ export interface DirectoryRow {
   handle: string | null;
   visibility: "private" | "public" | null;
   company: string | null;
+  currently: string | null;
+  currently_updated_at: string | null;
 }
 
 export function rowToDirectoryEntry(row: DirectoryRow): DirectoryEntry {
@@ -42,6 +44,8 @@ export function rowToDirectoryEntry(row: DirectoryRow): DirectoryEntry {
     handle: row.handle,
     visibility: row.visibility ?? "private",
     company: row.company,
+    currently: row.currently,
+    currentlyUpdatedAt: row.currently_updated_at,
   };
 }
 
@@ -62,7 +66,13 @@ export async function syncDirectoryProfile(
    * wrote about themselves. */
   aboutOverride?: string | null,
   /** Vanity handle / public-index opt-in / company — see lib/public-identity.ts. */
-  identity?: { handle: string | null; visibility: "private" | "public"; company: string | null }
+  identity?: { handle: string | null; visibility: "private" | "public"; company: string | null },
+  /** The authored "Currently" one-liner + its timestamp, when set — mirrors
+   * candidate_profile.currently onto the directory snapshot so it shows up
+   * anywhere the directory row is read (public profile, share link,
+   * recruiter detail, Directory cards), not just the candidate's own
+   * dashboard Profile page. */
+  currently?: { text: string | null; updatedAt: string | null }
 ): Promise<void> {
   try {
     const topLanguages = activity.languageBreakdown.slice(0, 3).map((l) => l.language);
@@ -82,6 +92,8 @@ export async function syncDirectoryProfile(
       handle: identity?.handle ?? null,
       visibility: identity?.visibility ?? "private",
       company: identity?.company ?? null,
+      currently: currently?.text ?? null,
+      currentlyUpdatedAt: currently?.updatedAt ?? null,
     };
     const supabase = getSupabaseAdmin();
     const baseRow = {
@@ -98,18 +110,26 @@ export async function syncDirectoryProfile(
       last_active_at: entry.lastActiveAt,
       skill_fingerprint: entry.skillFingerprint,
     };
-    // handle/visibility/company only exist once migration 0003 has run —
-    // until then PostgREST 400s on the unknown columns (PGRST204) and
-    // fails the *entire* upsert, not just those fields, which would
-    // silently break directory sync altogether for every account. Try
-    // the full row first so those fields populate the moment the
-    // migration lands; fall back to the pre-migration column set rather
-    // than losing sync entirely in the meantime.
-    const { error: upsertError } = await supabase
+    // handle/visibility/company (migration 0003) and currently/
+    // currentlyUpdatedAt (migration 0008) each only exist once their own
+    // migration has run — until then PostgREST 400s on the unknown
+    // columns (PGRST204) and fails the *entire* upsert, not just those
+    // fields, which would silently break directory sync altogether for
+    // every account. Staged so an environment that has 0003 but not yet
+    // 0008 keeps writing handle/visibility/company instead of that write
+    // regressing back to baseRow-only the moment this field was added.
+    const identityRow = { handle: entry.handle, visibility: entry.visibility, company: entry.company };
+    const currentlyRow = { currently: entry.currently, currently_updated_at: entry.currentlyUpdatedAt };
+    const { error: fullError } = await supabase
       .from("directory_profiles")
-      .upsert({ ...baseRow, handle: entry.handle, visibility: entry.visibility, company: entry.company });
-    if (upsertError?.code === "PGRST204") {
-      await supabase.from("directory_profiles").upsert(baseRow);
+      .upsert({ ...baseRow, ...identityRow, ...currentlyRow });
+    if (fullError?.code === "PGRST204") {
+      const { error: identityOnlyError } = await supabase
+        .from("directory_profiles")
+        .upsert({ ...baseRow, ...identityRow });
+      if (identityOnlyError?.code === "PGRST204") {
+        await supabase.from("directory_profiles").upsert(baseRow);
+      }
     }
     void notifySavedSearchMatches(entry);
     // One point-in-time score sample per sync — Growth Olympics and
