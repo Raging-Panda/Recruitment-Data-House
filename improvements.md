@@ -601,8 +601,15 @@ sharing). These items close that gap. Roughly ordered by leverage.
   `/api/featured-projects` (+ `/[id]`) pair following the existing
   experience/certifications route pattern (demo writes 403). Distinct
   from the auto-ranked Projects list, which stays stars/recency only.
-  Still open: no drag-reorder (up/down buttons only), and the pins
-  don't surface on the public profile / Directory detail view yet.
+  **Update:** the pins now also render (read-only, reusing the same
+  manager component) on the public vanity profile, the token share
+  link, and the recruiter Directory detail page — `getFeaturedProjectsSafe`
+  was already keyed by `githubId` rather than "self", so no new
+  plumbing was needed beyond calling it from those three pages.
+  Verified end-to-end: pinned a project through the real API on a
+  test identity with a linked fixture GitHub connection, confirmed it
+  rendered on all three read-only surfaces, cleaned up afterward.
+  Still open: no drag-reorder (up/down buttons only).
 - **Unified career timeline** — ✅ shipped (first slice): a
   `CareerTimeline` on the Profile page interleaves work experience and
   certifications into one date-sorted list (role vs. certification
@@ -620,8 +627,36 @@ sharing). These items close that gap. Roughly ordered by leverage.
 - **"Currently" block** — ✅ shipped as part of the "Authored About /
   narrative layer" item above: a 140-char, inline-editable line on the
   Profile page, persisted to `candidate_profile.currently` and stamped
-  with a relative "Updated N days ago". Still open: it isn't surfaced
-  on the public `/p/[token]` view or Directory card yet.
+  with a relative "Updated N days ago". **Update:** now mirrored onto
+  `directory_profiles` (new `currently`/`currently_updated_at`
+  columns, migration 0008) and surfaced on the public vanity profile,
+  the token share link, the recruiter Directory detail page, and both
+  Directory list cards (public `/directory` and the recruiter grid).
+  The sync write is staged into three fallback tiers (full row →
+  handle/visibility/company only → base row) so an environment that
+  already had migration 0003 but not 0008 keeps writing those earlier
+  fields instead of regressing to base-row-only the moment this field
+  was added — the same defensive pattern the original PGRST204 fix
+  established. Extracted the relative-date formatter
+  `ProfileNarrativeEditor` already had into `lib/time-ago.ts` so every
+  surface reads consistently. **Also found and fixed while verifying
+  this**: the recruiter Directory detail page
+  (`/dashboard/recruiter/directory/[githubId]`) 404'd for any Google/
+  LinkedIn-primary candidate — Next.js delivers a colon-containing
+  dynamic-route param (`google:<sub>`) to the page still percent-
+  encoded (`google%3A<sub>`) rather than decoded, so the lookup by
+  `githubId` silently never matched. Fixed with a `decodeURIComponent`
+  at the top of the page; every existing caller (Directory list,
+  Compare, Shortlists, Engagement) links here with the raw githubId; a
+  numeric or `showcase-*` id was never affected since it has nothing
+  to decode. Verified end-to-end against real Supabase using a test
+  identity with a linked fixture GitHub connection (the same
+  `test-simulate` trick used to verify account linking): set Currently
+  through the real Profile API → visited the dashboard Profile page to
+  trigger the real `syncDirectoryProfile` write (not a direct DB
+  write) → confirmed the directory row picked it up → confirmed it
+  rendered on all five surfaces, including the previously-404ing
+  recruiter detail page after the fix. Cleaned up afterward.
 
 ### Network effects & staying power
 

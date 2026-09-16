@@ -32,22 +32,29 @@ export default async function DirectoryProfilePage({
   const session = await getServerSession(authOptions);
   const viewerGithubId = session!.githubId!;
   const isDemo = isDemoAccount(viewerGithubId);
+  // Found live while verifying this task: for a Google/LinkedIn-primary
+  // candidate (githubId like "google:<sub>"), Next.js's dynamic segment
+  // arrives here still percent-encoded ("google%3A...") rather than
+  // decoded — every existing caller (Directory list, Compare, Shortlists,
+  // Engagement) links here with the raw githubId, so this 404'd for any
+  // non-GitHub-primary candidate before this fix.
+  const githubId = decodeURIComponent(params.githubId);
 
   let entry: DirectoryEntry | null;
   let endorsements: Endorsement[] = [];
   if (isDemo) {
-    entry = DEMO_DIRECTORY_ENTRIES.find((e) => e.githubId === params.githubId) ?? null;
-    endorsements = DEMO_ENDORSEMENTS[params.githubId] ?? [];
+    entry = DEMO_DIRECTORY_ENTRIES.find((e) => e.githubId === githubId) ?? null;
+    endorsements = DEMO_ENDORSEMENTS[githubId] ?? [];
   } else {
     try {
-      entry = await getDirectoryEntry(params.githubId);
+      entry = await getDirectoryEntry(githubId);
     } catch {
       entry = null;
     }
     if (entry) {
-      void recordProfileView(params.githubId, viewerGithubId);
+      void recordProfileView(githubId, viewerGithubId);
       try {
-        endorsements = await getEndorsementsFor(params.githubId);
+        endorsements = await getEndorsementsFor(githubId);
       } catch {
         endorsements = [];
       }
