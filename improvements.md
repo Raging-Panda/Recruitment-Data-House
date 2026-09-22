@@ -1025,9 +1025,38 @@ sharing). These items close that gap. Roughly ordered by leverage.
   self-recorded intro video to their profile, giving recruiters a
   sense of communication style and personality alongside the
   code-derived signals.
-- **Interview scheduling / calendar sync** — let recruiters send a
-  booking link (Google Calendar/Outlook sync) so screening calls can
-  be scheduled directly from a candidate's profile.
+- **Interview scheduling / calendar sync** — ✅ shipped, the "booking
+  link" version rather than live free/busy sync (that needs its own
+  Calendar-scoped OAuth app per provider — parked, same reasoning as
+  every other needs-a-real-credential item here). A recruiter proposes
+  up to 5 time slots for a candidate from the Directory detail page
+  (new `interview_requests` table); the candidate picks one from a new
+  `/dashboard/interviews` page (added to the sidebar); once booked,
+  both sides get "Add to Google Calendar" / "Add to Outlook" /
+  "Download .ics" links for the same event, generated from plain URL
+  parameters — no OAuth, no calendar account connection, no API key.
+  Either side can cancel at any point. All three transitions
+  (proposed/booked/cancelled) go through the existing
+  `createNotification` pipeline, so they get in-app + push
+  notifications for free. Booking is scoped server-side to (this exact
+  request id, the addressed candidate, still-pending status) in one
+  query so a stale double-click can't double-book, and the picked slot
+  is validated against the request's own `proposed_slots` rather than
+  trusting an arbitrary client-supplied datetime. Verified end-to-end
+  against real Supabase: non-premium recruiter blocked (403), self-
+  scheduling blocked, past-date/invalid-duration/too-many-slots/no-
+  slots all rejected, a real request created and its notification
+  fired, an unrelated third party's book/cancel attempts both 404
+  (proven to genuinely no-op, not just return an optimistic success),
+  booking an unproposed slot rejected, a real booking succeeded and
+  immediately fired the recruiter's notification, re-booking an
+  already-booked request correctly 409s, the `.ics` download returns a
+  well-formed file scoped to participants only, and the Google/Outlook
+  links were confirmed live in-browser (Google's calendar page
+  genuinely accepted and routed the link, redirecting to its own
+  sign-in exactly as it does for any real calendar link when the
+  browser isn't authenticated). Demo account correctly blocked from
+  writing and sees an empty list. Test data cleaned up afterward.
 - **Salary/market-rate insights** — show a rough market rate range
   for a candidate's skill level and region, sourced from aggregated
   placement data over time, to help both sides set expectations early.
