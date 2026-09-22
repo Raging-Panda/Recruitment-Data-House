@@ -807,10 +807,36 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ## Performance
 
-- **Fewer GitHub round-trips** — move from sequential REST calls
-  (languages per repo, separate search calls for PRs/issues) to
-  GitHub's GraphQL API to pull profile + repos + languages + PR/issue
-  counts in one or two requests instead of the current N+1 pattern.
+- **Fewer GitHub round-trips** — ✅ shipped: a single GraphQL query
+  (`fetchHubDataGraphQL` in `packages/shared`) replaces the REST-era
+  N+1 pattern — up to 25 per-repo language calls, a per-repo contents
+  call plus a per-repo workflows call for quality signals, 3 PR-search
+  calls, 2 issue-search calls, and one events call for commit activity
+  — with one GraphQL request, plus the one REST call to `/user` that
+  still runs first (GraphQL's `search()` needs a literal username,
+  which can't be known until a request already ran). Applies to both
+  the web app's server-side fetch and the mobile app's identical
+  client-side fetch, since both called the same buggy REST helpers
+  directly. **Bonus fix found along the way**: `reposToProjects` was
+  always called with empty quality/language maps in both apps — the
+  REST-era per-repo quality check was written but never actually wired
+  up, so every real GitHub-connected user's hasReadme/hasTests/hasCi
+  signals silently defaulted to false regardless of their real repos,
+  which floors the DevOps/Cloud/Leadership fingerprint scores at
+  `computeSkillFingerprint`'s fallback values (10/10/15) no matter what
+  they actually ship. The new query naturally produces real per-repo
+  quality data, so this now actually works. This was the one item
+  explicitly deferred earlier for needing a live GitHub token to verify
+  safely — verified this time against a real account's real data (the
+  user's own, via a scoped-down `public_repo, read:user` PAT, used only
+  for read-only test calls and never persisted anywhere): language byte
+  counts, PR/issue search counts, and CI/README detection all matched
+  the old REST endpoints exactly repo-for-repo, and the real account's
+  DevOps/Cloud scores moved off the floor (20/16 instead of a hardcoded
+  10/10) once real quality data started flowing through. Confirmed via
+  response headers that the whole hub summary now costs 5 GraphQL
+  rate-limit points in one HTTP request, versus ~30 REST calls (and ~30
+  points) before.
 - **Client-side data caching (mobile)** — replace the ad hoc
   `useEffect` fetch in `use-developer-hub-data.ts` with React
   Query/SWR so data is cached, revalidated in the background, and
