@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { EXTERNAL_LINK_SELECT, type ExternalLinkKind } from "@/lib/external-links";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { isSafeHttpUrl } from "@/lib/url-validation";
 
 const VALID_KINDS: ExternalLinkKind[] = ["writing", "talk", "package", "oss"];
 const MAX_LINKS = 10;
@@ -22,10 +23,8 @@ export async function POST(req: NextRequest) {
   if (!kind || !VALID_KINDS.includes(kind) || !title || !url) {
     return NextResponse.json({ error: "kind, title, and url are required" }, { status: 400 });
   }
-  try {
-    new URL(url);
-  } catch {
-    return NextResponse.json({ error: "url must be a valid URL" }, { status: 400 });
+  if (!isSafeHttpUrl(url)) {
+    return NextResponse.json({ error: "url must be a valid http(s) URL" }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();

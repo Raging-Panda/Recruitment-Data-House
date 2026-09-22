@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { validateHandle, isHandleTaken } from "@/lib/handle";
+import { isSafeHttpUrl } from "@/lib/url-validation";
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -32,12 +33,8 @@ export async function PUT(req: NextRequest) {
 
   if (typeof body?.videoIntroUrl === "string") {
     const url = body.videoIntroUrl.trim();
-    if (url) {
-      try {
-        new URL(url);
-      } catch {
-        return NextResponse.json({ error: "videoIntroUrl must be a valid URL" }, { status: 400 });
-      }
+    if (url && !isSafeHttpUrl(url)) {
+      return NextResponse.json({ error: "videoIntroUrl must be a valid http(s) URL" }, { status: 400 });
     }
     update.video_intro_url = url || null;
   }

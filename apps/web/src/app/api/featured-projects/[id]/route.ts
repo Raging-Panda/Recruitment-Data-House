@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToFeaturedProject, FEATURED_PROJECT_SELECT } from "@/lib/featured-projects";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { isSafeHttpUrl } from "@/lib/url-validation";
 
 const MAX_BLURB = 400;
 
@@ -35,7 +36,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     update.blurb = blurb;
   }
   if (typeof body.repoUrl === "string") {
-    update.repo_url = body.repoUrl.trim() || null;
+    const repoUrl = body.repoUrl.trim();
+    if (repoUrl && !isSafeHttpUrl(repoUrl)) {
+      return NextResponse.json({ error: "repoUrl must be a valid http(s) URL" }, { status: 400 });
+    }
+    update.repo_url = repoUrl || null;
   }
   if (Array.isArray(body.languages)) {
     update.languages = body.languages

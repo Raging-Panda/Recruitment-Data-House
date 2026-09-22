@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { SKILL_PROOF_SELECT } from "@/lib/skill-proofs";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { isSafeHttpUrl } from "@/lib/url-validation";
 
 const VALID_CATEGORIES: SkillCategory[] = [
   "Backend",
@@ -31,10 +32,8 @@ export async function POST(req: NextRequest) {
   if (!skillCategory || !VALID_CATEGORIES.includes(skillCategory) || !title || !url) {
     return NextResponse.json({ error: "skillCategory, title, and url are required" }, { status: 400 });
   }
-  try {
-    new URL(url);
-  } catch {
-    return NextResponse.json({ error: "url must be a valid URL" }, { status: 400 });
+  if (!isSafeHttpUrl(url)) {
+    return NextResponse.json({ error: "url must be a valid http(s) URL" }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();

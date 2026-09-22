@@ -8,6 +8,7 @@ import {
   MAX_FEATURED_PROJECTS,
 } from "@/lib/featured-projects";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { isSafeHttpUrl } from "@/lib/url-validation";
 
 const MAX_BLURB = 400;
 
@@ -54,6 +55,9 @@ export async function POST(req: NextRequest) {
       { error: `blurb must be ${MAX_BLURB} characters or fewer` },
       { status: 400 }
     );
+  }
+  if (repoUrl && !isSafeHttpUrl(repoUrl)) {
+    return NextResponse.json({ error: "repoUrl must be a valid http(s) URL" }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();
