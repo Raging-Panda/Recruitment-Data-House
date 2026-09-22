@@ -25,6 +25,7 @@ async function githubFetch<T>(token: string, path: string): Promise<T> {
 }
 
 export interface GithubUser {
+  id: number;
   login: string;
   name: string | null;
   avatar_url: string;

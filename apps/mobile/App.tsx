@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
+import { usePushNotifications } from "@/lib/use-push-notifications";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { RootTabNavigator } from "@/navigation/RootTabNavigator";
 import { BrandedLoadingScreen } from "@/components/BrandedLoadingScreen";
@@ -10,6 +11,7 @@ import { BrandedLoadingScreen } from "@/components/BrandedLoadingScreen";
 function RootNavigation() {
   const { accessToken, isLoading } = useAuth();
   const { mode } = useTheme();
+  usePushNotifications(accessToken);
 
   // Without this, a returning signed-in user briefly flashes the login
   // screen every cold start — accessToken starts null until the stored

@@ -254,7 +254,10 @@ export type NotificationType =
   | "skill_test_completed"
   | "welcome"
   | "saved_search_match"
-  | "endorsement_received";
+  | "endorsement_received"
+  | "profile_viewed"
+  | "shortlisted"
+  | "message_received";
 
 export interface NotificationItem {
   id: string;

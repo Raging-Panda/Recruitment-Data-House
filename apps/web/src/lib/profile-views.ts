@@ -1,9 +1,15 @@
 import type { ProfileViewStats } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { createNotification } from "@/lib/notifications";
 
 /**
  * Best-effort — a Supabase hiccup here shouldn't break loading the profile
  * being viewed. Self-views (viewing your own profile) don't count.
+ *
+ * Notifies the viewed candidate, but only on the first-ever view from a
+ * given viewer — every repeat view from the same recruiter would otherwise
+ * spam a push notification for something that's already surfaced in the
+ * Analytics view-count stat.
  */
 export async function recordProfileView(
   viewedGithubId: string,
@@ -11,10 +17,28 @@ export async function recordProfileView(
 ): Promise<void> {
   if (viewerGithubId === viewedGithubId) return;
   try {
-    await getSupabaseAdmin().from("profile_views").insert({
+    const supabase = getSupabaseAdmin();
+    let isNewViewer = false;
+    if (viewerGithubId) {
+      const { count } = await supabase
+        .from("profile_views")
+        .select("*", { count: "exact", head: true })
+        .eq("viewed_github_id", viewedGithubId)
+        .eq("viewer_github_id", viewerGithubId);
+      isNewViewer = (count ?? 0) === 0;
+    }
+    await supabase.from("profile_views").insert({
       viewed_github_id: viewedGithubId,
       viewer_github_id: viewerGithubId,
     });
+    if (isNewViewer) {
+      void createNotification(viewedGithubId, {
+        type: "profile_viewed",
+        title: "Someone viewed your profile",
+        body: "A recruiter checked out your IPSkill profile.",
+        link: "/dashboard/analytics",
+      });
+    }
   } catch {
     // view counts are a nice-to-have, not worth failing the page over
   }

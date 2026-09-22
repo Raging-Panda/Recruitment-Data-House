@@ -3,6 +3,7 @@ import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import * as SecureStore from "expo-secure-store";
 import { config } from "./config";
+import { PUSH_TOKEN_KEY } from "./use-push-notifications";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -60,6 +61,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [request, promptAsync, redirectUri]);
 
   const signOut = useCallback(async () => {
+    const expoPushToken = await SecureStore.getItemAsync(PUSH_TOKEN_KEY);
+    if (expoPushToken) {
+      // Best-effort — a shared/reused device shouldn't keep getting pushes
+      // meant for whoever was signed in before. Not worth blocking sign-out
+      // over if the backend is unreachable.
+      fetch(`${config.authBackendUrl}/api/mobile/push-token`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expoPushToken }),
+      }).catch(() => {});
+      await SecureStore.deleteItemAsync(PUSH_TOKEN_KEY);
+    }
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     setAccessToken(null);
   }, []);

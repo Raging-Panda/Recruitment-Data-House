@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { addCandidateToShortlist, removeCandidateFromShortlist } from "@/lib/shortlists";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     const added = await addCandidateToShortlist(session.githubId, params.id, candidateGithubId);
+    if (added) {
+      void createNotification(candidateGithubId, {
+        type: "shortlisted",
+        title: "Added to a shortlist",
+        body: "A recruiter added you to one of their shortlists.",
+        link: "/dashboard/analytics",
+      });
+    }
     return NextResponse.json({ added });
   } catch (err) {
     return NextResponse.json(
