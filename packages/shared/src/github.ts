@@ -69,29 +69,10 @@ export async function fetchRepoLanguages(
   return githubFetch<Record<string, number>>(token, `/repos/${owner}/${repo}/languages`);
 }
 
-interface RepoQualityCheck {
+export interface RepoQualityCheck {
   hasReadme: boolean;
   hasCi: boolean;
   hasTests: boolean;
-}
-
-async function checkRepoQuality(
-  token: string,
-  owner: string,
-  repo: string
-): Promise<RepoQualityCheck> {
-  const [contents, workflows] = await Promise.all([
-    githubFetch<{ name: string }[]>(token, `/repos/${owner}/${repo}/contents`).catch(() => []),
-    githubFetch<{ workflows: unknown[] }>(token, `/repos/${owner}/${repo}/actions/workflows`)
-      .then((r) => r.workflows.length > 0)
-      .catch(() => false),
-  ]);
-  const names = contents.map((c) => c.name.toLowerCase());
-  return {
-    hasReadme: names.some((n) => n.startsWith("readme")),
-    hasTests: names.some((n) => n === "test" || n === "tests" || n === "__tests__" || n === "spec"),
-    hasCi: workflows as boolean,
-  };
 }
 
 export async function buildLanguageBreakdown(

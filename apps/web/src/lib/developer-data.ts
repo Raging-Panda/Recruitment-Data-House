@@ -1,14 +1,11 @@
 import {
   buildActivityTimeline,
-  buildLanguageBreakdown,
   computeSkillFingerprint,
   deriveAnalyticsSnapshot,
   fetchContributionCalendar,
   fetchGithubRepos,
   fetchGithubUser,
-  fetchIssueStats,
-  fetchPullRequestStats,
-  fetchRecentCommitActivity,
+  fetchHubDataGraphQL,
   reposToProjects,
   type ContributionDay,
   type DeveloperActivitySummary,
@@ -50,37 +47,33 @@ export async function loadDeveloperHubData(
   const cached = await readGithubCache<DeveloperHubData>(githubId, "hub", HUB_CACHE_TTL_MS);
   if (cached) return cached;
 
-  const [user, repos] = await Promise.all([
-    fetchGithubUser(accessToken),
-    fetchGithubRepos(accessToken),
-  ]);
-
-  const [languageBreakdown, prStats, issueStats, commitActivity] = await Promise.all([
-    buildLanguageBreakdown(accessToken, repos),
-    fetchPullRequestStats(accessToken, user.login),
-    fetchIssueStats(accessToken, user.login),
-    fetchRecentCommitActivity(accessToken, user.login),
-  ]);
+  // The one REST call that stays: search() queries inside the GraphQL
+  // request below need this account's literal login string, which can't
+  // be known until a request already ran — folding the profile fetch
+  // into the same GraphQL query would just trade one round trip for
+  // another rather than actually saving one.
+  const user = await fetchGithubUser(accessToken);
+  const hub = await fetchHubDataGraphQL(accessToken, user.login);
 
   const activity: DeveloperActivitySummary = {
-    languageBreakdown,
-    commitActivity,
-    totalPullRequests: prStats.total,
-    mergedPullRequests: prStats.merged,
-    codeReviews: prStats.reviews,
-    issuesOpened: issueStats.opened,
-    issuesClosed: issueStats.closed,
-    publicRepoCount: user.public_repos,
+    languageBreakdown: hub.languageBreakdown,
+    commitActivity: hub.commitActivity,
+    totalPullRequests: hub.prStats.total,
+    mergedPullRequests: hub.prStats.merged,
+    codeReviews: hub.prStats.reviews,
+    issuesOpened: hub.issueStats.opened,
+    issuesClosed: hub.issueStats.closed,
+    publicRepoCount: hub.publicRepoCount,
     followers: user.followers,
   };
 
   const skillFingerprint = computeSkillFingerprint(
-    languageBreakdown,
-    { codeReviews: prStats.reviews, mergedPullRequests: prStats.merged },
-    []
+    hub.languageBreakdown,
+    { codeReviews: hub.prStats.reviews, mergedPullRequests: hub.prStats.merged },
+    [...hub.qualityByRepo.values()]
   );
 
-  const projects = reposToProjects(repos, new Map(), new Map());
+  const projects = reposToProjects(hub.repos, hub.qualityByRepo, hub.languagesByRepo);
 
   const overallScore = Math.round(
     Object.values(skillFingerprint).reduce((sum, v) => sum + v, 0) /
@@ -90,7 +83,7 @@ export async function loadDeveloperHubData(
   const profile: DeveloperProfile = {
     id: user.login,
     name: user.name ?? user.login,
-    headline: repos[0]?.language ? `${repos[0].language} Developer` : "Full Stack Developer",
+    headline: hub.repos[0]?.language ? `${hub.repos[0].language} Developer` : "Full Stack Developer",
     location: user.location,
     avatarUrl: user.avatar_url,
     githubLogin: user.login,
@@ -107,7 +100,7 @@ export async function loadDeveloperHubData(
     activity,
     analytics: deriveAnalyticsSnapshot({
       followers: user.followers,
-      publicRepoCount: user.public_repos,
+      publicRepoCount: hub.publicRepoCount,
     }),
   };
 

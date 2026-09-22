@@ -1,13 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-  buildLanguageBreakdown,
   computeSkillFingerprint,
   deriveAnalyticsSnapshot,
-  fetchGithubRepos,
   fetchGithubUser,
-  fetchIssueStats,
-  fetchPullRequestStats,
-  fetchRecentCommitActivity,
+  fetchHubDataGraphQL,
   reposToProjects,
   type AnalyticsSnapshot,
   type DeveloperActivitySummary,
@@ -50,34 +46,25 @@ export function useDeveloperHubData() {
 
     (async () => {
       try {
-        const [user, repos] = await Promise.all([
-          fetchGithubUser(accessToken),
-          fetchGithubRepos(accessToken),
-        ]);
-
-        const [languageBreakdown, prStats, issueStats, commitActivity] = await Promise.all([
-          buildLanguageBreakdown(accessToken, repos),
-          fetchPullRequestStats(accessToken, user.login),
-          fetchIssueStats(accessToken, user.login),
-          fetchRecentCommitActivity(accessToken, user.login),
-        ]);
+        const user = await fetchGithubUser(accessToken);
+        const hub = await fetchHubDataGraphQL(accessToken, user.login);
 
         const activity: DeveloperActivitySummary = {
-          languageBreakdown,
-          commitActivity,
-          totalPullRequests: prStats.total,
-          mergedPullRequests: prStats.merged,
-          codeReviews: prStats.reviews,
-          issuesOpened: issueStats.opened,
-          issuesClosed: issueStats.closed,
-          publicRepoCount: user.public_repos,
+          languageBreakdown: hub.languageBreakdown,
+          commitActivity: hub.commitActivity,
+          totalPullRequests: hub.prStats.total,
+          mergedPullRequests: hub.prStats.merged,
+          codeReviews: hub.prStats.reviews,
+          issuesOpened: hub.issueStats.opened,
+          issuesClosed: hub.issueStats.closed,
+          publicRepoCount: hub.publicRepoCount,
           followers: user.followers,
         };
 
         const skillFingerprint = computeSkillFingerprint(
-          languageBreakdown,
-          { codeReviews: prStats.reviews, mergedPullRequests: prStats.merged },
-          []
+          hub.languageBreakdown,
+          { codeReviews: hub.prStats.reviews, mergedPullRequests: hub.prStats.merged },
+          [...hub.qualityByRepo.values()]
         );
 
         const overallScore = Math.round(
@@ -88,7 +75,7 @@ export function useDeveloperHubData() {
         const profile: DeveloperProfile = {
           id: user.login,
           name: user.name ?? user.login,
-          headline: repos[0]?.language ? `${repos[0].language} Developer` : "Full Stack Developer",
+          headline: hub.repos[0]?.language ? `${hub.repos[0].language} Developer` : "Full Stack Developer",
           location: user.location,
           avatarUrl: user.avatar_url,
           githubLogin: user.login,
@@ -102,11 +89,11 @@ export function useDeveloperHubData() {
         const hubData: DeveloperHubData = {
           profile,
           skillFingerprint,
-          projects: reposToProjects(repos, new Map(), new Map()),
+          projects: reposToProjects(hub.repos, hub.qualityByRepo, hub.languagesByRepo),
           activity,
           analytics: deriveAnalyticsSnapshot({
             followers: user.followers,
-            publicRepoCount: user.public_repos,
+            publicRepoCount: hub.publicRepoCount,
           }),
         };
         setCachedHubData(accessToken, hubData);
