@@ -858,9 +858,37 @@ sharing). These items close that gap. Roughly ordered by leverage.
 - **Real in-app messaging** — build out the Messages tab (currently a
   stub) so recruiters and candidates can actually talk without
   leaving the platform.
-- **Push notifications (mobile)** — notify candidates on profile
-  views, shortlist activity, and messages via Expo push
-  notifications.
+- **Push notifications (mobile)** — ✅ shipped: a new `push_tokens`
+  table + `lib/push-notifications.ts` (register/unregister, send via
+  Expo's push API) wired into the single choke point every existing
+  notification trigger already goes through
+  (`lib/notifications.ts`'s `createNotification`), so every prior
+  trigger (endorsement received, certification/experience added,
+  skill test completed, saved-search match) gets push for free. Also
+  added the three triggers this item names that never fired any
+  notification before: a first-time profile view (not every repeat
+  view, to avoid spam), being added to a shortlist, and receiving a
+  message — each deduped/scoped correctly. A new
+  `/api/mobile/push-token` route resolves the caller's real numeric
+  GitHub id via GitHub's own `/user` API before trusting a
+  registration request, since the mobile app has no NextAuth session —
+  only a raw GitHub access token. Mobile: a `usePushNotifications`
+  hook (permission request, token registration, tap-to-open-link) and
+  unregistration on sign-out. Verified end-to-end against Expo's real
+  push API (not mocked): registered a syntactically-valid-but-fake
+  token, triggered a real endorsement, confirmed Expo genuinely
+  rejected it with `DeviceNotRegistered`, and confirmed the app
+  correctly deleted the dead token afterward — proving the full send
+  path executed for real, not just compiled. All three new triggers
+  verified live with correct dedup (a repeat profile view, a duplicate
+  shortlist add). **Not verifiable in this sandbox**: an actual push
+  landing on a phone — there's no EAS project configured (no
+  `projectId` in `app.json`) and no real device here, the same class
+  of gap as every OAuth integration this codebase already treats as
+  "needs a real one." A tapped notification currently opens the
+  equivalent web page via `Linking.openURL` rather than a native deep
+  link, since the mobile app has no native screens yet for messages/
+  shortlists/analytics — a pragmatic stopgap, not a native experience.
 - **Candidate comparison view** — ✅ shipped: a new Compare tab in
   Recruiter Tools (`/dashboard/recruiter/compare`) shows 2-4 selected
   candidates side by side — overall score, location, top languages,
