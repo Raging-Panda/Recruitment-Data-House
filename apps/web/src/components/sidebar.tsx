@@ -25,6 +25,7 @@ import {
   UsersIcon,
   BellIcon,
   SearchIcon,
+  CalendarIcon,
 } from "./icons";
 
 const NAV_ITEMS = [
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/feed", label: "Feed", icon: ActivityIcon },
   { href: "/dashboard/roles", label: "Open Roles", icon: BriefcaseIcon },
   { href: "/dashboard/messages", label: "Messages", icon: BellIcon },
+  { href: "/dashboard/interviews", label: "Interviews", icon: CalendarIcon },
   { href: "/dashboard/growth", label: "Growth Olympics", icon: UsersIcon },
   { href: "/dashboard/settings", label: "Settings", icon: GearIcon },
 ];

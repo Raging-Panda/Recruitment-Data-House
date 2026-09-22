@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import type { NotificationItem, NotificationType } from "@ipskill/shared";
-import { BellIcon, ShieldCheckIcon, LayersIcon, StarIcon, CheckCircleIcon, BookmarkIcon, EyeIcon } from "./icons";
+import { BellIcon, ShieldCheckIcon, LayersIcon, StarIcon, CheckCircleIcon, BookmarkIcon, EyeIcon, CalendarIcon } from "./icons";
 import { formatRelativeTime } from "@/lib/format";
 
 const TYPE_ICON: Record<NotificationType, ComponentType<{ size?: number }>> = {
@@ -16,6 +16,9 @@ const TYPE_ICON: Record<NotificationType, ComponentType<{ size?: number }>> = {
   profile_viewed: EyeIcon,
   shortlisted: BookmarkIcon,
   message_received: BellIcon,
+  interview_proposed: CalendarIcon,
+  interview_booked: CalendarIcon,
+  interview_cancelled: CalendarIcon,
 };
 
 export function NotificationsPanel() {

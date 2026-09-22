@@ -20,6 +20,7 @@ import { EndorsementList } from "@/components/endorsement-list";
 import { EndorsementForm } from "@/components/endorsement-form";
 import { FollowButton } from "@/components/follow-button";
 import { MessageButton } from "@/components/message-button";
+import { ProposeInterviewForm } from "@/components/propose-interview-form";
 import { isFollowing } from "@/lib/social";
 import { generateCandidateSummary } from "@/lib/candidate-summary";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
@@ -195,8 +196,9 @@ export default async function DirectoryProfilePage({
 
       <div className="mt-6 rounded-2xl border border-dashed border-surface-border bg-background-elevated p-5 text-center">
         {!isDemo && viewerGithubId !== entry.githubId ? (
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-3">
             <MessageButton targetId={entry.githubId} preference={messagePreference} />
+            <ProposeInterviewForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
           </div>
         ) : (
           <p className="text-sm text-text-secondary">

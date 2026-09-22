@@ -257,7 +257,10 @@ export type NotificationType =
   | "endorsement_received"
   | "profile_viewed"
   | "shortlisted"
-  | "message_received";
+  | "message_received"
+  | "interview_proposed"
+  | "interview_booked"
+  | "interview_cancelled";
 
 export interface NotificationItem {
   id: string;
