@@ -907,10 +907,21 @@ sharing). These items close that gap. Roughly ordered by leverage.
   security practice) and the actual on-device/simulator UI — no EAS
   project or dev client configured here, same class of gap already
   documented for push notifications.
-- **Client-side data caching (mobile)** — replace the ad hoc
-  `useEffect` fetch in `use-developer-hub-data.ts` with React
-  Query/SWR so data is cached, revalidated in the background, and
-  doesn't re-fetch from scratch on every screen focus.
+- **Client-side data caching (mobile)** — ✅ shipped. Replaced the hand-rolled
+  `Map`-based TTL cache (`hub-data-cache.ts`, now deleted) and the
+  `useEffect`/`useState` fetch it backed in `use-developer-hub-data.ts`
+  with `@tanstack/react-query` (`QueryClientProvider` added in
+  `App.tsx`). The hook now keys its query on the access token, with a
+  5-minute stale time and 30-minute gc time, so `ProfileScreen`,
+  `ProjectsScreen`, and `AnalyticsScreen` (unchanged call sites — same
+  `{ data, isLoading, error }` shape) get real stale-while-revalidate
+  behavior: cached data survives unmount/remount, background
+  revalidation replaces the old blank-then-refetch/expire pattern, and
+  the response no longer regresses to a cold refetch on every screen
+  focus. Verified via `pnpm -r typecheck` and `pnpm build:web` (mobile
+  has no build step); no on-device/simulator run — same documented gap
+  as the earlier native-screens/push-notification items (no EAS
+  project or dev client configured here).
 - **Streaming/suspense on web** — ✅ mostly already shipped, now
   extended: the shell-vs-body split this item describes already exists
   for every GitHub-data-heavy route (Profile, Skills, Projects,
