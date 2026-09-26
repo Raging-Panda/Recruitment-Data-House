@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { DirectoryEntry, DirectoryFilters, Shortlist } from "@ipskill/shared";
@@ -11,6 +11,13 @@ import { useToast } from "@/components/toast-provider";
 import { DEFAULT_DIRECTORY_FILTERS, matchesDirectoryFilters } from "@/lib/directory-filters";
 import { ShortlistPicker } from "@/components/shortlist-picker";
 import { CompareSelectionBar, MAX_COMPARE_SELECTION } from "@/components/compare-selection-bar";
+
+// "Virtualize long lists" — a windowed/progressive render rather than a
+// true virtual-scroll (no new dependency added, same call the public
+// Directory's PagedDirectoryGrid already made), since a recruiter's
+// filtered result set has no cap the way the public Directory grid or
+// the candidate's own Projects list (server-side capped at 25 repos) do.
+const PAGE_SIZE = 24;
 
 const MIN_SCORE_OPTIONS = [
   { label: "Any skill level", value: 0 },
@@ -35,6 +42,7 @@ export function DirectoryBrowser({
   const [shortlists, setShortlists] = useState<Shortlist[] | null>(null);
   const [isSavingSearch, setIsSavingSearch] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [visible, setVisible] = useState(PAGE_SIZE);
   const showToast = useToast();
 
   function toggleSelected(githubId: string) {
@@ -60,6 +68,15 @@ export function DirectoryBrowser({
   );
 
   const filtered = entries.filter((entry) => matchesDirectoryFilters(entry, filters));
+  const shown = filtered.slice(0, visible);
+
+  // A new filter combination is a new result set — start windowed from
+  // the top again rather than keeping whatever count was scrolled to
+  // before, which could otherwise render (or hide) an unrelated tail.
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, location, language, minScore, availableOnly]);
 
   async function ensureShortlistsLoaded() {
     if (shortlists) return shortlists;
@@ -164,7 +181,7 @@ export function DirectoryBrowser({
       </p>
 
       <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((entry) => (
+        {shown.map((entry) => (
           <div key={entry.githubId} className="relative">
             <Link
               href={`/dashboard/recruiter/directory/${entry.githubId}`}
@@ -264,6 +281,14 @@ export function DirectoryBrowser({
           </div>
         ))}
       </div>
+
+      {visible < filtered.length && (
+        <div className="mt-6 flex justify-center">
+          <button onClick={() => setVisible((v) => v + PAGE_SIZE)} className={buttonClass("subtle", "sm")}>
+            Load more ({filtered.length - visible} remaining)
+          </button>
+        </div>
+      )}
 
       <CompareSelectionBar selectedIds={selectedIds} onClear={() => setSelectedIds([])} />
 
