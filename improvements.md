@@ -550,12 +550,15 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ### Proof that can't be faked
 
-- **Proof-of-work links on skill claims** — let a developer attach a
-  specific public artifact (a merged PR, a release, a commit range, an
-  npm package, a talk) to a skill or fingerprint category, so a claim
-  is backed by a concrete, clickable thing rather than only the
-  heatmap-derived score. Recruiters (and peers) can click through and
-  verify.
+- **Proof-of-work links on skill claims** — ✅ shipped. A developer can
+  attach a concrete, clickable artifact (a merged PR, a release, a
+  package, a talk) to one of the 8 skill-fingerprint categories via a
+  new `skill_proofs` table (`db/migrations/0006_skill_proofs.sql`),
+  edited from an owner-only manager on the Profile page
+  (`lib/skill-proofs.ts`, `api/skill-proofs`) and surfaced read-only on
+  every profile view: recruiter Directory detail, the public vanity
+  profile, and the token share link. Same CRUD shape as the existing
+  external-links feature (12-per-owner cap, demo account writes 403).
 - **Verified work history** — confirm a work-experience entry via
   company-domain email verification (or the eventual third-party
   employment check from `PLAN.md`), and badge it "Verified employer"
