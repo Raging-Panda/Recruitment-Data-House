@@ -38,6 +38,14 @@ const KIND_LABEL: Record<TimelineItem["kind"], string> = {
   github: "GitHub",
 };
 
+/** Roles and certifications are the spine — the most-scanned, often-
+ * detailed entries — and keep the original spaced-out treatment.
+ * Verified skills and GitHub milestones are supporting texture that can
+ * accumulate fast (a milestone per Featured Project, a milestone per
+ * passed test), so they render as a single tight row instead — denser
+ * without the spine itself feeling cramped. */
+const DENSE_KINDS = new Set<TimelineItem["kind"]>(["skill", "github"]);
+
 function fmt(value: string | null | undefined, isCurrent = false): string {
   if (isCurrent) return "Present";
   if (!value) return "—";
@@ -150,29 +158,44 @@ export function CareerTimeline({
 
   return (
     <ol className="relative ml-2 border-l border-surface-border">
-      {items.map((item) => (
-        <li key={item.key} className="ml-6 pb-6 last:pb-0">
-          <span
-            className={`absolute -left-[6px] mt-1 h-3 w-3 rounded-full border-2 border-background-elevated ${DOT_CLASS[item.kind]}`}
-            aria-hidden
-          />
-          <p className="text-xs text-text-muted">
-            {item.kind === "role"
-              ? `${fmt(item.date)} — ${fmt(item.endDate, item.isCurrent)}`
-              : fmt(item.date)}
-            <span className="ml-2 rounded-full bg-surface px-2 py-0.5 text-[10px] uppercase tracking-wide text-text-secondary">
-              {KIND_LABEL[item.kind]}
-            </span>
-          </p>
-          <p className="mt-1 text-sm font-semibold text-heading">{item.title}</p>
-          <p className="text-xs text-text-secondary">{item.subtitle}</p>
-          {item.detail && (
-            <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-text-muted">
-              {item.detail}
-            </p>
-          )}
-        </li>
-      ))}
+      {items.map((item) => {
+        const dense = DENSE_KINDS.has(item.kind);
+        return (
+          <li key={item.key} className={`ml-6 last:pb-0 ${dense ? "pb-3" : "pb-5"}`}>
+            <span
+              className={`absolute rounded-full border-2 border-background-elevated ${DOT_CLASS[item.kind]} ${
+                dense ? "-left-[5px] mt-[5px] h-2 w-2" : "-left-[6px] mt-[3px] h-3 w-3"
+              }`}
+              aria-hidden
+            />
+            {dense ? (
+              <p className="text-xs leading-snug">
+                <span className="text-text-muted">{fmt(item.date)}</span>{" "}
+                <span className="font-medium text-heading">{item.title}</span>{" "}
+                <span className="text-text-muted">· {item.subtitle}</span>
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-text-muted">
+                  {item.kind === "role"
+                    ? `${fmt(item.date)} — ${fmt(item.endDate, item.isCurrent)}`
+                    : fmt(item.date)}
+                  <span className="ml-2 rounded-full bg-surface px-2 py-0.5 text-[10px] uppercase tracking-wide text-text-secondary">
+                    {KIND_LABEL[item.kind]}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm font-semibold text-heading">{item.title}</p>
+                <p className="text-xs text-text-secondary">{item.subtitle}</p>
+                {item.detail && (
+                  <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-text-muted">
+                    {item.detail}
+                  </p>
+                )}
+              </>
+            )}
+          </li>
+        );
+      })}
     </ol>
   );
 }
