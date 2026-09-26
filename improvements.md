@@ -874,10 +874,26 @@ sharing). These items close that gap. Roughly ordered by leverage.
   Skills 198 kB → 100 kB, and the new public profile link page
   192 kB → 94.2 kB — each chart now flashes a brief skeleton before
   mounting client-side instead of shipping in the main bundle.
-- **Virtualize long lists** — the web Projects page and the eventual
-  developer directory should virtualize rows once candidate/repo
-  counts grow past a page or two (mobile's `FlatList` already does
-  this).
+- **Virtualize long lists** — ✅ shipped: the same windowed/progressive
+  render the public Directory's `PagedDirectoryGrid` already
+  established (no new dependency), applied to the two lists that were
+  still missing it. The premium recruiter Directory
+  (`DirectoryBrowser`) had no cap at all on its filtered result set —
+  the one place in the app a list can genuinely grow past a page or
+  two today — now windows to 24 with a "Load more" button, and
+  changing any filter resets back to page one rather than keeping
+  whatever count was scrolled to. The web Projects page's inline list
+  was extracted into `ProjectsList` with the same pattern (windowed to
+  15) — low practical impact today since the hub-data fetch already
+  caps a candidate's own repos at 25 server-side, but keeps it
+  consistent if that cap ever changes. Verified end-to-end with 20
+  synthetic directory rows added to genuinely exceed the page size (13
+  real rows otherwise, never enough to trigger this): Load More
+  correctly reveals the rest, and changing the search filter resets
+  the window rather than staying expanded, confirmed by clearing the
+  filter back to the full 33-row set and seeing "Load more" reappear
+  instead of jumping straight to showing all 33. Test rows removed
+  afterward.
 
 ## New features
 
