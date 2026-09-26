@@ -22,6 +22,7 @@ import { DEMO_GITHUB_ID } from "./demo-mode";
 import { DEFAULT_DIRECTORY_FILTERS } from "./directory-filters";
 import type { RecruiterEngagementSummary } from "./recruiter-engagement";
 import type { PublicProfileLinkStatus } from "./public-profile-link";
+import type { VerifiedSkillMilestone } from "./skill-tests";
 
 const NOW = Date.now();
 const DAY = 24 * 60 * 60 * 1000;
@@ -136,6 +137,7 @@ export function buildDemoDeveloperHubData(): DeveloperHubData {
       languages: ["Go", "SQL"],
       stars: 210,
       watchers: 38,
+      createdAt: new Date(NOW - 3 * 365 * DAY).toISOString(),
       updatedAt: new Date(NOW - 1 * DAY).toISOString(),
       url: "https://github.com/naledi-khumalo/payments-gateway-core",
       quality: { hasTests: true, hasReadme: true, hasCi: true, hasLicense: true },
@@ -148,6 +150,7 @@ export function buildDemoDeveloperHubData(): DeveloperHubData {
       languages: ["Go"],
       stars: 96,
       watchers: 19,
+      createdAt: new Date(NOW - 2 * 365 * DAY).toISOString(),
       updatedAt: new Date(NOW - 4 * DAY).toISOString(),
       url: "https://github.com/naledi-khumalo/distributed-task-queue",
       quality: { hasTests: true, hasReadme: true, hasCi: true, hasLicense: true },
@@ -160,6 +163,7 @@ export function buildDemoDeveloperHubData(): DeveloperHubData {
       languages: ["TypeScript", "CSS"],
       stars: 34,
       watchers: 8,
+      createdAt: new Date(NOW - 550 * DAY).toISOString(),
       updatedAt: new Date(NOW - 8 * DAY).toISOString(),
       url: "https://github.com/naledi-khumalo/react-analytics-dashboard",
       quality: { hasTests: true, hasReadme: true, hasCi: false, hasLicense: false },
@@ -172,6 +176,7 @@ export function buildDemoDeveloperHubData(): DeveloperHubData {
       languages: ["HCL"],
       stars: 58,
       watchers: 11,
+      createdAt: new Date(NOW - 4 * 365 * DAY).toISOString(),
       updatedAt: new Date(NOW - 15 * DAY).toISOString(),
       url: "https://github.com/naledi-khumalo/terraform-aws-modules",
       quality: { hasTests: false, hasReadme: true, hasCi: false, hasLicense: true },
@@ -184,6 +189,7 @@ export function buildDemoDeveloperHubData(): DeveloperHubData {
       languages: ["Python"],
       stars: 21,
       watchers: 4,
+      createdAt: new Date(NOW - 365 * DAY).toISOString(),
       updatedAt: new Date(NOW - 26 * DAY).toISOString(),
       url: "https://github.com/naledi-khumalo/ml-pipeline-toolkit",
       quality: { hasTests: false, hasReadme: true, hasCi: false, hasLicense: false },
@@ -208,6 +214,7 @@ export function buildDemoDeveloperHubData(): DeveloperHubData {
     percentileRank: Math.max(1, Math.round(100 - overallScore * 0.9)),
     about:
       "Senior backend engineer with 7+ years building distributed systems in Go and Python. Focused on payments infrastructure, developer tooling, and mentoring junior engineers.",
+    joinedGithubAt: new Date(NOW - 9 * 365 * DAY).toISOString(),
   };
 
   return {
@@ -397,6 +404,32 @@ export function buildDemoAttemptSummaries(
   });
   return summaries;
 }
+
+/** Career Timeline's verified-skill entries for the demo persona — the
+ * real seed IDs/titles for the 3 active "Fundamentals" templates (see
+ * db/migrations), dated/scored with the same formula
+ * buildDemoAttemptSummaries above uses so the two stay consistent with
+ * each other. */
+export const DEMO_VERIFIED_SKILL_MILESTONES: VerifiedSkillMilestone[] = [
+  {
+    templateId: "11111111-1111-1111-1111-111111111111",
+    title: "JavaScript Fundamentals",
+    percentage: 94,
+    submittedAt: new Date(NOW - 5 * DAY).toISOString(),
+  },
+  {
+    templateId: "22222222-2222-2222-2222-222222222222",
+    title: "Python Fundamentals",
+    percentage: 87,
+    submittedAt: new Date(NOW - 8 * DAY).toISOString(),
+  },
+  {
+    templateId: "33333333-3333-3333-3333-333333333333",
+    title: "SQL Basics",
+    percentage: 91,
+    submittedAt: new Date(NOW - 11 * DAY).toISOString(),
+  },
+];
 
 /**
  * Not backed by the notifications table — the demo account's write routes

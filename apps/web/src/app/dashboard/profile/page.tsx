@@ -21,6 +21,7 @@ import {
   DEMO_PUBLIC_LINK_STATUS,
   DEMO_WORK_EXPERIENCE,
   DEMO_CERTIFICATIONS,
+  DEMO_VERIFIED_SKILL_MILESTONES,
 } from "@/lib/demo-data";
 import { InfoCard } from "@/components/info-card";
 import { ScoreRing } from "@/components/score-ring";
@@ -43,6 +44,7 @@ import { getExternalLinksSafe } from "@/lib/external-links";
 import { SkillProofsManager } from "@/components/skill-proofs-manager";
 import { getSkillProofsForSafe } from "@/lib/skill-proofs";
 import type { ContributionDay, Endorsement, WorkExperience, Certification } from "@ipskill/shared";
+import { buildVerifiedSkillMilestones, type VerifiedSkillMilestone } from "@/lib/skill-tests";
 
 const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
   token: null,
@@ -57,13 +59,17 @@ const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
 async function loadCareerHistory(
   githubId: string,
   isDemo: boolean
-): Promise<{ experience: WorkExperience[]; certifications: Certification[] }> {
+): Promise<{ experience: WorkExperience[]; certifications: Certification[]; verifiedSkills: VerifiedSkillMilestone[] }> {
   if (isDemo) {
-    return { experience: DEMO_WORK_EXPERIENCE, certifications: DEMO_CERTIFICATIONS };
+    return {
+      experience: DEMO_WORK_EXPERIENCE,
+      certifications: DEMO_CERTIFICATIONS,
+      verifiedSkills: DEMO_VERIFIED_SKILL_MILESTONES,
+    };
   }
   try {
     const supabase = getSupabaseAdmin();
-    const [exp, cert] = await Promise.all([
+    const [exp, cert, attempts, templates] = await Promise.all([
       supabase
         .from("work_experience")
         .select("*")
@@ -74,13 +80,20 @@ async function loadCareerHistory(
         .select("*")
         .eq("github_id", githubId)
         .order("issue_date", { ascending: false }),
+      supabase
+        .from("skill_test_attempts")
+        .select("template_id, percentage, submitted_at")
+        .eq("github_id", githubId),
+      supabase.from("skill_test_templates").select("id, title"),
     ]);
+    const templateTitles = new Map((templates.data ?? []).map((t) => [t.id as string, t.title as string]));
     return {
       experience: (exp.data ?? []).map(rowToWorkExperience),
       certifications: (cert.data ?? []).map(rowToCertification),
+      verifiedSkills: buildVerifiedSkillMilestones(attempts.data ?? [], templateTitles),
     };
   } catch {
-    return { experience: [], certifications: [] };
+    return { experience: [], certifications: [], verifiedSkills: [] };
   }
 }
 
@@ -174,9 +187,15 @@ async function ThinProfile({ session }: { session: Session }) {
 
       <div className="mt-8">
         <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
-        <p className="mt-1 text-xs text-text-muted">Roles and certifications as one dated story.</p>
+        <p className="mt-1 text-xs text-text-muted">
+          Roles, certifications, and verified skills as one dated story.
+        </p>
         <div className="mt-4">
-          <CareerTimeline experience={career.experience} certifications={career.certifications} />
+          <CareerTimeline
+            experience={career.experience}
+            certifications={career.certifications}
+            verifiedSkills={career.verifiedSkills}
+          />
         </div>
       </div>
 
@@ -417,11 +436,18 @@ export default async function ProfilePage() {
       <div className="mt-8">
         <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
         <p className="mt-1 text-xs text-text-muted">
-          Roles and certifications as one dated story. Day-to-day GitHub activity lives on the
-          Projects page.
+          Roles, certifications, verified skills, and a few GitHub milestones as one dated story.
+          Day-to-day GitHub activity lives on the Projects page.
         </p>
         <div className="mt-4">
-          <CareerTimeline experience={career.experience} certifications={career.certifications} />
+          <CareerTimeline
+            experience={career.experience}
+            certifications={career.certifications}
+            verifiedSkills={career.verifiedSkills}
+            joinedGithubAt={profile.joinedGithubAt}
+            featuredProjects={featuredProjects}
+            projects={projects}
+          />
         </div>
       </div>
 

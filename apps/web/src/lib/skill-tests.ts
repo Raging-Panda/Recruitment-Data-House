@@ -145,3 +145,50 @@ export function isAttemptExpired(attempt: AttemptRow, timeLimitSeconds: number):
   const elapsedMs = Date.now() - new Date(attempt.started_at).getTime();
   return elapsedMs > timeLimitSeconds * 1000;
 }
+
+/** Same 70% bar the activity feed already uses to decide a completed
+ * attempt is worth recording as a real event (see the skill-tests submit
+ * route) — reused here so "verified" means the same thing everywhere. */
+export const VERIFIED_SKILL_THRESHOLD = 70;
+
+export interface VerifiedSkillMilestone {
+  templateId: string;
+  title: string;
+  percentage: number;
+  submittedAt: string;
+}
+
+/**
+ * One entry per skill a candidate has ever passed, for the Career
+ * Timeline — not one per attempt, so retakes don't spam the timeline.
+ * Dated by the *first* passing attempt (when they actually got verified),
+ * but shows the best score they've since achieved. Pure transform; the
+ * caller queries skill_test_attempts/skill_test_templates itself, same
+ * division of labor as the rest of this file.
+ */
+export function buildVerifiedSkillMilestones(
+  attempts: { template_id: string; percentage: number | null; submitted_at: string | null }[],
+  templateTitles: Map<string, string>
+): VerifiedSkillMilestone[] {
+  const best = new Map<string, { percentage: number; submittedAt: string }>();
+  for (const a of attempts) {
+    if (a.percentage === null || a.submitted_at === null || a.percentage < VERIFIED_SKILL_THRESHOLD) {
+      continue;
+    }
+    const existing = best.get(a.template_id);
+    if (!existing) {
+      best.set(a.template_id, { percentage: a.percentage, submittedAt: a.submitted_at });
+    } else {
+      best.set(a.template_id, {
+        percentage: Math.max(existing.percentage, a.percentage),
+        submittedAt: a.submitted_at < existing.submittedAt ? a.submitted_at : existing.submittedAt,
+      });
+    }
+  }
+  return [...best.entries()].map(([templateId, v]) => ({
+    templateId,
+    title: templateTitles.get(templateId) ?? "Verified skill",
+    percentage: v.percentage,
+    submittedAt: v.submittedAt,
+  }));
+}

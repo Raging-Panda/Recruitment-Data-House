@@ -9,6 +9,10 @@ export interface DeveloperProfile {
   overallScore: number;
   percentileRank: number;
   about: string | null;
+  /** When this GitHub account was created — used as a "Joined GitHub"
+   * entry on the Career Timeline. Null for accounts with no GitHub
+   * connection (Google/LinkedIn/local sign-ins with no linked GitHub). */
+  joinedGithubAt: string | null;
 }
 
 export type SkillCategory =
@@ -37,6 +41,7 @@ export interface DeveloperProject {
   languages: string[];
   stars: number;
   watchers: number;
+  createdAt: string;
   updatedAt: string;
   url: string;
   quality: RepoQualitySignals;

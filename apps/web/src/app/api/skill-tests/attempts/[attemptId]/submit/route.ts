@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { isAttemptExpired, type AttemptRow, type QuestionRow, type TemplateRow } from "@/lib/skill-tests";
+import {
+  isAttemptExpired,
+  VERIFIED_SKILL_THRESHOLD,
+  type AttemptRow,
+  type QuestionRow,
+  type TemplateRow,
+} from "@/lib/skill-tests";
 import type { SkillTestSubmitResult } from "@ipskill/shared";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createNotification } from "@/lib/notifications";
@@ -93,7 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: { attemptId: 
     body: expired ? "Submitted after time ran out" : null,
     link: "/dashboard/skills",
   });
-  if (percentage >= 70) {
+  if (percentage >= VERIFIED_SKILL_THRESHOLD) {
     void recordActivityEvent(session.githubId, {
       type: "skill_test_completed",
       title: templateRow.title,

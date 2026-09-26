@@ -91,6 +91,7 @@ export async function loadDeveloperHubData(
     overallScore,
     percentileRank: Math.max(1, Math.round(100 - overallScore * 0.9)),
     about: user.bio,
+    joinedGithubAt: user.created_at,
   };
 
   const result: DeveloperHubData = {

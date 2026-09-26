@@ -45,6 +45,7 @@ query HubData($prQuery: String!, $mergedPRQuery: String!, $reviewedPRQuery: Stri
         isFork
         stargazerCount
         watchers { totalCount }
+        createdAt
         updatedAt
         owner { login }
         primaryLanguage { name }
@@ -83,6 +84,7 @@ interface GraphQLRepoNode {
   isFork: boolean;
   stargazerCount: number;
   watchers: { totalCount: number };
+  createdAt: string;
   updatedAt: string;
   owner: { login: string };
   primaryLanguage: { name: string } | null;
@@ -172,6 +174,7 @@ export async function fetchHubDataGraphQL(token: string, login: string): Promise
     html_url: n.url,
     stargazers_count: n.stargazerCount,
     watchers_count: n.watchers.totalCount,
+    created_at: n.createdAt,
     updated_at: n.updatedAt,
     fork: n.isFork,
     language: n.primaryLanguage?.name ?? null,

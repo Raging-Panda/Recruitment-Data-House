@@ -58,6 +58,7 @@ export function buildMockDeveloperHubData(): DeveloperHubData {
       languages: ["Go", "SQL"],
       stars: 14,
       watchers: 5,
+      createdAt: new Date(NOW - 200 * DAY).toISOString(),
       updatedAt: new Date(NOW - 2 * DAY).toISOString(),
       url: "https://github.com/octocat/test-order-service",
       quality: { hasTests: true, hasReadme: true, hasCi: true, hasLicense: true },
@@ -70,6 +71,7 @@ export function buildMockDeveloperHubData(): DeveloperHubData {
       languages: ["TypeScript", "CSS"],
       stars: 6,
       watchers: 2,
+      createdAt: new Date(NOW - 120 * DAY).toISOString(),
       updatedAt: new Date(NOW - 9 * DAY).toISOString(),
       url: "https://github.com/octocat/test-dashboard-ui",
       quality: { hasTests: true, hasReadme: true, hasCi: false, hasLicense: false },
@@ -82,6 +84,7 @@ export function buildMockDeveloperHubData(): DeveloperHubData {
       languages: ["Python"],
       stars: 3,
       watchers: 1,
+      createdAt: new Date(NOW - 90 * DAY).toISOString(),
       updatedAt: new Date(NOW - 21 * DAY).toISOString(),
       url: "https://github.com/octocat/test-data-pipeline",
       quality: { hasTests: false, hasReadme: true, hasCi: false, hasLicense: true },
@@ -105,6 +108,7 @@ export function buildMockDeveloperHubData(): DeveloperHubData {
     overallScore,
     percentileRank: Math.max(1, Math.round(100 - overallScore * 0.9)),
     about: "Fixture account for exercising IPSkill's UI without a real GitHub login.",
+    joinedGithubAt: new Date(NOW - 900 * DAY).toISOString(),
   };
 
   return {

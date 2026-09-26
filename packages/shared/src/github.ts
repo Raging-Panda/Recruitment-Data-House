@@ -33,6 +33,7 @@ export interface GithubUser {
   location: string | null;
   followers: number;
   public_repos: number;
+  created_at: string;
 }
 
 export interface GithubRepo {
@@ -43,6 +44,7 @@ export interface GithubRepo {
   html_url: string;
   stargazers_count: number;
   watchers_count: number;
+  created_at: string;
   updated_at: string;
   fork: boolean;
   language: string | null;
@@ -196,6 +198,7 @@ export function reposToProjects(
         languages: languagesByRepo.get(r.full_name) ?? (r.language ? [r.language] : []),
         stars: r.stargazers_count,
         watchers: r.watchers_count,
+        createdAt: r.created_at,
         updatedAt: r.updated_at,
         url: r.html_url,
         quality: {
