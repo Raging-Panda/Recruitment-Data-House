@@ -47,7 +47,10 @@ export const LINK_PROVIDERS: Record<LinkProvider, LinkProviderConfig> = {
       `https://github.com/login/oauth/authorize?${new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
-        scope: "read:user user:email repo",
+        // public_repo, not repo — see the same note in lib/auth.ts's
+        // primary GitHub provider; a linked GitHub account only ever
+        // unlocks the same public-portfolio data a primary sign-in does.
+        scope: "read:user user:email public_repo",
         state,
       })}`,
     async exchangeCode({ clientId, clientSecret, code, redirectUri }) {

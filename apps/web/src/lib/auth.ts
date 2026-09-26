@@ -89,7 +89,14 @@ const providers: NextAuthOptions["providers"] = [
     clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
     authorization: {
       params: {
-        scope: "read:user user:email repo",
+        // public_repo, not repo — this app only ever reads a candidate's
+        // public portfolio (fingerprint, project list, contribution
+        // history); it never needs private-repo access, and a public
+        // developer profile shouldn't be built from private-repo data
+        // anyway. Narrowed from `repo` (full read/write, private repos
+        // included) after a review flagged the app was requesting far
+        // more than it uses.
+        scope: "read:user user:email public_repo",
       },
     },
   }),

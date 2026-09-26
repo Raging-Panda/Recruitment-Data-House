@@ -31,7 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [request, , promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: config.githubClientId,
-      scopes: ["read:user", "user:email", "repo"],
+      // public_repo, not repo — see the same note on the web app's
+      // GitHub provider (lib/auth.ts): this only ever reads a
+      // candidate's public portfolio, never private repos.
+      scopes: ["read:user", "user:email", "public_repo"],
       redirectUri,
     },
     discovery
