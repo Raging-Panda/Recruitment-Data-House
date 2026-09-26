@@ -642,7 +642,16 @@ sharing). These items close that gap. Roughly ordered by leverage.
   alongside the pre-existing role/certification ones, both via curl
   and visually in-browser; also confirmed the demo persona's fixture
   interleaves all four kinds correctly. Test data cleaned up
-  afterward. Still open: a denser visual treatment.
+  afterward. **Update:** got a denser two-tier treatment too — roles/
+  certifications keep the original spaced-out layout (the spine, most-
+  scanned, often has a real description); verified skills and GitHub
+  milestones — the two kinds that can accumulate fast — now render as
+  a single tight row (inline date/title/subtitle, smaller dot, less
+  padding) so the timeline doesn't feel bloated as a profile fills
+  out. Verified visually against the demo persona's 9-entry mix (3
+  skills, 2 GitHub, 3 certifications, 3 roles): compact rows read as a
+  tight cluster, spine entries keep full legibility, nothing overlaps
+  as kinds interleave chronologically. Nothing else open here.
 - **Beyond GitHub: writing, talks, packages, OSS** — structured slots
   for blog posts, conference talks, published packages (npm/PyPI/
   crates/NuGet), and notable OSS contributions to repos the developer
