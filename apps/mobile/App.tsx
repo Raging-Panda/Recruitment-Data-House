@@ -1,6 +1,7 @@
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { usePushNotifications } from "@/lib/use-push-notifications";
@@ -30,12 +31,16 @@ function RootNavigation() {
   );
 }
 
+const queryClient = new QueryClient();
+
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <RootNavigation />
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <RootNavigation />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
