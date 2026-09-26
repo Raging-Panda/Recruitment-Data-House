@@ -610,14 +610,39 @@ sharing). These items close that gap. Roughly ordered by leverage.
   test identity with a linked fixture GitHub connection, confirmed it
   rendered on all three read-only surfaces, cleaned up afterward.
   Still open: no drag-reorder (up/down buttons only).
-- **Unified career timeline** — ✅ shipped (first slice): a
-  `CareerTimeline` on the Profile page interleaves work experience and
-  certifications into one date-sorted list (role vs. certification
-  dot colour, role rows show a start–end range). Deliberately *not*
-  folding in day-level GitHub commits/PRs — those keep their own feed
-  on the Projects page; this is the career spine at role/credential
-  resolution. Still open: GitHub trajectory and verified-skill passes
-  as timeline entries, and a denser visual treatment.
+- **Unified career timeline** — ✅ shipped, including the two gaps this
+  note used to list: a `CareerTimeline` on the Profile page interleaves
+  work experience, certifications, verified skill passes, and a few
+  GitHub milestones into one date-sorted list (role/certification/
+  skill/GitHub each get their own dot colour, role rows show a
+  start–end range). Deliberately *not* folding in day-level GitHub
+  commits/PRs — those keep their own feed on the Projects page; this is
+  the career spine at role/credential resolution, not a firehose.
+  **Verified skills**: one entry per skill ever passed (not per
+  attempt, so retakes don't spam the timeline), dated by the first
+  passing attempt but showing the best score since — the same 70% bar
+  the activity feed already used for "a completed attempt worth
+  recording" (extracted into `VERIFIED_SKILL_THRESHOLD` and reused in
+  the submit route rather than a second copy of the magic number).
+  Supabase-only, so it shows up even without a GitHub connection
+  (ThinProfile). **GitHub trajectory**: "Joined GitHub" (the account's
+  own creation date) plus "Started building {name}" for each of the
+  candidate's own Featured Project pins, cross-referenced against
+  their repo list by name for the real repo creation date —
+  deliberately scoped to Featured Projects (already curated by the
+  candidate) rather than every repo, so it's meaningful milestones,
+  not noise. Required threading `created_at` through `GithubUser` and
+  `GithubRepo` (REST and GraphQL both) and a matching `createdAt` on
+  `DeveloperProject`, touching both apps since mobile builds its own
+  profile from the same shared GraphQL client. Verified end-to-end
+  against real Supabase (not a fixture): pinned a real Featured
+  Project and inserted a real passing skill-test attempt on a test
+  identity with a linked fixture GitHub connection, confirmed all
+  three new entry kinds render in correct chronological order
+  alongside the pre-existing role/certification ones, both via curl
+  and visually in-browser; also confirmed the demo persona's fixture
+  interleaves all four kinds correctly. Test data cleaned up
+  afterward. Still open: a denser visual treatment.
 - **Beyond GitHub: writing, talks, packages, OSS** — structured slots
   for blog posts, conference talks, published packages (npm/PyPI/
   crates/NuGet), and notable OSS contributions to repos the developer
