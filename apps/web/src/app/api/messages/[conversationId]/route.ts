@@ -4,13 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import {
   getMessages,
-  sendMessage,
+  sendMessageAndNotify,
   markConversationRead,
   isParticipant,
   getConversationMeta,
 } from "@/lib/messaging";
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { createNotification } from "@/lib/notifications";
 
 export async function GET(_req: NextRequest, { params }: { params: { conversationId: string } }) {
   const session = await getServerSession(authOptions);
@@ -48,24 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: { conversatio
   if (text.length > 2000) return NextResponse.json({ error: "Message too long" }, { status: 400 });
 
   try {
-    const message = await sendMessage(params.conversationId, session.githubId, text);
-
-    const { data: convo } = await getSupabaseAdmin()
-      .from("conversations")
-      .select("participant_a, participant_b")
-      .eq("id", params.conversationId)
-      .maybeSingle();
-    const recipient =
-      convo?.participant_a === session.githubId ? convo?.participant_b : convo?.participant_a;
-    if (recipient) {
-      void createNotification(recipient, {
-        type: "message_received",
-        title: "New message",
-        body: text.length > 140 ? `${text.slice(0, 140)}…` : text,
-        link: `/dashboard/messages/${params.conversationId}`,
-      });
-    }
-
+    const message = await sendMessageAndNotify(params.conversationId, session.githubId, text);
     return NextResponse.json({ message }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { PlaceholderScreen } from "@/screens/PlaceholderScreen";
 import { ProfileStackNavigator } from "./ProfileStackNavigator";
+import { MessagesStackNavigator } from "./MessagesStackNavigator";
 import { useTheme, type ThemeColors } from "@/lib/theme-context";
 import { HomeIcon, SearchIcon, MessageIcon, PersonIcon } from "@/components/icons";
 import type { RootTabParamList } from "./types";
@@ -17,9 +18,6 @@ function SearchScreen() {
 }
 function AddScreen() {
   return <PlaceholderScreen title="Add" />;
-}
-function MessagesScreen() {
-  return <PlaceholderScreen title="Messages" />;
 }
 
 const ICONS: Record<keyof RootTabParamList, typeof HomeIcon> = {
@@ -58,7 +56,7 @@ export function RootTabNavigator() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Add" component={AddScreen} options={{ tabBarLabel: () => null }} />
-      <Tab.Screen name="Messages" component={MessagesScreen} />
+      <Tab.Screen name="Messages" component={MessagesStackNavigator} />
       <Tab.Screen
         name="ProfileTab"
         component={ProfileStackNavigator}

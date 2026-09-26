@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SkillRadarChart } from "@/components/SkillRadarChart";
-import { BarChartIcon, SunIcon, MoonIcon } from "@/components/icons";
+import { BarChartIcon, CalendarIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { useDeveloperHubData } from "@/lib/use-developer-hub-data";
 import { useTheme, type ThemeColors } from "@/lib/theme-context";
 import { BrandedLoadingScreen } from "@/components/BrandedLoadingScreen";
@@ -45,6 +45,9 @@ export function ProfileScreen({ navigation }: Props) {
             ) : (
               <MoonIcon size={20} color={colors.heading} />
             )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Interviews")} accessibilityLabel="Interviews">
+            <CalendarIcon size={20} color={colors.heading} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate("Analytics")}>
             <BarChartIcon size={20} color={colors.heading} />

@@ -1,6 +1,7 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getMessagePreference } from "@/lib/message-preference";
+import { createNotification } from "@/lib/notifications";
 
 function canonicalPair(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
@@ -156,6 +157,37 @@ export async function sendMessage(conversationId: string, senderId: string, body
     .single();
   if (error) throw new Error(error.message);
   return { id: data.id, senderId: data.sender_id, body: data.body, createdAt: data.created_at };
+}
+
+/**
+ * The one place a message actually gets sent from, used by both the web
+ * API route and the mobile one — sends it, then resolves the other
+ * participant and fires their notification (in-app + push, via
+ * createNotification), so neither caller has to duplicate that lookup.
+ */
+export async function sendMessageAndNotify(
+  conversationId: string,
+  senderId: string,
+  body: string
+): Promise<MessageItem> {
+  const message = await sendMessage(conversationId, senderId, body);
+
+  const { data: convo } = await getSupabaseAdmin()
+    .from("conversations")
+    .select("participant_a, participant_b")
+    .eq("id", conversationId)
+    .maybeSingle();
+  const recipient = convo?.participant_a === senderId ? convo?.participant_b : convo?.participant_a;
+  if (recipient) {
+    void createNotification(recipient, {
+      type: "message_received",
+      title: "New message",
+      body: body.length > 140 ? `${body.slice(0, 140)}…` : body,
+      link: `/dashboard/messages/${conversationId}`,
+    });
+  }
+
+  return message;
 }
 
 export async function markConversationRead(conversationId: string, viewerId: string): Promise<void> {

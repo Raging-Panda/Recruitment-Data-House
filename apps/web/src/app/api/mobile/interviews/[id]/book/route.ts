@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
+import { resolveMobileGithubId } from "@/lib/mobile-auth";
 import { bookInterviewAndNotify } from "@/lib/interviews";
 
 const ERROR_STATUS = { not_found: 404, invalid_slot: 400, no_longer_open: 409 } as const;
@@ -12,15 +10,14 @@ const ERROR_MESSAGE = {
 } as const;
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.githubId) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
+  const githubId = await resolveMobileGithubId(req);
+  if (!githubId) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
   const slot = typeof body?.slot === "string" ? body.slot : "";
   if (!slot) return NextResponse.json({ error: "slot is required" }, { status: 400 });
 
-  const result = await bookInterviewAndNotify(params.id, session.githubId, slot);
+  const result = await bookInterviewAndNotify(params.id, githubId, slot);
   if (!result.ok) {
     return NextResponse.json({ error: ERROR_MESSAGE[result.reason] }, { status: ERROR_STATUS[result.reason] });
   }

@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { usePushNotifications } from "@/lib/use-push-notifications";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { RootTabNavigator } from "@/navigation/RootTabNavigator";
+import { navigationRef } from "@/navigation/navigation-ref";
 import { BrandedLoadingScreen } from "@/components/BrandedLoadingScreen";
 
 function RootNavigation() {
@@ -22,7 +23,7 @@ function RootNavigation() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar style={mode === "dark" ? "light" : "dark"} />
       {accessToken ? <RootTabNavigator /> : <LoginScreen />}
     </NavigationContainer>

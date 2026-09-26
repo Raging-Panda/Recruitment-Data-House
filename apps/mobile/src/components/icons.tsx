@@ -91,3 +91,20 @@ export function MoonIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <Path d="M4.5 5h15a1 1 0 0 1 1 1v13.5a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+      <Path d="M8 3v4M16 3v4M3.5 10h17" />
+    </Base>
+  );
+}
+
+export function SendIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <Path d="m4 4 16 8-16 8 4-8-4-8Z" />
+    </Base>
+  );
+}

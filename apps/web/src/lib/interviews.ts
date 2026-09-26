@@ -1,5 +1,6 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { createNotification } from "@/lib/notifications";
 export { MAX_PROPOSED_SLOTS } from "@/lib/interview-constants";
 
 export type InterviewStatus = "pending" | "booked" | "cancelled";
@@ -125,4 +126,64 @@ export async function cancelInterviewRequest(
     .maybeSingle();
   if (error) throw new Error(error.message);
   return data ? rowToInterview(data as InterviewRow) : null;
+}
+
+export type BookInterviewResult =
+  | { ok: true; interview: InterviewRequest }
+  | { ok: false; reason: "not_found" | "invalid_slot" | "no_longer_open" };
+
+/**
+ * The full booking flow — used by both the web and mobile routes so
+ * neither has to duplicate the "is this really addressed to me, is this
+ * really one of the offered times" checks or the recruiter notification.
+ */
+export async function bookInterviewAndNotify(
+  id: string,
+  candidateId: string,
+  slot: string
+): Promise<BookInterviewResult> {
+  const existing = await getInterviewRequest(id).catch(() => null);
+  if (!existing || existing.candidateId !== candidateId) {
+    return { ok: false, reason: "not_found" };
+  }
+  if (!existing.proposedSlots.includes(slot)) {
+    return { ok: false, reason: "invalid_slot" };
+  }
+
+  const booked = await bookInterviewSlot(id, candidateId, slot).catch(() => null);
+  if (!booked) return { ok: false, reason: "no_longer_open" };
+
+  void createNotification(booked.recruiterId, {
+    type: "interview_booked",
+    title: "Interview booked",
+    body: `Your interview request "${booked.title}" was booked.`,
+    link: "/dashboard/interviews",
+  });
+
+  return { ok: true, interview: booked };
+}
+
+/** Same pairing for cancel — resolves the other party and notifies them,
+ * so a caller never has to work that out itself. */
+export async function cancelInterviewAndNotify(
+  id: string,
+  viewerId: string
+): Promise<InterviewRequest | null> {
+  const existing = await getInterviewRequest(id).catch(() => null);
+  if (!existing || (existing.recruiterId !== viewerId && existing.candidateId !== viewerId)) {
+    return null;
+  }
+
+  const cancelled = await cancelInterviewRequest(id, viewerId).catch(() => null);
+  if (!cancelled) return null;
+
+  const otherParty = cancelled.recruiterId === viewerId ? cancelled.candidateId : cancelled.recruiterId;
+  void createNotification(otherParty, {
+    type: "interview_cancelled",
+    title: "Interview cancelled",
+    body: `"${cancelled.title}" was cancelled.`,
+    link: "/dashboard/interviews",
+  });
+
+  return cancelled;
 }

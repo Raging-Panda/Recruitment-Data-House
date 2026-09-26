@@ -5,6 +5,7 @@ import * as Device from "expo-device";
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 import { config } from "./config";
+import { navigateForLink } from "@/navigation/navigation-ref";
 
 export const PUSH_TOKEN_KEY = "ipskill_expo_push_token";
 
@@ -20,12 +21,11 @@ Notifications.setNotificationHandler({
 
 /**
  * Registers this device for Expo push notifications once signed in, and
- * opens whatever the notification's `link` points at (a relative web path
- * — Messages, Analytics, etc.) when the user taps it. The mobile app has
- * no native screens of its own for messages/shortlists/analytics yet, so
- * this opens the equivalent web page rather than trying to deep-link into
- * a screen that doesn't exist — a pragmatic stopgap until those get a
- * native equivalent.
+ * opens whatever the notification's `link` points at when tapped —
+ * natively, via navigateForLink, for the paths this app now has real
+ * screens for (Messages, Interviews); anything else (Analytics extras,
+ * Shortlists — recruiter-only, no mobile screen at all) falls back to
+ * opening the equivalent web page.
  *
  * `getExpoPushTokenAsync` needs an EAS `projectId` to work outside of a
  * bare/dev-client build — this app has no EAS project configured yet
@@ -83,7 +83,8 @@ export function usePushNotifications(accessToken: string | null) {
 
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const link = response.notification.request.content.data?.link;
-      if (typeof link === "string") {
+      if (typeof link !== "string") return;
+      if (!navigateForLink(link)) {
         Linking.openURL(`${config.authBackendUrl}${link}`);
       }
     });
