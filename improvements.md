@@ -837,6 +837,42 @@ sharing). These items close that gap. Roughly ordered by leverage.
   response headers that the whole hub summary now costs 5 GraphQL
   rate-limit points in one HTTP request, versus ~30 REST calls (and ~30
   points) before.
+- **Native mobile screens for Messages and Interviews** — ✅ shipped:
+  the "Messages" tab had a nav slot since the tab bar was first built,
+  but it was always a placeholder — real `MessagesScreen` (conversation
+  list, requests surfaced separately) + `MessageThreadScreen` (send,
+  accept/decline) now live there in a proper stack, and a new
+  `InterviewsScreen` (pick a proposed slot, cancel) is reachable from a
+  header icon on Profile. The mobile app has no NextAuth session, only
+  a raw GitHub access token, so a new `/api/mobile/*` route family
+  resolves identity from that token server-side (same verify-via-
+  GitHub's-real-`/user`-API pattern the push-token route already used)
+  rather than trusting a client-supplied id. The book/cancel/send-
+  message business logic that used to live inline in the web routes
+  was refactored into shared `lib/interviews.ts` /`lib/messaging.ts`
+  functions so the web and mobile routes call the exact same code —
+  validation, authorization scoping, notification firing included —
+  instead of maintaining two copies. A tapped push notification now
+  navigates natively into these two screens when the link matches.
+  **Deliberately scoped out**: Shortlists (recruiter-only; mobile has
+  no recruiter mode at all — no Directory browsing, no premium gating
+  — building it would mean designing a whole parallel mobile
+  experience, not adding a screen to an existing one) and enhancing
+  Analytics (already has a screen, just built on GitHub-derived
+  estimates rather than the real Supabase-backed profile-view stat —
+  a smaller, separate item if ever wanted). Verified: every new
+  route's auth-failure path (missing header, malformed bearer, a real
+  round-trip to GitHub's `/user` API rejecting a garbage token) all
+  correctly 401; the shared business logic was re-verified end-to-end
+  through the web routes after the refactor (a real message send +
+  notification, an invalid-slot booking rejected, a real booking +
+  notification, an unrelated party blocked from cancelling, a real
+  cancel + notification). **Not independently verified**: the mobile-
+  specific "real GitHub identity" round trip (needs a real token, and
+  the one used earlier this session was deleted after use per its own
+  security practice) and the actual on-device/simulator UI — no EAS
+  project or dev client configured here, same class of gap already
+  documented for push notifications.
 - **Client-side data caching (mobile)** — replace the ad hoc
   `useEffect` fetch in `use-developer-hub-data.ts` with React
   Query/SWR so data is cached, revalidated in the background, and
@@ -927,10 +963,10 @@ sharing). These items close that gap. Roughly ordered by leverage.
   landing on a phone — there's no EAS project configured (no
   `projectId` in `app.json`) and no real device here, the same class
   of gap as every OAuth integration this codebase already treats as
-  "needs a real one." A tapped notification currently opens the
-  equivalent web page via `Linking.openURL` rather than a native deep
-  link, since the mobile app has no native screens yet for messages/
-  shortlists/analytics — a pragmatic stopgap, not a native experience.
+  "needs a real one." **Update:** a tapped notification now navigates
+  natively for Messages and Interviews (see "Native mobile screens"
+  below) — falls back to `Linking.openURL` for anything without a
+  mobile screen (Analytics extras, Shortlists).
 - **Candidate comparison view** — ✅ shipped: a new Compare tab in
   Recruiter Tools (`/dashboard/recruiter/compare`) shows 2-4 selected
   candidates side by side — overall score, location, top languages,
