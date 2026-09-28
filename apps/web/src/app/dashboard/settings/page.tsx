@@ -12,6 +12,7 @@ import { ApiKeysCard } from "@/components/api-keys-card";
 import { DirectMessagesCard } from "@/components/direct-messages-card";
 import { TwoFactorCard } from "@/components/two-factor-card";
 import { getTotpStatus } from "@/lib/two-factor";
+import { V1_MODE } from "@/lib/v1-mode";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -47,20 +48,22 @@ export default async function SettingsPage() {
           isDemo={isDemo}
           testLinkAvailable={isTestModeEnabled()}
         />
-        {totpStatus.supported ? (
-          <TwoFactorCard initiallyEnabled={totpStatus.enabled} isDemo={isDemo} />
-        ) : (
-          <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
-            <h3 className="text-sm font-semibold text-heading">Two-Factor Authentication</h3>
-            <p className="mt-1 text-xs text-text-muted">
-              Handled by {primaryProvider === "github" ? "GitHub" : primaryProvider === "google" ? "Google" : "LinkedIn"}
-              's own sign-in — enable it there. IPSkill's own 2FA only applies to email/password
-              accounts.
-            </p>
-          </div>
-        )}
-        <DirectMessagesCard initialPreference={messagePreference} isDemo={isDemo} />
-        <ReferralCard />
+        {!V1_MODE &&
+          (totpStatus.supported ? (
+            <TwoFactorCard initiallyEnabled={totpStatus.enabled} isDemo={isDemo} />
+          ) : (
+            <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+              <h3 className="text-sm font-semibold text-heading">Two-Factor Authentication</h3>
+              <p className="mt-1 text-xs text-text-muted">
+                Handled by{" "}
+                {primaryProvider === "github" ? "GitHub" : primaryProvider === "google" ? "Google" : "LinkedIn"}
+                's own sign-in — enable it there. IPSkill's own 2FA only applies to email/password
+                accounts.
+              </p>
+            </div>
+          ))}
+        {!V1_MODE && <DirectMessagesCard initialPreference={messagePreference} isDemo={isDemo} />}
+        {!V1_MODE && <ReferralCard />}
         <ApiKeysCard isDemo={isDemo} />
       </div>
     </div>

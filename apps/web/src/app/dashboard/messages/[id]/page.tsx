@@ -12,8 +12,10 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getDirectoryEntry } from "@/lib/directory";
 import { MessageThread } from "@/components/message-thread";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export default async function ConversationPage({ params }: { params: { id: string } }) {
+  if (V1_MODE) notFound();
   const session = await getServerSession(authOptions);
   if (isDemoAccount(session!.githubId)) notFound();
 

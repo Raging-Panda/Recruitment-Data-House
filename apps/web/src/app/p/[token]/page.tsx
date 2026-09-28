@@ -18,6 +18,7 @@ import { relativeDate } from "@/lib/time-ago";
 export const dynamic = "force-dynamic";
 import { ScoreRing } from "@/components/score-ring";
 import { EndorsementList } from "@/components/endorsement-list";
+import { V1_MODE } from "@/lib/v1-mode";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
 
@@ -126,7 +127,7 @@ export default async function PublicProfilePage({ params }: { params: { token: s
           </div>
         )}
 
-        {skillProofs.length > 0 && (
+        {!V1_MODE && skillProofs.length > 0 && (
           <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
             <h2 className="text-sm font-semibold text-heading">Proof of Work</h2>
             <div className="mt-3">
@@ -135,12 +136,14 @@ export default async function PublicProfilePage({ params }: { params: { token: s
           </div>
         )}
 
-        <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
-          <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
-          <div className="mt-3">
-            <EndorsementList endorsements={endorsements} />
+        {!V1_MODE && (
+          <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
+            <div className="mt-3">
+              <EndorsementList endorsements={endorsements} />
+            </div>
           </div>
-        </div>
+        )}
 
         <p className="mt-8 text-center text-xs text-text-muted">
           Shared via IPSkill — a read-only view of a verified developer profile.

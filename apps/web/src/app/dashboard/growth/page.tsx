@@ -5,8 +5,12 @@ import { getPlan } from "@/lib/premium";
 import { hasPremiumDevAccess } from "@/lib/plan";
 import { getGrowthLeaderboard } from "@/lib/growth";
 import { GrowthUpgradeCta } from "@/components/growth-upgrade-cta";
+import { notFound } from "next/navigation";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export default async function GrowthOlympicsPage() {
+  if (V1_MODE) notFound();
+
   const session = await getServerSession(authOptions);
   const plan = await getPlan(session!.githubId);
   const eligible = hasPremiumDevAccess(plan);
