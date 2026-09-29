@@ -4,15 +4,24 @@ import Link from "next/link";
 import type { SkillTestAttemptSummary, SkillTestTemplate } from "@ipskill/shared";
 import { buttonClass } from "@/lib/button-styles";
 import { EmptyState } from "@/components/empty-state";
-import { ShieldCheckIcon } from "@/components/icons";
+import { CheckCircleIcon, ShieldCheckIcon } from "@/components/icons";
 import { servedQuestionCount } from "@/lib/skill-tests";
+
+/** A stamped-seal treatment for a permanently-aced test — visually distinct
+ * from the plain status pills (a fill/border/rotation "stamp" rather than
+ * another same-shaped badge), so a 100% is unmistakable at a glance. */
+function AcedStamp() {
+  return (
+    <span className="inline-flex -rotate-6 items-center gap-1 rounded-md border-2 border-accent-green px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-accent-green">
+      <CheckCircleIcon size={13} />
+      Aced
+    </span>
+  );
+}
 
 function badgeFor(summary: SkillTestAttemptSummary | undefined) {
   if (summary?.locked) {
     return { label: "Locked", className: "bg-surface text-text-muted" };
-  }
-  if (summary?.aced) {
-    return { label: "Aced · 100%", className: "bg-accent-green/20 text-accent-green" };
   }
   if (!summary || summary.status === "not_started") {
     return { label: "Not started", className: "bg-surface text-text-muted" };
@@ -71,9 +80,13 @@ export function VerifiedSkillsPanel({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-semibold text-heading">{template.title}</h3>
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
-                  {badge.label}
-                </span>
+                {summary?.aced ? (
+                  <AcedStamp />
+                ) : (
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
+                    {badge.label}
+                  </span>
+                )}
               </div>
               <p className="mt-1 text-sm text-text-secondary">{template.description}</p>
               <p className="mt-1 text-xs text-text-muted">
