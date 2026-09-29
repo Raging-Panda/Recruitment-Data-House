@@ -4,7 +4,7 @@ import { loadDeveloperHubData } from "@/lib/developer-data";
 import { getGithubAccessToken } from "@/lib/github-connection";
 import { ConnectGithubPrompt } from "@/components/connect-github-prompt";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
+import { applyLevelLocks, rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
 import type { SkillTestTemplate, SkillTestAttemptSummary } from "@ipskill/shared";
 import { VerifiedSkillsPanel } from "@/components/verified-skills-panel";
 import { CodeIcon } from "@/components/icons";
@@ -42,9 +42,13 @@ export default async function SkillsPage() {
         : supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),
     ]);
     templates = (templateRows as TemplateRow[] | null)?.map(rowToTemplate) ?? [];
-    summaries = isDemo
+    const rawSummaries = isDemo
       ? buildDemoAttemptSummaries(templates)
       : summarizeAttempts((attemptRows.data as AttemptRow[]) ?? []);
+    summaries = applyLevelLocks(
+      rawSummaries,
+      templates.map((t) => ({ id: t.id, stack: t.stack, levelOrder: t.levelOrder }))
+    );
   } catch {
     // leave templates/summaries empty — VerifiedSkillsPanel handles zero templates
   }

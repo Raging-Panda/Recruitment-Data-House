@@ -400,6 +400,9 @@ export function buildDemoAttemptSummaries(
       bestPercentage: scores[i % scores.length],
       latestAttemptId: `demo-attempt-${template.id}`,
       completedAt: new Date(NOW - (5 + i * 3) * DAY).toISOString(),
+      aced: false,
+      retakeAvailableAt: null,
+      locked: false,
     });
   });
   return summaries;

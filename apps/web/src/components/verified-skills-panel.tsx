@@ -8,6 +8,12 @@ import { ShieldCheckIcon } from "@/components/icons";
 import { servedQuestionCount } from "@/lib/skill-tests";
 
 function badgeFor(summary: SkillTestAttemptSummary | undefined) {
+  if (summary?.locked) {
+    return { label: "Locked", className: "bg-surface text-text-muted" };
+  }
+  if (summary?.aced) {
+    return { label: "Aced · 100%", className: "bg-accent-green/20 text-accent-green" };
+  }
   if (!summary || summary.status === "not_started") {
     return { label: "Not started", className: "bg-surface text-text-muted" };
   }
@@ -23,10 +29,25 @@ function badgeFor(summary: SkillTestAttemptSummary | undefined) {
   };
 }
 
-function buttonLabel(summary: SkillTestAttemptSummary | undefined) {
-  if (!summary || summary.status === "not_started") return "Start test";
-  if (summary.status === "in_progress") return "Resume";
-  return "Retake";
+/** Whole days until the cooldown lifts, rounded up so "0 days left" never
+ * shows for a timestamp that's technically still a few hours out. */
+function daysRemaining(iso: string): number {
+  const ms = new Date(iso).getTime() - Date.now();
+  return Math.max(1, Math.ceil(ms / (24 * 60 * 60 * 1000)));
+}
+
+/** The button's label and whether the test can actually be started right
+ * now — locked, aced, and cooling-down tests all render as disabled text
+ * instead of a link into the test. */
+function actionFor(summary: SkillTestAttemptSummary | undefined): { label: string; disabled: boolean } {
+  if (summary?.locked) return { label: "Locked", disabled: true };
+  if (summary?.aced) return { label: "Aced", disabled: true };
+  if (summary?.retakeAvailableAt) {
+    return { label: `Retake in ${daysRemaining(summary.retakeAvailableAt)}d`, disabled: true };
+  }
+  if (!summary || summary.status === "not_started") return { label: "Start test", disabled: false };
+  if (summary.status === "in_progress") return { label: "Resume", disabled: false };
+  return { label: "Retake", disabled: false };
 }
 
 export function VerifiedSkillsPanel({
@@ -41,6 +62,7 @@ export function VerifiedSkillsPanel({
       {templates.map((template) => {
         const summary = summaries[template.id];
         const badge = badgeFor(summary);
+        const action = actionFor(summary);
         return (
           <div
             key={template.id}
@@ -56,14 +78,23 @@ export function VerifiedSkillsPanel({
               <p className="mt-1 text-sm text-text-secondary">{template.description}</p>
               <p className="mt-1 text-xs text-text-muted">
                 {servedQuestionCount(template)} questions · {Math.round(template.timeLimitSeconds / 60)} min
+                {summary?.locked && " · pass the previous level to unlock"}
               </p>
             </div>
-            <Link
-              href={`/dashboard/skills/tests/${template.slug}`}
-              className={buttonClass("primary", "md", "whitespace-nowrap")}
-            >
-              {buttonLabel(summary)}
-            </Link>
+            {action.disabled ? (
+              <span
+                className={`${buttonClass("subtle", "md", "whitespace-nowrap")} cursor-not-allowed opacity-60`}
+              >
+                {action.label}
+              </span>
+            ) : (
+              <Link
+                href={`/dashboard/skills/tests/${template.slug}`}
+                className={buttonClass("primary", "md", "whitespace-nowrap")}
+              >
+                {action.label}
+              </Link>
+            )}
           </div>
         );
       })}

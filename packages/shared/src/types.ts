@@ -240,6 +240,15 @@ export interface SkillTestAttemptSummary {
   bestPercentage: number | null;
   latestAttemptId: string | null;
   completedAt: string | null;
+  /** True once any attempt scored 100% — the test is retired for good, no more retakes. */
+  aced: boolean;
+  /** Set while the 7-day retake cooldown from the most recent completed
+   * (non-aced) attempt is still active; null once it's passed or no
+   * completed attempt exists yet. */
+  retakeAvailableAt: string | null;
+  /** True for a leveled test whose same-stack previous level hasn't been
+   * passed yet — always false for level-1 and standalone templates. */
+  locked: boolean;
 }
 
 export interface SkillTestStartResponse {

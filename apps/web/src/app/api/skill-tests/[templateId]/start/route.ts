@@ -3,9 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import {
+  getRetakeState,
   isAttemptExpired,
   rowToPublicQuestion,
   shuffle,
+  VERIFIED_SKILL_THRESHOLD,
   type AttemptRow,
   type QuestionRow,
   type TemplateRow,
@@ -74,6 +76,71 @@ export async function POST(_req: Request, { params }: { params: { templateId: st
       .from("skill_test_attempts")
       .update({ status: "expired" })
       .eq("id", existingAttempt.id);
+  }
+
+  // Starting a genuinely new attempt from here on — enforce the aced/
+  // cooldown/level-lock rules that only apply to a *new* attempt, never to
+  // resuming one already in progress (handled above, before this point).
+  const { data: ownAttempts, error: ownAttemptsError } = await supabase
+    .from("skill_test_attempts")
+    .select("*")
+    .eq("github_id", session.githubId)
+    .eq("template_id", templateRow.id);
+
+  if (ownAttemptsError) {
+    return NextResponse.json({ error: ownAttemptsError.message }, { status: 500 });
+  }
+
+  const { aced, retakeAvailableAt } = getRetakeState(ownAttempts as AttemptRow[]);
+  if (aced) {
+    return NextResponse.json(
+      { error: "You aced this test already — it's retired and can't be retaken." },
+      { status: 403 }
+    );
+  }
+  if (retakeAvailableAt) {
+    return NextResponse.json(
+      { error: "You can retake this test 7 days after your last attempt.", retakeAvailableAt },
+      { status: 403 }
+    );
+  }
+
+  if (templateRow.level !== null && templateRow.level_order !== null && templateRow.level_order > 1) {
+    const { data: prereqTemplate, error: prereqTemplateError } = await supabase
+      .from("skill_test_templates")
+      .select("id")
+      .eq("stack", templateRow.stack)
+      .eq("level_order", templateRow.level_order - 1)
+      .maybeSingle();
+
+    if (prereqTemplateError) {
+      return NextResponse.json({ error: prereqTemplateError.message }, { status: 500 });
+    }
+
+    let prereqBest: number | null = null;
+    if (prereqTemplate) {
+      const { data: prereqAttempts, error: prereqAttemptsError } = await supabase
+        .from("skill_test_attempts")
+        .select("percentage")
+        .eq("github_id", session.githubId)
+        .eq("template_id", prereqTemplate.id)
+        .not("percentage", "is", null)
+        .order("percentage", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (prereqAttemptsError) {
+        return NextResponse.json({ error: prereqAttemptsError.message }, { status: 500 });
+      }
+      prereqBest = prereqAttempts?.percentage ?? null;
+    }
+
+    if (prereqBest === null || prereqBest < VERIFIED_SKILL_THRESHOLD) {
+      return NextResponse.json(
+        { error: "Pass the previous level of this test before starting this one." },
+        { status: 403 }
+      );
+    }
   }
 
   const { data: allQuestions, error: allQuestionsError } = await supabase

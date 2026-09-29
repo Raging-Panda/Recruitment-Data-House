@@ -81,6 +81,41 @@ export function rowToAttempt(row: AttemptRow): SkillTestAttempt {
   };
 }
 
+/** A passed, non-aced test can't be retaken until 7 days after the most
+ * recent completed attempt — long enough to discourage grinding the same
+ * bank, short enough that it's not a real barrier to re-verifying a skill. */
+export const RETAKE_COOLDOWN_DAYS = 7;
+
+/** Aced/cooldown state for one template, from that template's own attempts
+ * only — shared between summarizeAttempts (display) and the /start route
+ * (enforcement) so the two can't drift apart. `retakeAvailableAt` is null
+ * once aced, once the cooldown has passed, or with no completed attempt
+ * yet — i.e. whenever a new attempt is currently allowed to start. */
+export function getRetakeState(attemptsForTemplate: AttemptRow[]): {
+  aced: boolean;
+  retakeAvailableAt: string | null;
+} {
+  const completed = attemptsForTemplate.filter((a) => a.percentage !== null);
+  const best = completed.reduce<AttemptRow | null>(
+    (acc, a) => (acc === null || (a.percentage ?? 0) > (acc.percentage ?? 0) ? a : acc),
+    null
+  );
+  const mostRecentCompleted = completed.reduce<AttemptRow | null>(
+    (acc, a) => (acc === null || (a.submitted_at ?? "") > (acc.submitted_at ?? "") ? a : acc),
+    null
+  );
+  const aced = best?.percentage === 100;
+  if (aced || !mostRecentCompleted?.submitted_at) return { aced, retakeAvailableAt: null };
+
+  const availableAt = new Date(
+    new Date(mostRecentCompleted.submitted_at).getTime() + RETAKE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
+  );
+  return {
+    aced,
+    retakeAvailableAt: availableAt.getTime() > Date.now() ? availableAt.toISOString() : null,
+  };
+}
+
 /** Groups a candidate's attempts into one summary per template for the Skills page list. */
 export function summarizeAttempts(attempts: AttemptRow[]): Map<string, SkillTestAttemptSummary> {
   const byTemplate = new Map<string, AttemptRow[]>();
@@ -98,6 +133,7 @@ export function summarizeAttempts(attempts: AttemptRow[]): Map<string, SkillTest
       (acc, a) => (acc === null || (a.percentage ?? 0) > (acc.percentage ?? 0) ? a : acc),
       null
     );
+    const { aced, retakeAvailableAt } = getRetakeState(list);
 
     if (inProgress) {
       summaries.set(templateId, {
@@ -106,6 +142,9 @@ export function summarizeAttempts(attempts: AttemptRow[]): Map<string, SkillTest
         bestPercentage: best?.percentage ?? null,
         latestAttemptId: inProgress.id,
         completedAt: best?.submitted_at ?? null,
+        aced,
+        retakeAvailableAt,
+        locked: false,
       });
     } else if (best) {
       summaries.set(templateId, {
@@ -114,6 +153,9 @@ export function summarizeAttempts(attempts: AttemptRow[]): Map<string, SkillTest
         bestPercentage: best.percentage,
         latestAttemptId: best.id,
         completedAt: best.submitted_at,
+        aced,
+        retakeAvailableAt,
+        locked: false,
       });
     } else {
       const mostRecent = list[0];
@@ -123,11 +165,56 @@ export function summarizeAttempts(attempts: AttemptRow[]): Map<string, SkillTest
         bestPercentage: null,
         latestAttemptId: mostRecent.id,
         completedAt: null,
+        aced: false,
+        retakeAvailableAt: null,
+        locked: false,
       });
     }
   }
 
   return summaries;
+}
+
+/** Marks a leveled test locked until the same stack's previous level has
+ * been passed (>= VERIFIED_SKILL_THRESHOLD) — level 1 and standalone
+ * (non-leveled, levelOrder === null) templates are never locked, and
+ * passing unlocks the next level immediately, with no extra wait beyond
+ * the retake cooldown that already applies to the passed test itself.
+ * Returns one entry per template, including ones the candidate has no
+ * attempt on yet (as "not_started"), so the Skills page can render every
+ * active template's lock/aced/cooldown state in one pass. */
+export function applyLevelLocks(
+  summaries: Map<string, SkillTestAttemptSummary>,
+  templates: { id: string; stack: string; levelOrder: number | null }[]
+): Map<string, SkillTestAttemptSummary> {
+  const byStackLevel = new Map<string, string>();
+  for (const t of templates) {
+    if (t.levelOrder !== null) byStackLevel.set(`${t.stack}:${t.levelOrder}`, t.id);
+  }
+
+  const result = new Map<string, SkillTestAttemptSummary>();
+  for (const t of templates) {
+    const existing: SkillTestAttemptSummary = summaries.get(t.id) ?? {
+      templateId: t.id,
+      status: "not_started",
+      bestPercentage: null,
+      latestAttemptId: null,
+      completedAt: null,
+      aced: false,
+      retakeAvailableAt: null,
+      locked: false,
+    };
+
+    let locked = false;
+    if (t.levelOrder !== null && t.levelOrder > 1) {
+      const prereqId = byStackLevel.get(`${t.stack}:${t.levelOrder - 1}`);
+      const prereqBest = prereqId ? (summaries.get(prereqId)?.bestPercentage ?? null) : null;
+      locked = prereqBest === null || prereqBest < VERIFIED_SKILL_THRESHOLD;
+    }
+
+    result.set(t.id, { ...existing, locked });
+  }
+  return result;
 }
 
 /** Fisher-Yates — served question order is shuffled per attempt so a shared

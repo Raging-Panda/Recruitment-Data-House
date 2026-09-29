@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
+import { applyLevelLocks, rowToTemplate, summarizeAttempts, type AttemptRow, type TemplateRow } from "@/lib/skill-tests";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -33,10 +33,14 @@ export async function GET() {
     return NextResponse.json({ error: attemptsError.message }, { status: 500 });
   }
 
-  const summaries = summarizeAttempts(attempts as AttemptRow[]);
+  const mappedTemplates = (templates as TemplateRow[]).map(rowToTemplate);
+  const summaries = applyLevelLocks(
+    summarizeAttempts(attempts as AttemptRow[]),
+    mappedTemplates.map((t) => ({ id: t.id, stack: t.stack, levelOrder: t.levelOrder }))
+  );
 
   return NextResponse.json({
-    templates: (templates as TemplateRow[]).map(rowToTemplate),
+    templates: mappedTemplates,
     summaries: Object.fromEntries(summaries),
   });
 }
