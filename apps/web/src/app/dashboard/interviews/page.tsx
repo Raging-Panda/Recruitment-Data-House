@@ -6,8 +6,12 @@ import { getDirectoryEntriesByIds } from "@/lib/directory";
 import { EmptyState } from "@/components/empty-state";
 import { CalendarIcon } from "@/components/icons";
 import { InterviewCard } from "@/components/interview-card";
+import { notFound } from "next/navigation";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export default async function InterviewsPage() {
+  if (V1_MODE) notFound();
+
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
   const interviews = isDemo ? [] : await listInterviewsFor(session!.githubId!).catch(() => []);

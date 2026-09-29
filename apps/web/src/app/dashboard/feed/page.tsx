@@ -5,6 +5,8 @@ import { getDirectoryEntriesByIds } from "@/lib/directory";
 import { EmptyState } from "@/components/empty-state";
 import { ActivityIcon } from "@/components/icons";
 import { KudosButton } from "@/components/kudos-button";
+import { notFound } from "next/navigation";
+import { V1_MODE } from "@/lib/v1-mode";
 
 const TYPE_LABELS: Record<string, string> = {
   skill_test_completed: "passed a skill test",
@@ -21,6 +23,8 @@ function timeAgo(iso: string): string {
 }
 
 export default async function FeedPage() {
+  if (V1_MODE) notFound();
+
   const session = await getServerSession(authOptions);
   const events = await getFollowingFeed(session!.githubId!).catch(() => []);
   const owners = await getDirectoryEntriesByIds([...new Set(events.map((e) => e.ownerId))]).catch(() => []);

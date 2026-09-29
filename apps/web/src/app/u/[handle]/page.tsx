@@ -13,6 +13,7 @@ import { getSkillProofsForSafe } from "@/lib/skill-proofs";
 import { getFeaturedProjectsSafe, MAX_FEATURED_PROJECTS } from "@/lib/featured-projects";
 import { ScoreRing } from "@/components/score-ring";
 import { EndorsementList } from "@/components/endorsement-list";
+import { V1_MODE } from "@/lib/v1-mode";
 import { EndorsementForm } from "@/components/endorsement-form";
 import { SkillProofsList } from "@/components/skill-proofs-list";
 import { FeaturedProjectsManager } from "@/components/featured-projects-manager";
@@ -149,7 +150,7 @@ export default async function PublicHandleProfilePage({
           </div>
         )}
 
-        {skillProofs.length > 0 && (
+        {!V1_MODE && skillProofs.length > 0 && (
           <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
             <h2 className="text-sm font-semibold text-heading">Proof of Work</h2>
             <p className="mt-1 text-xs text-text-muted">
@@ -176,24 +177,26 @@ export default async function PublicHandleProfilePage({
           </div>
         )}
 
-        <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
-          <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
-          <div className="mt-3">
-            <EndorsementList endorsements={endorsements} />
+        {!V1_MODE && (
+          <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+            <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
+            <div className="mt-3">
+              <EndorsementList endorsements={endorsements} />
+            </div>
+            {canEndorse ? (
+              <EndorsementForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
+            ) : (
+              !viewerGithubId && (
+                <p className="mt-3 text-xs text-text-muted">
+                  <Link href="/login" className="text-primary hover:underline">
+                    Sign in
+                  </Link>{" "}
+                  to endorse {entry.displayName.split(" ")[0]}.
+                </p>
+              )
+            )}
           </div>
-          {canEndorse ? (
-            <EndorsementForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
-          ) : (
-            !viewerGithubId && (
-              <p className="mt-3 text-xs text-text-muted">
-                <Link href="/login" className="text-primary hover:underline">
-                  Sign in
-                </Link>{" "}
-                to endorse {entry.displayName.split(" ")[0]}.
-              </p>
-            )
-          )}
-        </div>
+        )}
 
         <p className="mt-8 text-center text-xs text-text-muted">
           <a href={`/api/badge/${params.handle}.svg`} className="underline decoration-dotted">

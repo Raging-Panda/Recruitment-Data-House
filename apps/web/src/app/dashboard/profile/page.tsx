@@ -29,6 +29,7 @@ import { DisplayNameEditor } from "@/components/display-name-editor";
 import { ProfileNarrativeEditor } from "@/components/profile-narrative-editor";
 import { FeaturedProjectsManager } from "@/components/featured-projects-manager";
 import { CareerTimeline } from "@/components/career-timeline";
+import { V1_MODE } from "@/lib/v1-mode";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { EndorsementList } from "@/components/endorsement-list";
 import { PublicProfileLinkCard } from "@/components/public-profile-link-card";
@@ -174,37 +175,43 @@ async function ThinProfile({ session }: { session: Session }) {
         />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
-        <h2 className="text-sm font-semibold text-heading">Verified Skills</h2>
-        <p className="mt-1 text-sm text-text-muted">
-          Proctored-free knowledge checks — don&apos;t need GitHub, a good way to build signal in
-          the meantime.
-        </p>
-        <div className="mt-2">
-          <GetVerifiedSkillButton options={skillTestOptions} />
+      {!V1_MODE && (
+        <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <h2 className="text-sm font-semibold text-heading">Verified Skills</h2>
+          <p className="mt-1 text-sm text-text-muted">
+            Proctored-free knowledge checks — don&apos;t need GitHub, a good way to build signal
+            in the meantime.
+          </p>
+          <div className="mt-2">
+            <GetVerifiedSkillButton options={skillTestOptions} />
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
-        <p className="mt-1 text-xs text-text-muted">
-          Roles, certifications, and verified skills as one dated story.
-        </p>
-        <div className="mt-4">
-          <CareerTimeline
-            experience={career.experience}
-            certifications={career.certifications}
-            verifiedSkills={career.verifiedSkills}
-          />
+      {!V1_MODE && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
+          <p className="mt-1 text-xs text-text-muted">
+            Roles, certifications, and verified skills as one dated story.
+          </p>
+          <div className="mt-4">
+            <CareerTimeline
+              experience={career.experience}
+              certifications={career.certifications}
+              verifiedSkills={career.verifiedSkills}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
-        <div className="mt-4">
-          <EndorsementList endorsements={endorsements} />
+      {!V1_MODE && (
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
+          <div className="mt-4">
+            <EndorsementList endorsements={endorsements} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -350,9 +357,11 @@ export default async function ProfilePage() {
         <ExternalLinksManager initialEntries={externalLinks} readOnly={isDemo} />
       </div>
 
-      <div className="mt-8">
-        <SkillProofsManager initialEntries={skillProofs} readOnly={isDemo} />
-      </div>
+      {!V1_MODE && (
+        <div className="mt-8">
+          <SkillProofsManager initialEntries={skillProofs} readOnly={isDemo} />
+        </div>
+      )}
 
       <div className="mt-8">
         <PublicIdentityCard
@@ -397,59 +406,65 @@ export default async function ProfilePage() {
 
         <PublicProfileLinkCard initialStatus={linkStatus} isDemo={isDemo} />
 
-        <InfoCard title="Export Profile">
-          <p className="pt-1 text-sm text-text-muted">
-            A one-page PDF summary of your profile and skill fingerprint — pairs well with your
-            share link above for sending directly to a client.
-          </p>
-          <a
-            href="/api/profile/pdf"
-            download={`ipskill-${profile.githubLogin}-profile.pdf`}
-            className={`${buttonClass("primary", "sm")} mt-2 inline-flex`}
-          >
-            Download PDF
-          </a>
-          <p className="mt-3 pt-1 text-sm text-text-muted">
-            A signed JSON attestation of your score — tamper-evident, verifiable by anyone at{" "}
-            <code className="text-xs">/api/profile/attestation/verify</code>.
-          </p>
-          <a
-            href="/api/profile/attestation"
-            download={`ipskill-${profile.githubLogin}-attestation.json`}
-            className={`${buttonClass("subtle", "sm")} mt-2 inline-flex`}
-          >
-            Download Signed Snapshot
-          </a>
-        </InfoCard>
+        {!V1_MODE && (
+          <InfoCard title="Export Profile">
+            <p className="pt-1 text-sm text-text-muted">
+              A one-page PDF summary of your profile and skill fingerprint — pairs well with your
+              share link above for sending directly to a client.
+            </p>
+            <a
+              href="/api/profile/pdf"
+              download={`ipskill-${profile.githubLogin}-profile.pdf`}
+              className={`${buttonClass("primary", "sm")} mt-2 inline-flex`}
+            >
+              Download PDF
+            </a>
+            <p className="mt-3 pt-1 text-sm text-text-muted">
+              A signed JSON attestation of your score — tamper-evident, verifiable by anyone at{" "}
+              <code className="text-xs">/api/profile/attestation/verify</code>.
+            </p>
+            <a
+              href="/api/profile/attestation"
+              download={`ipskill-${profile.githubLogin}-attestation.json`}
+              className={`${buttonClass("subtle", "sm")} mt-2 inline-flex`}
+            >
+              Download Signed Snapshot
+            </a>
+          </InfoCard>
+        )}
 
-        <InfoCard title="Verified Skills">
-          <p className="pt-1 text-sm text-text-muted">
-            Add another language or framework to your Verified Skills — a proctored-free knowledge
-            check, separate from your GitHub-derived fingerprint.
+        {!V1_MODE && (
+          <InfoCard title="Verified Skills">
+            <p className="pt-1 text-sm text-text-muted">
+              Add another language or framework to your Verified Skills — a proctored-free
+              knowledge check, separate from your GitHub-derived fingerprint.
+            </p>
+            <div className="mt-2">
+              <GetVerifiedSkillButton options={skillTestOptions} />
+            </div>
+          </InfoCard>
+        )}
+      </div>
+
+      {!V1_MODE && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
+          <p className="mt-1 text-xs text-text-muted">
+            Roles, certifications, verified skills, and a few GitHub milestones as one dated
+            story. Day-to-day GitHub activity lives on the Projects page.
           </p>
-          <div className="mt-2">
-            <GetVerifiedSkillButton options={skillTestOptions} />
+          <div className="mt-4">
+            <CareerTimeline
+              experience={career.experience}
+              certifications={career.certifications}
+              verifiedSkills={career.verifiedSkills}
+              joinedGithubAt={profile.joinedGithubAt}
+              featuredProjects={featuredProjects}
+              projects={projects}
+            />
           </div>
-        </InfoCard>
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-heading">Career Timeline</h2>
-        <p className="mt-1 text-xs text-text-muted">
-          Roles, certifications, verified skills, and a few GitHub milestones as one dated story.
-          Day-to-day GitHub activity lives on the Projects page.
-        </p>
-        <div className="mt-4">
-          <CareerTimeline
-            experience={career.experience}
-            certifications={career.certifications}
-            verifiedSkills={career.verifiedSkills}
-            joinedGithubAt={profile.joinedGithubAt}
-            featuredProjects={featuredProjects}
-            projects={projects}
-          />
         </div>
-      </div>
+      )}
 
       <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
         <h2 className="text-sm font-semibold text-heading">Contribution Activity</h2>
@@ -462,16 +477,18 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
-        <p className="mt-1 text-xs text-text-muted">
-          A human signal from other developers on the platform, alongside your GitHub-derived
-          fingerprint. Given by other devs from your Directory profile.
-        </p>
-        <div className="mt-4">
-          <EndorsementList endorsements={endorsements} />
+      {!V1_MODE && (
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-heading">Endorsements</h2>
+          <p className="mt-1 text-xs text-text-muted">
+            A human signal from other developers on the platform, alongside your GitHub-derived
+            fingerprint. Given by other devs from your Directory profile.
+          </p>
+          <div className="mt-4">
+            <EndorsementList endorsements={endorsements} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

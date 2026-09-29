@@ -9,6 +9,7 @@ import { useTheme } from "./theme-provider";
 import { useToast } from "./toast-provider";
 import { setPendingToast } from "@/lib/pending-toast";
 import { PLAN_LABELS, type Plan } from "@/lib/plan";
+import { V1_MODE } from "@/lib/v1-mode";
 import {
   HomeIcon,
   PersonIcon,
@@ -28,26 +29,28 @@ import {
   CalendarIcon,
 } from "./icons";
 
-const NAV_ITEMS = [
+const ALL_NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: HomeIcon },
   { href: "/dashboard/profile", label: "Profile", icon: PersonIcon },
-  { href: "/dashboard/skills", label: "Skills", icon: CodeIcon },
+  { href: "/dashboard/skills", label: "Skills", icon: CodeIcon, v1: false },
   { href: "/dashboard/projects", label: "Projects", icon: BriefcaseIcon },
   { href: "/dashboard/experience", label: "Experience", icon: LayersIcon },
   { href: "/dashboard/certifications", label: "Certifications", icon: ShieldCheckIcon },
-  { href: "/dashboard/achievements", label: "Achievements", icon: StarIcon },
+  { href: "/dashboard/achievements", label: "Achievements", icon: StarIcon, v1: false },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChartIcon },
   // The public developer index (/directory) — unauthenticated, outside
   // the /dashboard route tree entirely, so this is a genuine "leave the
   // dashboard shell" link, not an active-state-tracked internal page.
   { href: "/directory", label: "Discover", icon: SearchIcon },
-  { href: "/dashboard/feed", label: "Feed", icon: ActivityIcon },
-  { href: "/dashboard/roles", label: "Open Roles", icon: BriefcaseIcon },
-  { href: "/dashboard/messages", label: "Messages", icon: BellIcon },
-  { href: "/dashboard/interviews", label: "Interviews", icon: CalendarIcon },
-  { href: "/dashboard/growth", label: "Growth Olympics", icon: UsersIcon },
+  { href: "/dashboard/feed", label: "Feed", icon: ActivityIcon, v1: false },
+  { href: "/dashboard/roles", label: "Open Roles", icon: BriefcaseIcon, v1: false },
+  { href: "/dashboard/messages", label: "Messages", icon: BellIcon, v1: false },
+  { href: "/dashboard/interviews", label: "Interviews", icon: CalendarIcon, v1: false },
+  { href: "/dashboard/growth", label: "Growth Olympics", icon: UsersIcon, v1: false },
   { href: "/dashboard/settings", label: "Settings", icon: GearIcon },
 ];
+
+const NAV_ITEMS = ALL_NAV_ITEMS.filter((item) => !(V1_MODE && item.v1 === false));
 
 export function Sidebar({
   userName,

@@ -23,6 +23,7 @@ import { MessageButton } from "@/components/message-button";
 import { ProposeInterviewForm } from "@/components/propose-interview-form";
 import { isFollowing } from "@/lib/social";
 import { generateCandidateSummary } from "@/lib/candidate-summary";
+import { V1_MODE } from "@/lib/v1-mode";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
 
 export default async function DirectoryProfilePage({
@@ -171,7 +172,7 @@ export default async function DirectoryProfilePage({
         </div>
       )}
 
-      {skillProofs.length > 0 && (
+      {!V1_MODE && skillProofs.length > 0 && (
         <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
           <h2 className="text-sm font-semibold text-heading">Proof of Work</h2>
           <div className="mt-3">
@@ -180,29 +181,31 @@ export default async function DirectoryProfilePage({
         </div>
       )}
 
-      <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
-        <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
-        <p className="mt-1 text-xs text-text-secondary">
-          A human signal from other developers on the platform, alongside the GitHub-derived
-          fingerprint.
-        </p>
-        <div className="mt-3">
-          <EndorsementList endorsements={endorsements} />
+      {!V1_MODE && (
+        <div className="mt-6 rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <h2 className="text-sm font-semibold text-heading">Endorsements</h2>
+          <p className="mt-1 text-xs text-text-secondary">
+            A human signal from other developers on the platform, alongside the GitHub-derived
+            fingerprint.
+          </p>
+          <div className="mt-3">
+            <EndorsementList endorsements={endorsements} />
+          </div>
+          {!isDemo && viewerGithubId !== entry.githubId && (
+            <EndorsementForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
+          )}
         </div>
-        {!isDemo && viewerGithubId !== entry.githubId && (
-          <EndorsementForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
-        )}
-      </div>
+      )}
 
       <div className="mt-6 rounded-2xl border border-dashed border-surface-border bg-background-elevated p-5 text-center">
-        {!isDemo && viewerGithubId !== entry.githubId ? (
+        {!V1_MODE && !isDemo && viewerGithubId !== entry.githubId ? (
           <div className="flex flex-col items-center gap-3">
             <MessageButton targetId={entry.githubId} preference={messagePreference} />
             <ProposeInterviewForm candidateGithubId={entry.githubId} candidateName={entry.displayName} />
           </div>
         ) : (
           <p className="text-sm text-text-secondary">
-            {isDemo ? "Messaging isn't available on the shared demo account." : "This is your own profile."}
+            {isDemo ? "Messaging isn't available on the shared demo account." : !V1_MODE ? "This is your own profile." : ""}
           </p>
         )}
         <Link

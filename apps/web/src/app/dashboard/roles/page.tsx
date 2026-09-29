@@ -5,8 +5,12 @@ import { loadDeveloperHubData } from "@/lib/developer-data";
 import { listJobRoles, computeRoleMatch } from "@/lib/job-roles";
 import { EmptyState } from "@/components/empty-state";
 import { BriefcaseIcon } from "@/components/icons";
+import { notFound } from "next/navigation";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export default async function RolesPage() {
+  if (V1_MODE) notFound();
+
   const session = await getServerSession(authOptions);
   const githubToken = await getGithubAccessToken(session);
   const roles = await listJobRoles().catch(() => []);

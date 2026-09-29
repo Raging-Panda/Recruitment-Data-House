@@ -12,8 +12,12 @@ import { isDemoAccount } from "@/lib/demo-mode";
 import { buildDemoAttemptSummaries } from "@/lib/demo-data";
 import { describeSkillFreshness } from "@/lib/analysis";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
+import { notFound } from "next/navigation";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export default async function SkillsPage() {
+  if (V1_MODE) notFound();
+
   const session = await getServerSession(authOptions);
   const githubToken = await getGithubAccessToken(session);
   if (!githubToken) return <ConnectGithubPrompt page="Skills" />;

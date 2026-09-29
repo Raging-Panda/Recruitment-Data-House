@@ -8,6 +8,8 @@ import { getDirectoryEntriesByIds } from "@/lib/directory";
 import { EmptyState } from "@/components/empty-state";
 import { BellIcon } from "@/components/icons";
 import { MessageRequestRow } from "@/components/message-request-row";
+import { notFound } from "next/navigation";
+import { V1_MODE } from "@/lib/v1-mode";
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -18,6 +20,8 @@ function timeAgo(iso: string | null): string {
 }
 
 export default async function MessagesPage() {
+  if (V1_MODE) notFound();
+
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
   const allConversations = isDemo ? [] : await listConversations(session!.githubId!).catch(() => []);
