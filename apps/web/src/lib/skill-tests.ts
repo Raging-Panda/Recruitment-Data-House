@@ -141,6 +141,20 @@ export function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
+/** How many questions an attempt is actually served — the lesser of the
+ * full bank and the authored target, once the bank has grown past it.
+ * Mirrors the sampling in the /start route, so the UI never advertises a
+ * question count higher than what a test-taker will actually see. */
+export function servedQuestionCount(template: {
+  questionCount: number;
+  targetQuestionCount: number | null;
+}): number {
+  if (!template.targetQuestionCount || template.targetQuestionCount <= 0) {
+    return template.questionCount;
+  }
+  return Math.min(template.targetQuestionCount, template.questionCount);
+}
+
 export function isAttemptExpired(attempt: AttemptRow, timeLimitSeconds: number): boolean {
   const elapsedMs = Date.now() - new Date(attempt.started_at).getTime();
   return elapsedMs > timeLimitSeconds * 1000;

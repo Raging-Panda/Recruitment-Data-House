@@ -5,6 +5,7 @@ import type { SkillTestAttemptSummary, SkillTestTemplate } from "@ipskill/shared
 import { buttonClass } from "@/lib/button-styles";
 import { EmptyState } from "@/components/empty-state";
 import { ShieldCheckIcon } from "@/components/icons";
+import { servedQuestionCount } from "@/lib/skill-tests";
 
 function badgeFor(summary: SkillTestAttemptSummary | undefined) {
   if (!summary || summary.status === "not_started") {
@@ -54,7 +55,7 @@ export function VerifiedSkillsPanel({
               </div>
               <p className="mt-1 text-sm text-text-secondary">{template.description}</p>
               <p className="mt-1 text-xs text-text-muted">
-                {template.questionCount} questions · {Math.round(template.timeLimitSeconds / 60)} min
+                {servedQuestionCount(template)} questions · {Math.round(template.timeLimitSeconds / 60)} min
               </p>
             </div>
             <Link

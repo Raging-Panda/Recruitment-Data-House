@@ -201,11 +201,15 @@ export interface SkillTestTemplate {
   stack: string;
   description: string;
   timeLimitSeconds: number;
+  /** Size of the full authored bank for this tier — may exceed what any
+   * one attempt is served once targetQuestionCount is set. */
   questionCount: number;
   /** Null for the original single-tier "Fundamentals" templates. */
   level: SkillTestLevel | null;
   levelOrder: number | null;
-  /** Content-authoring target for this tier — not enforced, questionCount is the real count. */
+  /** How many questions an attempt is served, sampled at random from the
+   * bank — the /start route serves the whole (shuffled) bank when this is
+   * null or the bank hasn't grown past it yet. */
   targetQuestionCount: number | null;
 }
 

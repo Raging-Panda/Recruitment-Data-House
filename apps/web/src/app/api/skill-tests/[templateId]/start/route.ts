@@ -86,7 +86,16 @@ export async function POST(_req: Request, { params }: { params: { templateId: st
     return NextResponse.json({ error: "This test has no questions yet" }, { status: 500 });
   }
 
-  const servedQuestions = shuffle(allQuestions as QuestionRow[]);
+  // Sample target_question_count at random from the bank once it's grown
+  // past that size, instead of always serving every question — falls back
+  // to the whole (shuffled) bank when no target is set or the bank hasn't
+  // outgrown it yet, so this is a no-op for today's smaller banks.
+  const shuffled = shuffle(allQuestions as QuestionRow[]);
+  const serveCount =
+    templateRow.target_question_count && templateRow.target_question_count > 0
+      ? Math.min(templateRow.target_question_count, shuffled.length)
+      : shuffled.length;
+  const servedQuestions = shuffled.slice(0, serveCount);
   const servedQuestionIds = servedQuestions.map((q) => q.id);
 
   const { data: newAttempt, error: insertError } = await supabase
