@@ -1,6 +1,7 @@
 import type { DeveloperProfile } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isDemoAccount } from "@/lib/demo-mode";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export interface OnboardingItem {
   id: string;
@@ -97,13 +98,21 @@ export async function getOnboardingChecklist(
       href: "/dashboard/certifications",
       external: false,
     },
-    {
-      id: "skill-test",
-      label: "Run a skill test",
-      done: hasSkillTest,
-      href: "/dashboard/skills",
-      external: false,
-    },
+    // Skill tests are hidden in v1 mode (/dashboard/skills 404s) — leaving
+    // this in would permanently cap completion below 100% and link to a
+    // dead page, so it's dropped from the checklist entirely rather than
+    // just hidden like the other v1-cut widgets.
+    ...(V1_MODE
+      ? []
+      : [
+          {
+            id: "skill-test",
+            label: "Run a skill test",
+            done: hasSkillTest,
+            href: "/dashboard/skills",
+            external: false,
+          },
+        ]),
   ];
 
   const percentage = Math.round((items.filter((item) => item.done).length / items.length) * 100);

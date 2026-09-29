@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { rowToNotification, type NotificationRow } from "@/lib/notifications";
 import { isDemoAccount } from "@/lib/demo-mode";
 import { DEMO_NOTIFICATIONS } from "@/lib/demo-data";
+import { V1_MODE } from "@/lib/v1-mode";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -13,8 +14,14 @@ export async function GET() {
   }
 
   if (isDemoAccount(session.githubId)) {
-    const unreadCount = DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length;
-    return NextResponse.json({ notifications: DEMO_NOTIFICATIONS, unreadCount });
+    // The skill-test-completed fixture links to /dashboard/skills, which
+    // 404s in v1 mode — drop it there rather than ship a dead link on the
+    // one account this app's demo/preview traffic actually clicks through.
+    const notifications = V1_MODE
+      ? DEMO_NOTIFICATIONS.filter((n) => n.type !== "skill_test_completed")
+      : DEMO_NOTIFICATIONS;
+    const unreadCount = notifications.filter((n) => !n.isRead).length;
+    return NextResponse.json({ notifications, unreadCount });
   }
 
   const { data, error } = await getSupabaseAdmin()
