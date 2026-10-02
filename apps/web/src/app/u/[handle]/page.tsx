@@ -22,6 +22,8 @@ import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar
 import { relativeDate } from "@/lib/time-ago";
 import { buildPersonJsonLd, serializeJsonLd } from "@/lib/json-ld";
 import { getSiteUrl } from "@/lib/site-url";
+import { getVerificationBadges } from "@/lib/verification";
+import { VerificationBadges } from "@/components/verification-badges";
 
 // Unauthenticated route — no cookies()/session read, so Next won't treat
 // it as dynamic automatically and the fetch data-cache can otherwise
@@ -88,6 +90,9 @@ export default async function PublicHandleProfilePage({
   const externalLinks = await getExternalLinksSafe(entry.githubId);
   const skillProofs = await getSkillProofsForSafe(entry.githubId);
   const featuredProjects = await getFeaturedProjectsSafe(entry.githubId);
+  // Trust badges are a post-v1 layer — hidden behind the v1 flag like the
+  // other cut features.
+  const verificationBadges = V1_MODE ? [] : await getVerificationBadges(entry.githubId);
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -113,6 +118,7 @@ export default async function PublicHandleProfilePage({
             <p className="text-sm text-text-secondary">{entry.headline}</p>
             {entry.location && <p className="mt-1 text-xs text-text-muted">📍 {entry.location}</p>}
             {entry.company && <p className="text-xs text-text-muted">🏢 {entry.company}</p>}
+            <VerificationBadges badges={verificationBadges} />
             <p className="mt-3 max-w-md whitespace-pre-line text-sm text-text-secondary">
               {entry.about ?? "No bio provided."}
             </p>

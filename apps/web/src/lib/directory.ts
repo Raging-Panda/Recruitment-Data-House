@@ -6,6 +6,7 @@ import type {
 } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { notifySavedSearchMatches } from "@/lib/saved-searches";
+import { getHiddenIdsSafe } from "@/lib/verification";
 
 export interface DirectoryRow {
   github_id: string;
@@ -185,7 +186,10 @@ export async function getDirectoryEntryByHandle(handle: string): Promise<Directo
     .eq("visibility", "public")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  return data ? rowToDirectoryEntry(data as DirectoryRow) : null;
+  if (!data) return null;
+  // An admin takedown 404s exactly like a private/nonexistent handle.
+  if ((await getHiddenIdsSafe()).has((data as DirectoryRow).github_id)) return null;
+  return rowToDirectoryEntry(data as DirectoryRow);
 }
 
 export async function getPublicDirectoryEntries(): Promise<DirectoryEntry[]> {
@@ -195,7 +199,8 @@ export async function getPublicDirectoryEntries(): Promise<DirectoryEntry[]> {
     .eq("visibility", "public")
     .order("overall_score", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data as DirectoryRow[]).map(rowToDirectoryEntry);
+  const hidden = await getHiddenIdsSafe();
+  return (data as DirectoryRow[]).filter((r) => !hidden.has(r.github_id)).map(rowToDirectoryEntry);
 }
 
 export async function getPublicDirectoryEntriesByCompany(company: string): Promise<DirectoryEntry[]> {
@@ -206,7 +211,8 @@ export async function getPublicDirectoryEntriesByCompany(company: string): Promi
     .ilike("company", company)
     .order("overall_score", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data as DirectoryRow[]).map(rowToDirectoryEntry);
+  const hidden = await getHiddenIdsSafe();
+  return (data as DirectoryRow[]).filter((r) => !hidden.has(r.github_id)).map(rowToDirectoryEntry);
 }
 
 export async function getDirectoryEntriesByIds(githubIds: string[]): Promise<DirectoryEntry[]> {
