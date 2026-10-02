@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { DEMO_GITHUB_ID } from "@/lib/demo-mode";
 import { VERIFIED_SKILL_THRESHOLD } from "@/lib/skill-tests";
@@ -19,6 +20,9 @@ const NONE: ProfileModeration = { adminVerified: false, hidden: false };
  * error — including the table not existing yet pre-migration — so a
  * Supabase hiccup never takes a public profile down. */
 export async function getModerationSafe(githubId: string): Promise<ProfileModeration> {
+  // A takedown or review must show up on the very next request, not after
+  // Next's fetch cache happens to expire.
+  noStore();
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("profile_verifications")
@@ -87,6 +91,7 @@ export async function getVerificationBadges(
 /** Ids an admin has taken down. Safe-fallback to "none hidden" so a
  * missing table (pre-migration) or Supabase error can't blank the index. */
 export async function getHiddenIdsSafe(): Promise<Set<string>> {
+  noStore();
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("profile_verifications")
