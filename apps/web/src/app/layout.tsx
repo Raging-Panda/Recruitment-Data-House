@@ -5,8 +5,10 @@ import "./globals.css";
 import { SessionProviderWrapper } from "@/components/session-provider-wrapper";
 import { ThemeProvider, ThemeFlashGuard } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: "IPSkill — Unique Skills, Perfect Match.",
   description: "The developer hub for verified, skill-validated tech candidates.",
 };

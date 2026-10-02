@@ -20,6 +20,8 @@ import { FeaturedProjectsManager } from "@/components/featured-projects-manager"
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { SkillRadarChartLazy as SkillRadarChart } from "@/components/skill-radar-chart-lazy";
 import { relativeDate } from "@/lib/time-ago";
+import { buildPersonJsonLd, serializeJsonLd } from "@/lib/json-ld";
+import { getSiteUrl } from "@/lib/site-url";
 
 // Unauthenticated route — no cookies()/session read, so Next won't treat
 // it as dynamic automatically and the fetch data-cache can otherwise
@@ -49,7 +51,14 @@ export async function generateMetadata({
   return {
     title,
     description,
-    openGraph: { title, description, images: [`/u/${params.handle}/opengraph-image`] },
+    alternates: { canonical: `${getSiteUrl()}/u/${params.handle}` },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `${getSiteUrl()}/u/${params.handle}`,
+      images: [`/u/${params.handle}/opengraph-image`],
+    },
     twitter: { card: "summary_large_image", title, description },
   };
 }
@@ -82,6 +91,11 @@ export default async function PublicHandleProfilePage({
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
+      <script
+        type="application/ld+json"
+        // serializeJsonLd escapes "<" so a profile field can't close the tag.
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildPersonJsonLd(entry, params.handle)) }}
+      />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-2">
           <IPSkillLogo size={28} />
