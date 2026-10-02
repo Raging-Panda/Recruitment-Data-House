@@ -486,13 +486,32 @@ windowed treatment.
   ability, not historical totals. Verified via Playwright with a
   deliberately-stale fixture (Terraform, ~600 days) correctly flagged
   while fresher languages show plain unstyled captions.
-- **Verification badges on the public profile** — once the
-  candidate-verification layer from `PLAN.md` exists, surface exactly
-  which checks passed (ID, qualification, employment history) as
-  visible badges, not just an internal status field.
-- **Admin/moderation dashboard** — internal tooling for the IPSkill
-  team to review flagged profiles, manage verification statuses, and
-  handle reported abuse (referral fraud, duplicate accounts, etc.).
+- **Verification badges on the public profile** — 🟡 partially shipped.
+  `/u/[handle]` shows badges for checks that are backed by real data,
+  each stating exactly what was verified: **GitHub-verified** (signed in
+  through GitHub), **N verified skills** (passed tests at >= 70%), and
+  **Reviewed by IPSkill** (set by an admin). Behind the v1 flag like the
+  other trust features. Computed at read time (`lib/verification.ts`),
+  except the admin flag, which lives in `profile_verifications`
+  (`db/migrations/0013_profile_verifications.sql`). **Still open:** the
+  checks the original item named — ID, qualification and employment
+  history — need a real data source (see "Verified work history") and
+  are deliberately absent rather than faked; a GitHub-account-age badge
+  would need the join date added to the directory snapshot.
+- **Admin/moderation dashboard** — 🟡 minimal version shipped.
+  `/dashboard/admin` (404 for non-admins; admins are an explicit
+  `ADMIN_GITHUB_IDS` allowlist, unset = nobody, the demo account can
+  never be one) lists every profile with **Mark reviewed** and **Hide**.
+  Hidden profiles drop out of `/u/[handle]`, the public index, company
+  pages and the sitemap, reversibly; moderation reads bypass Next's
+  fetch cache so a takedown applies on the very next request (a real bug
+  caught in live verification: the first read after a hide was stale).
+  `PUT /api/admin/profiles/[githubId]` is 403 for non-admins. Verified
+  end to end against real Supabase (review, hide, unhide, unreview,
+  empty-update 400). **Still open:** a report-abuse flow (users flagging
+  profiles), a review queue for flagged items, referral-fraud/duplicate-
+  account detection, an audit log beyond the `updated_by` column, and a
+  sidebar link for admins (reached by URL today).
 
 ## North star: the best way to be known as a developer
 
@@ -505,48 +524,41 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ### Public identity & discoverability
 
-- **Vanity public profile at a chosen handle** — the current public
-  link (`/p/[token]`) is an unguessable, expiring UUID: great for
-  "share this with one recruiter," useless for "be known." Add an
-  opt-in, permanent public profile at a clean URL
-  (`ipskill.com/@handle`) that the developer chooses. Same read-only
-  view the token page renders, but stable, brandable, and safe to put
-  in a GitHub bio. Keep the token link as the private-share option;
-  this is the public one. Needs a `handle` column (unique, reserved-
-  word list, change-with-redirect), a public/unlisted/private
-  visibility setting, and a decision on what's shown publicly by
-  default (probably: fingerprint, top languages, featured work,
-  verified skills, endorsements — not raw contribution counts or
-  location unless opted in).
-- **SEO-indexable public profiles** — once vanity profiles exist, make
-  them server-rendered with real `<title>`/meta/JSON-LD
-  (`Person` + `knowsAbout`), a per-profile OG image, and a
-  `sitemap.xml` that lists every public profile. The goal: searching a
-  developer's name surfaces their IPSkill profile on page one. This is
-  most of what "be known" actually means in practice.
-- **Auto-generated social share images** — a dynamic OG image per
-  public profile (avatar, name, headline, top-3 languages, overall
-  score, verified-skill count) via `@vercel/og` / Satori, so a link
-  pasted into Slack, X, LinkedIn, or a Discord renders as a rich card
-  instead of a bare URL. Cheap, high-visibility growth lever.
-- **Embeddable profile badge / card** — a small SVG badge
-  ("IPSkill: Backend 92 · 4 verified skills") and a richer iframe/web-
-  component card that a developer drops into their GitHub profile
-  README, personal site, or blog footer, each linking back to the
-  vanity profile. This is the classic developer-tool growth loop
-  (Shields.io, Wakatime, etc.) and turns every active user into a
-  distribution channel.
-- **Public developer index** — a browsable, opt-in public version of
-  the Directory (no recruiter paywall) so profiles are found by
-  browsing and filtering, not only by direct link. Privacy-first:
-  appears only if the developer set their profile public. Recruiter
-  Tools stays premium for the *saved searches / shortlists / compare /
-  engagement* workflow on top of it.
+- **Vanity public profile at a chosen handle** — ✅ shipped. Public
+  profile at `/u/[handle]` with a unique, validated handle (reserved
+  words, collision-checked across both profile tables) and a
+  public/private visibility setting; the token link `/p/[token]` stays
+  the private-share option. (Found already built during a backlog audit;
+  this entry was stale.)
+- **SEO-indexable public profiles** — ✅ shipped. Server-rendered
+  `/u/[handle]` with `generateMetadata`, a canonical URL, `og:type=profile`,
+  schema.org `Person` JSON-LD (name, jobTitle, worksFor, knowsAbout,
+  sameAs; serialized with `<` escaped so a profile field can't close the
+  script tag), a `sitemap.xml` listing every public profile, and a new
+  `robots.txt` (allows `/`, `/directory`, `/u/`; blocks `/dashboard`,
+  `/api`, `/login` and the private `/p/` links). A `SITE_URL` env var
+  drives all absolute URLs and falls back to `NEXTAUTH_URL` (which on a
+  preview deployment is pinned to a Vercel alias for OAuth), so a real
+  domain can be set later without touching it. Verified locally.
+- **Auto-generated social share images** — ✅ shipped. A dynamic
+  per-profile OG image at `u/[handle]/opengraph-image`, referenced from
+  the profile's OG/Twitter metadata. (Found already built during the
+  audit; entry was stale.)
+- **Embeddable profile badge / card** — 🟡 SVG badge shipped. A dynamic
+  SVG badge at `/api/badge/[handle].svg`, linked from the public
+  profile footer. **Still open:** the richer iframe/web-component card
+  the original item described.
+- **Public developer index** — ✅ shipped. `/directory` is open to
+  signed-out visitors and lists only profiles whose owner set them
+  public (and that an admin hasn't hidden); recruiter tooling stays
+  premium on top. (Found already built during the audit.)
 - **"Claim your profile" for unconnected devs** — optionally
   pre-generate lightweight stub profiles from public GitHub data for
   well-known OSS contributors, with a prominent "is this you? claim
   it" flow. Bootstraps the index and gives new visitors something to
   land on. Needs care around consent/POPIA and a clean opt-out.
+  **Deliberately on hold** until the consent approach is decided —
+  it means creating profiles of real people who haven't signed up.
 
 ### Proof that can't be faked
 
