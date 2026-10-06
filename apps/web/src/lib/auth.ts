@@ -110,17 +110,9 @@ const providers: NextAuthOptions["providers"] = [
   // lib/github-connection.ts. There is no account linking yet: signing in
   // with GitHub afterwards starts a separate identity rather than upgrading
   // this one (see the "Google login" item in improvements.md).
-  GoogleProvider({
-    clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-  }),
   // Same second-class-citizen status as Google — no GitHub token, so
   // ThinProfile / ConnectGithubPrompt again. See the LinkedInProvider
   // comment above for why this isn't next-auth's built-in provider.
-  LinkedInProvider({
-    clientId: process.env.LINKEDIN_CLIENT_ID ?? "",
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET ?? "",
-  }),
   // Real email/password accounts (users table, apps/web/src/lib/password.ts
   // for hashing). Same "second-class citizen" status as Google — a regular
   // account has no GitHub token and gets the ThinProfile / ConnectGithubPrompt
@@ -189,6 +181,29 @@ const providers: NextAuthOptions["providers"] = [
     },
   }),
 ];
+
+// Google and LinkedIn are only registered when their credentials exist.
+// Registered with empty ids they still show up in /api/auth/providers, so
+// the login page offered buttons that dead-ended at OAuthSignin on any
+// deployment that hadn't set them up. Absent here = absent from the login
+// page (it reads the providers list); setting the env vars brings them back
+// with no code change.
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+  providers.push(
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+    })
+  );
+}
 
 // Dev-only bypass so the app can be exercised without a real GitHub OAuth
 // round trip — see test-mode.ts for the ALLOW_TEST_LOGIN gate. Never

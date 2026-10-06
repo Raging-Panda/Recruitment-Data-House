@@ -18,6 +18,8 @@ export function LoginCard() {
   const router = useRouter();
   const showToast = useToast();
   const [testLoginAvailable, setTestLoginAvailable] = useState(false);
+  // null until /api/auth/providers answers, so the optional buttons don't flash in and out.
+  const [optionalProviders, setOptionalProviders] = useState<{ google: boolean; linkedin: boolean } | null>(null);
   const [demoEmail, setDemoEmail] = useState(DEMO_EMAIL);
   const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
   const [demoError, setDemoError] = useState<string | null>(null);
@@ -46,14 +48,35 @@ export function LoginCard() {
   useEffect(() => {
     fetch("/api/auth/providers")
       .then((res) => res.json())
-      .then((providers) => setTestLoginAvailable(Boolean(providers?.["test-account"])))
-      .catch(() => setTestLoginAvailable(false));
+      .then((providers) => {
+        setTestLoginAvailable(Boolean(providers?.["test-account"]));
+        setOptionalProviders({ google: Boolean(providers?.google), linkedin: Boolean(providers?.linkedin) });
+      })
+      .catch(() => {
+        setTestLoginAvailable(false);
+        setOptionalProviders({ google: false, linkedin: false });
+      });
   }, []);
 
   // Catches the toast set by Sidebar right before sign-out redirected here —
   // a toast fired on that page would just vanish with the navigation.
   useEffect(() => {
     const pending = consumePendingToast();
+    // NextAuth sends a failed or cancelled OAuth attempt back here with
+    // ?error=…. The "Signed in with X" toast was queued before the redirect,
+    // so showing it now would claim a success that didn't happen.
+    const authError = new URLSearchParams(window.location.search).get("error");
+    if (authError) {
+      showToast(
+        authError === "OAuthSignin" || authError === "Configuration"
+          ? "That sign-in option isn't available right now. Try another way to sign in."
+          : authError === "AccessDenied"
+            ? "Sign-in was cancelled or not allowed."
+            : "Sign-in didn't complete. Please try again.",
+        "error"
+      );
+      return;
+    }
     if (pending) showToast(pending.message, pending.variant);
   }, [showToast]);
 
@@ -193,6 +216,7 @@ export function LoginCard() {
           Get Started <ArrowRightIcon size={16} />
         </button>
 
+        {optionalProviders?.google && (
         <button
           onClick={signInWithGoogle}
           title="Your fingerprint, projects, and heatmap come from GitHub — Google gets you a lighter profile for now — connect GitHub afterward from Settings"
@@ -200,6 +224,7 @@ export function LoginCard() {
         >
           <GoogleMark /> Continue with Google
         </button>
+        )}
 
         <button
           onClick={signInWithGithub}
@@ -208,6 +233,7 @@ export function LoginCard() {
           <GithubMark /> Continue with GitHub
         </button>
 
+        {optionalProviders?.linkedin && (
         <button
           onClick={signInWithLinkedIn}
           title="Your fingerprint, projects, and heatmap come from GitHub — LinkedIn gets you a lighter profile for now — connect GitHub afterward from Settings"
@@ -215,6 +241,7 @@ export function LoginCard() {
         >
           <LinkedInMark /> Continue with LinkedIn
         </button>
+        )}
 
         {authMode === "closed" && (
           <div className="flex gap-2">
