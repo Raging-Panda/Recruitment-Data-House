@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashPassword } from "@/lib/password";
 import { attributeReferral } from "@/lib/referrals";
 import { LOCAL_ID_PREFIX } from "@/lib/local-account";
+import { clientIp, hitRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -13,6 +14,16 @@ const MIN_PASSWORD_LENGTH = 8;
  * right after a 201, same two-step shape NextAuth's own examples use.
  */
 export async function POST(req: NextRequest) {
+  // Signup is free to call, so without a cap it is a spam/enumeration
+  // tool (the 409 below confirms which emails already have accounts).
+  const limit = await hitRateLimit(`register:ip:${clientIp(req.headers)}`, RATE_LIMITS.registerPerIp);
+  if (limit.limited) {
+    return NextResponse.json(
+      { error: "Too many sign-up attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body?.password === "string" ? body.password : "";

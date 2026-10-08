@@ -16,6 +16,7 @@ import { getSupabaseAdmin } from "./supabase";
 import { verifyPassword } from "./password";
 import { LOCAL_ID_PREFIX } from "./local-account";
 import { verifyTotpOrBackupCode } from "./two-factor";
+import { clientIp, hashKeyPart, hitRateLimit, RATE_LIMITS, resetRateLimit } from "./rate-limit";
 
 interface LinkedInOIDCProfile {
   sub: string;
@@ -132,9 +133,21 @@ const providers: NextAuthOptions["providers"] = [
       // below, so a forged/skipped pre-check can't bypass 2FA.
       totpCode: { label: "Authenticator code", type: "text" },
     },
-    async authorize(credentials) {
+    async authorize(credentials, req) {
       const email = credentials?.email?.trim().toLowerCase();
       if (!email || !credentials?.password) return null;
+
+      // Throttle before touching the DB or hashing anything. Two buckets: per
+      // email (stops guessing one account from many IPs) and per IP (stops
+      // one machine sweeping many accounts). Thrown rather than returned
+      // null so the form can say "too many attempts" instead of lying with
+      // "incorrect password".
+      const emailKey = `login:email:${hashKeyPart(email)}`;
+      const [byEmail, byIp] = await Promise.all([
+        hitRateLimit(emailKey, RATE_LIMITS.loginPerEmail),
+        hitRateLimit(`login:ip:${clientIp(req?.headers ?? {})}`, RATE_LIMITS.loginPerIp),
+      ]);
+      if (byEmail.limited || byIp.limited) throw new Error("RateLimited");
 
       const { data: user, error } = await getSupabaseAdmin()
         .from("users")
@@ -145,9 +158,16 @@ const providers: NextAuthOptions["providers"] = [
       if (!verifyPassword(credentials.password, user.password_hash)) return null;
 
       if (user.totp_enabled) {
+        // Own, tighter bucket keyed on the account (not the IP, which an
+        // attacker controls): a 6-digit code is only safe if guesses are scarce.
+        const totpKey = `totp:user:${user.id}`;
+        const totp = await hitRateLimit(totpKey, RATE_LIMITS.totpPerUser);
+        if (totp.limited) throw new Error("RateLimited");
         const code = credentials?.totpCode?.trim();
         if (!code || !(await verifyTotpOrBackupCode(user.id, code))) return null;
+        await resetRateLimit(totpKey);
       }
+      await resetRateLimit(emailKey);
 
       return {
         id: `${LOCAL_ID_PREFIX}${user.id}`,

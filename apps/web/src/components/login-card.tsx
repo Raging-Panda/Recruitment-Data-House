@@ -8,6 +8,8 @@ import { ArrowRightIcon } from "./icons";
 import { useToast } from "./toast-provider";
 import { setPendingToast, consumePendingToast } from "@/lib/pending-toast";
 
+const TOO_MANY_ATTEMPTS = "Too many attempts. Please wait a few minutes and try again.";
+
 const DEMO_EMAIL = "admin@admin.com";
 const DEMO_PASSWORD = "1234";
 
@@ -140,6 +142,7 @@ export function LoginCard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: authEmail, password: authPassword }),
         }).then((r) => r.json());
+        if (check.error === "rate_limited") throw new Error(TOO_MANY_ATTEMPTS);
         if (!check.ok) throw new Error("Incorrect email or password");
         if (check.requires2FA) {
           setNeedsTotp(true);
@@ -152,6 +155,7 @@ export function LoginCard() {
         password: authPassword,
         redirect: false,
       });
+      if (result?.error === "RateLimited") throw new Error(TOO_MANY_ATTEMPTS);
       if (result?.error) throw new Error("Incorrect email or password");
       setPendingToast(authMode === "signup" ? "Account created" : "Signed in");
       router.push("/dashboard/profile");
@@ -173,6 +177,7 @@ export function LoginCard() {
         totpCode,
         redirect: false,
       });
+      if (result?.error === "RateLimited") throw new Error(TOO_MANY_ATTEMPTS);
       if (result?.error) throw new Error("Invalid code — check your authenticator app and try again.");
       setPendingToast("Signed in");
       router.push("/dashboard/profile");
