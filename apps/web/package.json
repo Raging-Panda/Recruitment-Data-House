@@ -11,6 +11,7 @@
   "dependencies": {
     "@ipskill/shared": "workspace:*",
     "@react-pdf/renderer": "^4.5.1",
+    "@sentry/nextjs": "^8",
     "@supabase/supabase-js": "^2.45.4",
     "next": "^14.2.15",
     "next-auth": "^4.24.8",
