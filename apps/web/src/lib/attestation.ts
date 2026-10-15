@@ -18,8 +18,26 @@ export interface AttestationPayload {
   issuedAt: string;
 }
 
-function canonical(payload: AttestationPayload): string {
-  return JSON.stringify(payload, Object.keys(payload).sort());
+/**
+ * Deterministic JSON with keys sorted at every depth, so the signature covers
+ * the whole payload regardless of key order. Not `JSON.stringify(payload,
+ * Object.keys(payload).sort())`: a replacer array is an allowlist applied to
+ * nested objects too, so it signed skillFingerprint as `{}` and its values
+ * could be edited without breaking verification. Undefined values are dropped
+ * the way JSON.stringify drops them, so a payload signs the same before and
+ * after the JSON round trip through the downloaded file.
+ */
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => canonical(item ?? null)).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const entries = Object.keys(record)
+      .filter((key) => record[key] !== undefined)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonical(record[key])}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function sign(payload: AttestationPayload): string {

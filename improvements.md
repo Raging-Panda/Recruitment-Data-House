@@ -591,15 +591,22 @@ sharing). These items close that gap. Roughly ordered by leverage.
   company-domain email verification (or the eventual third-party
   employment check from `PLAN.md`), and badge it "Verified employer"
   so the experience section isn't purely self-asserted.
-- **Signed profile snapshot** — 🟡 shipped, with a known bug. A
+- **Signed profile snapshot** — 🟡 partially shipped. A
   "download signed snapshot" button on the dashboard Profile page hits
   `GET /api/profile/attestation` (signed JSON, `lib/attestation.ts`);
   anyone can check one at the public `POST
-  /api/profile/attestation/verify`. **Bug, open:** the signature is
-  computed over `JSON.stringify(payload, Object.keys(payload).sort())`,
-  and that replacer array also filters *nested* keys, so the skill
-  fingerprint is signed as `{}` — editing fingerprint values doesn't
-  break verification. **Still open beyond the bug:** it's HMAC-SHA256
+  /api/profile/attestation/verify`. **Bug fixed 2026-10-15:** the
+  signature used to be computed over `JSON.stringify(payload,
+  Object.keys(payload).sort())`, and that replacer array also filters
+  *nested* keys, so the skill fingerprint was signed as `{}` — its
+  values could be edited without breaking verification. It now signs a
+  canonical JSON with keys sorted at every depth. Verified locally:
+  untouched, JSON-round-tripped and key-reordered snapshots verify; an
+  edited fingerprint value, an edited overall score, an extra
+  fingerprint key and a wrong signature are all rejected. Snapshots
+  downloaded before the fix no longer verify (by design — their
+  fingerprint was never protected); re-download to get a valid one.
+  **Still open:** it's HMAC-SHA256
   over `NEXTAUTH_SECRET`, not a public-key signature, so only IPSkill's
   server can verify it and rotating the secret invalidates every
   snapshot ever issued; and the PDF export carries no signature (the
