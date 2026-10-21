@@ -524,10 +524,12 @@ and Growth 404).
   caught in live verification: the first read after a hide was stale).
   `PUT /api/admin/profiles/[githubId]` is 403 for non-admins. Verified
   end to end against real Supabase (review, hide, unhide, unreview,
-  empty-update 400). **Still open:** a report-abuse flow (users flagging
-  profiles), a review queue for flagged items, referral-fraud/duplicate-
-  account detection, an audit log beyond the `updated_by` column, and a
-  sidebar link for admins (reached by URL today).
+  empty-update 400). **Update 2026-10-21:** admins now get an "Admin"
+  sidebar link (decided server-side in the dashboard layout from the same
+  allowlist; non-admins and the demo account never see it). **Still
+  open:** a report-abuse flow (users flagging profiles), a review queue
+  for flagged items, referral-fraud/duplicate-account detection, and an
+  audit log beyond the `updated_by` column.
 
 ## North star: the best way to be known as a developer
 
@@ -753,16 +755,20 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ### Network effects & staying power
 
-- **Follow / developer activity feed** — 🟡 shipped, but mostly
-  unreachable. `lib/social.ts`, `/api/social/follow` (POST/DELETE) and
-  `/dashboard/feed` (last 30 events from people you follow). Events
-  actually recorded: a verified skill-test pass, a certification added,
-  an endorsement received. **Still open:** the only `FollowButton` is on
-  the recruiter Directory detail page, which needs Premium Recruiter —
-  it isn't on `/u/[handle]` or the public `/directory` — so most
-  developers can't follow anyone and their Feed stays empty; no
-  release or fingerprint-jump events; the feed has a "featured a
-  project" label that nothing ever records. Original idea: a feed of
+- **Follow / developer activity feed** — 🟡 shipped. `lib/social.ts`,
+  `/api/social/follow` (POST/DELETE) and `/dashboard/feed` (last 30
+  events from people you follow). Events actually recorded: a verified
+  skill-test pass, a certification added, an endorsement received.
+  **Update 2026-10-21:** the Follow button is now on the public
+  `/u/[handle]` profile for any signed-in viewer (not yourself, not the
+  demo account; hidden in v1 like the Feed) — before, it was only on the
+  Premium Recruiter-gated Directory detail page, so most developers
+  couldn't follow anyone. Verified against a local PostgREST stand-in:
+  follow and unfollow persist across reloads, a Google-only account can
+  follow, and it's absent for anonymous visitors, your own profile and
+  the demo account. **Still open:** no Follow on the public
+  `/directory` cards; no release or fingerprint-jump events; the feed
+  has a "featured a project" label that nothing ever records. Original idea: a feed of
   followed devs' milestones that turns IPSkill into a place developers
   come back to.
 - **Open peer endorsements** — ✅ shipped: the vanity public profile
@@ -794,8 +800,8 @@ sharing). These items close that gap. Roughly ordered by leverage.
   remove with `remove: true`) and `KudosButton` on Feed items, one per
   person per event, with a count (`kudos` table, migration 0003). Still
   open: the owner isn't notified, and can't see kudos they've received
-  — and since kudos only exist on the Feed, they inherit its reach
-  problem (see "Follow / developer activity feed").
+  (kudos only exist on Feed items, so they reach as far as following
+  does — see "Follow / developer activity feed").
 - **Trending developers** — ✅ shipped. `getPublicTrendingDevelopers()`
   in `lib/growth.ts` reuses the Growth Olympics score and shows the top
   5 public profiles with positive growth as chips on `/directory`.
@@ -1210,12 +1216,17 @@ sharing). These items close that gap. Roughly ordered by leverage.
   (Strong 85+, Solid 65+, otherwise Developing), the top two skill
   areas, the top two languages and the overall score. Shown only on
   the recruiter Directory detail page.
-- **Async video intro** — 🟡 saved but never shown. Migration 0004
+- **Async video intro** — ✅ shipped (link version). Migration 0004
   adds `video_intro_url` (a link, not an upload — there's no storage
   bucket), edited from the Public Identity card on the Profile page.
-  **Still open:** the link isn't displayed anywhere but the owner's own
-  editor — not on `/u/[handle]`, the recruiter Directory detail page,
-  or mobile — so recruiters can't see it.
+  **Update 2026-10-21:** a "▶ Watch video intro" link
+  (`components/video-intro-link.tsx`) now shows on `/u/[handle]`, the
+  `/p/[token]` share link and the recruiter Directory detail page — it
+  used to appear only in the owner's own editor. It re-checks the scheme
+  at render, so a non-http(s) value stored before the save route
+  validated it never renders as a link (verified with a
+  `javascript:` fixture on all three pages). Still open: not on mobile,
+  and no real uploads/embedded player.
 - **Interview scheduling / calendar sync** — ✅ shipped, the "booking
   link" version rather than live free/busy sync (that needs its own
   Calendar-scoped OAuth app per provider — parked, same reasoning as
@@ -1293,7 +1304,10 @@ sharing). These items close that gap. Roughly ordered by leverage.
   ids: GitHub/Google/LinkedIn buttons each hand off to the right
   provider with the right callback URL and scopes, and the demo and
   dev-only test sign-ins (GitHub/Google/LinkedIn-shaped) land on the
-  right profile view and sign out cleanly. Still open: when Supabase is
-  unreachable, email sign-up shows the raw "TypeError: fetch failed"
-  error to the user (`/api/auth/register` returns Supabase's error
-  message verbatim) instead of a friendly message.
+  right profile view and sign out cleanly. **Fixed 2026-10-21:** email
+  sign-up used to show Supabase's raw error (e.g. "TypeError: fetch
+  failed") when the database was unreachable; `/api/auth/register` now
+  returns a friendly "couldn't create your account right now" message
+  and logs the real error server-side (which Sentry's console capture
+  picks up), and a duplicate-email insert race returns the normal 409
+  "already exists" instead of a 500.

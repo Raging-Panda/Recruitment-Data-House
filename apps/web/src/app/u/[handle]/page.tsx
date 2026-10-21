@@ -24,6 +24,10 @@ import { buildPersonJsonLd, serializeJsonLd } from "@/lib/json-ld";
 import { getSiteUrl } from "@/lib/site-url";
 import { getVerificationBadges } from "@/lib/verification";
 import { VerificationBadges } from "@/components/verification-badges";
+import { isFollowing } from "@/lib/social";
+import { FollowButton } from "@/components/follow-button";
+import { getPublicIdentitySafe } from "@/lib/public-identity";
+import { VideoIntroLink } from "@/components/video-intro-link";
 
 // Unauthenticated route — no cookies()/session read, so Next won't treat
 // it as dynamic automatically and the fetch data-cache can otherwise
@@ -80,6 +84,14 @@ export default async function PublicHandleProfilePage({
   const viewerGithubId = session?.githubId ?? null;
   const canEndorse =
     !!viewerGithubId && !isDemoAccount(viewerGithubId) && viewerGithubId !== entry.githubId;
+  // Same viewer rules as endorsing. This used to be the recruiter Directory
+  // detail page's job alone, which is Premium Recruiter-gated — so most
+  // developers had no way to follow anyone and their Feed stayed empty.
+  // Hidden in v1 like the Feed it fills.
+  const canFollow = canEndorse && !V1_MODE;
+  const alreadyFollowing = canFollow
+    ? await isFollowing(viewerGithubId!, entry.githubId).catch(() => false)
+    : false;
 
   let endorsements: Endorsement[] = [];
   try {
@@ -90,6 +102,7 @@ export default async function PublicHandleProfilePage({
   const externalLinks = await getExternalLinksSafe(entry.githubId);
   const skillProofs = await getSkillProofsForSafe(entry.githubId);
   const featuredProjects = await getFeaturedProjectsSafe(entry.githubId);
+  const { videoIntroUrl } = await getPublicIdentitySafe(entry.githubId);
   // Trust badges are a post-v1 layer — hidden behind the v1 flag like the
   // other cut features.
   const verificationBadges = V1_MODE ? [] : await getVerificationBadges(entry.githubId);
@@ -130,8 +143,12 @@ export default async function PublicHandleProfilePage({
                 )}
               </p>
             )}
+            <VideoIntroLink url={videoIntroUrl} />
           </div>
-          <ScoreRing score={entry.overallScore} label="Overall Score" />
+          <div className="flex flex-col items-center gap-3">
+            <ScoreRing score={entry.overallScore} label="Overall Score" />
+            {canFollow && <FollowButton targetId={entry.githubId} initialFollowing={alreadyFollowing} />}
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">

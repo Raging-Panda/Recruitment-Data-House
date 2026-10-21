@@ -7,6 +7,18 @@ import { clientIp, hitRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
+const DUPLICATE_EMAIL = "An account with that email already exists";
+
+/** The login card shows `error` verbatim, so a database failure gets a
+ * generic message; the real one goes to the server log (and Sentry, which
+ * captures server console errors) instead of e.g. "TypeError: fetch failed". */
+function accountCreationFailed(stage: string, err: { message: string }) {
+  console.error(`[register] ${stage} failed:`, err.message);
+  return NextResponse.json(
+    { error: "We couldn't create your account right now. Please try again in a moment." },
+    { status: 500 }
+  );
+}
 
 /**
  * Creates a real, regular (email/password) account in `users`. Does not
@@ -46,14 +58,9 @@ export async function POST(req: NextRequest) {
     .select("id")
     .eq("email", email)
     .maybeSingle();
-  if (lookupError) {
-    return NextResponse.json({ error: lookupError.message }, { status: 500 });
-  }
+  if (lookupError) return accountCreationFailed("lookup", lookupError);
   if (existing) {
-    return NextResponse.json(
-      { error: "An account with that email already exists" },
-      { status: 409 }
-    );
+    return NextResponse.json({ error: DUPLICATE_EMAIL }, { status: 409 });
   }
 
   const { data: created, error: insertError } = await supabase
@@ -66,7 +73,12 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single();
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    // 23505 = unique violation: the same email signed up between the lookup
+    // above and this insert.
+    if (insertError.code === "23505") {
+      return NextResponse.json({ error: DUPLICATE_EMAIL }, { status: 409 });
+    }
+    return accountCreationFailed("insert", insertError);
   }
 
   const ref = typeof body?.ref === "string" ? body.ref.trim() : "";

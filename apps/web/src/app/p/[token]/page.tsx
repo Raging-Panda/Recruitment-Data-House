@@ -8,6 +8,8 @@ import { SkillProofsList } from "@/components/skill-proofs-list";
 import { getFeaturedProjectsSafe, MAX_FEATURED_PROJECTS } from "@/lib/featured-projects";
 import { FeaturedProjectsManager } from "@/components/featured-projects-manager";
 import { relativeDate } from "@/lib/time-ago";
+import { getPublicIdentitySafe } from "@/lib/public-identity";
+import { VideoIntroLink } from "@/components/video-intro-link";
 
 // Unauthenticated route — no cookies()/session read to make Next treat it
 // as dynamic automatically (that's what protects every /dashboard page),
@@ -41,6 +43,7 @@ export default async function PublicProfilePage({ params }: { params: { token: s
   }
   const skillProofs = await getSkillProofsForSafe(entry.githubId);
   const featuredProjects = await getFeaturedProjectsSafe(entry.githubId);
+  const { videoIntroUrl } = await getPublicIdentitySafe(entry.githubId);
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -77,6 +80,7 @@ export default async function PublicProfilePage({ params }: { params: { token: s
                 )}
               </p>
             )}
+            <VideoIntroLink url={videoIntroUrl} />
           </div>
           <ScoreRing score={entry.overallScore} label="Overall Score" />
         </div>

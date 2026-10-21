@@ -131,7 +131,7 @@ export function LoginCard() {
             ref: refCode || undefined,
           }),
         });
-        const json = await res.json();
+        const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error ?? "Could not create account");
       } else {
         // Login pre-check: is this account 2FA-protected? Purely a UX
