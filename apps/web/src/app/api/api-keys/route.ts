@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createApiKey, listApiKeys } from "@/lib/api-keys";
+import { getPlan } from "@/lib/premium";
+import { hasRecruiterAccess } from "@/lib/plan";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -19,6 +21,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
   if (isDemoAccount(session.githubId)) return demoWriteBlockedResponse();
+  // The API is for enterprise clients pulling candidates into their own ATS
+  // — a recruiter-side feature. Listing/revoking stays open to everyone so
+  // nobody is ever stuck with a key they can't see or revoke.
+  if (!hasRecruiterAccess(await getPlan(session.githubId))) {
+    return NextResponse.json({ error: "API keys are part of Premium Recruiter." }, { status: 403 });
+  }
 
   const body = await req.json().catch(() => null);
   const label = typeof body?.label === "string" && body.label.trim() ? body.label.trim() : "Unnamed key";

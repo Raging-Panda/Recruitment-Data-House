@@ -278,7 +278,8 @@ export type NotificationType =
   | "message_received"
   | "interview_proposed"
   | "interview_booked"
-  | "interview_cancelled";
+  | "interview_cancelled"
+  | "kudos_received";
 
 export interface NotificationItem {
   id: string;

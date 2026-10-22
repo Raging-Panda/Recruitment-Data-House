@@ -5,7 +5,7 @@ import { buttonClass } from "@/lib/button-styles";
 import { useToast } from "@/components/toast-provider";
 import type { ApiKeySummary } from "@/lib/api-keys";
 
-export function ApiKeysCard({ isDemo }: { isDemo: boolean }) {
+export function ApiKeysCard({ isDemo, canCreate }: { isDemo: boolean; canCreate: boolean }) {
   const showToast = useToast();
   const [keys, setKeys] = useState<ApiKeySummary[]>([]);
   const [newKey, setNewKey] = useState<string | null>(null);
@@ -64,9 +64,13 @@ export function ApiKeysCard({ isDemo }: { isDemo: boolean }) {
         </div>
       )}
 
-      <button onClick={createKey} disabled={busy} className={`${buttonClass("primary", "sm")} mt-3`}>
-        Generate key
-      </button>
+      {canCreate ? (
+        <button onClick={createKey} disabled={busy} className={`${buttonClass("primary", "sm")} mt-3`}>
+          Generate key
+        </button>
+      ) : (
+        <p className="mt-3 text-xs text-text-secondary">API keys are part of Premium Recruiter.</p>
+      )}
 
       {keys.length > 0 && (
         <ul className="mt-3 space-y-2">

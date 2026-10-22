@@ -766,9 +766,11 @@ sharing). These items close that gap. Roughly ordered by leverage.
   couldn't follow anyone. Verified against a local PostgREST stand-in:
   follow and unfollow persist across reloads, a Google-only account can
   follow, and it's absent for anonymous visitors, your own profile and
-  the demo account. **Still open:** no Follow on the public
-  `/directory` cards; no release or fingerprint-jump events; the feed
-  has a "featured a project" label that nothing ever records. Original idea: a feed of
+  the demo account. **Update 2026-10-22:** pinning a Featured Project
+  now records the "featured a project" event the Feed already had a
+  label for (repo name as the detail line). **Still open:** no Follow on
+  the public `/directory` cards; no release or fingerprint-jump events.
+  Original idea: a feed of
   followed devs' milestones that turns IPSkill into a place developers
   come back to.
 - **Open peer endorsements** — ✅ shipped: the vanity public profile
@@ -798,10 +800,14 @@ sharing). These items close that gap. Roughly ordered by leverage.
   — top-of-funnel for bulk sign-ups and, later, paid employer branding.
 - **Milestone kudos** — ✅ shipped. `/api/social/kudos` (give, or
   remove with `remove: true`) and `KudosButton` on Feed items, one per
-  person per event, with a count (`kudos` table, migration 0003). Still
-  open: the owner isn't notified, and can't see kudos they've received
-  (kudos only exist on Feed items, so they reach as far as following
-  does — see "Follow / developer activity feed").
+  person per event, with a count (`kudos` table, migration 0003).
+  **Update 2026-10-22:** the milestone's owner now gets a
+  `kudos_received` notification ("{name} gave you kudos — for your new
+  certification"), at most once per giver per milestone per day, so
+  toggling kudos off and on or re-clicking can't spam them (a
+  `kudosNotifyPerEvent` rule in `lib/rate-limit.ts` used as a dedupe).
+  Still open: owners can't see kudos on their own milestones (they only
+  show on followers' Feeds).
 - **Trending developers** — ✅ shipped. `getPublicTrendingDevelopers()`
   in `lib/growth.ts` reuses the Growth Olympics score and shows the top
   5 public profiles with positive growth as chips on `/directory`.
@@ -1193,14 +1199,19 @@ sharing). These items close that gap. Roughly ordered by leverage.
 - **Growth Olympics** — 🟡 leaderboard shipped, prizes not.
   `/dashboard/growth` + `getGrowthLeaderboard()` in `lib/growth.ts`, a
   30-day window over `score_snapshots`. Growth points = overall-score
-  change + 10 × new roles + 8 × new certifications + 6 × completed
-  skill-test attempts. Gated by `premium_dev` (free users see
-  `GrowthUpgradeCta`). **Still open:** nothing awards or fulfils the
-  "monthly prize" the upgrade box promises; anti-gaming is just that
-  weighting; the skill-test term counts any completed attempt, not
-  only passes; and anyone with snapshots appears on the board, not
-  only Premium Dev users. Original idea: a monthly competition among
-  premium users with a real prize (e.g. a R1000 Takealot voucher).
+  change + 10 × new roles + 8 × new certifications + 6 × skill tests
+  passed for the first time. Gated by `premium_dev` (free users see
+  `GrowthUpgradeCta`). **Fixed 2026-10-22:** the skill-test term used to
+  count every completed attempt in the window — fails and retakes
+  included — so it now counts a test only the first time it's passed
+  (≥ 70%); and only Premium Dev accounts are ranked (public Trending
+  still ranks everyone). Verified against a local PostgREST stand-in: a
+  fixture with a pre-window pass re-passed, a test passed twice and a
+  fail scores 1 skill instead of 4, and a free account drops off the
+  board but stays on Trending. **Still open:** nothing awards or fulfils
+  the "monthly prize" the upgrade box promises, and anti-gaming beyond
+  this weighting. Original idea: a monthly competition among premium
+  users with a real prize (e.g. a R1000 Takealot voucher).
 - **Referral program** — 🟡 partially shipped. `lib/referrals.ts`,
   `/api/referrals` (get-or-create an 8-character code plus a signup
   count) and a `ReferralCard` sharing `/login?ref=CODE`. Self-referral
@@ -1268,8 +1279,14 @@ sharing). These items close that gap. Roughly ordered by leverage.
   score, languages, availability, profile URL). Keys are managed from
   an API Keys card (`lib/api-keys.ts`, `/api/api-keys` + `[id]`):
   24 random bytes, stored only as a SHA-256 hash, shown once,
-  revocable. Still open: no per-key scopes, no rate limiting, and any
-  signed-in user with an email can create keys (no plan check).
+  revocable. **Update 2026-10-22:** creating a key now needs Premium
+  Recruiter (403 otherwise; the Settings card says so instead of
+  offering "Generate key" — listing and revoking stay open to everyone),
+  and each key is limited to 60 requests a minute (429 with
+  `Retry-After`; counted against a hash of the key, never the raw key).
+  No keys existed in production when the plan check landed, so nobody
+  was left holding one they can no longer create. Still open: no
+  per-key scopes.
 - **Migrate skill tests to a third-party vendor** — once the app is
   earning revenue, replace/extend the in-house MCQ tests with a real
   proctored coding-assessment provider (CodeSignal, HackerRank for
