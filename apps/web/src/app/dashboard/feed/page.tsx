@@ -34,7 +34,7 @@ export default async function FeedPage() {
     <div className="mx-auto max-w-2xl">
       <h1 className="text-2xl font-bold text-heading">Feed</h1>
       <p className="mt-1 text-sm text-text-secondary">
-        Milestones from developers you follow — follow someone from their Directory profile.
+        Milestones from developers you follow — follow someone from their public profile.
       </p>
 
       {events.length === 0 ? (
@@ -42,7 +42,7 @@ export default async function FeedPage() {
           className="mt-6"
           icon={ActivityIcon}
           title="Nothing yet"
-          description="Follow other developers from the Directory to see their milestones here."
+          description="Follow other developers from their public profile to see their milestones here."
         />
       ) : (
         <ul className="mt-6 space-y-3">

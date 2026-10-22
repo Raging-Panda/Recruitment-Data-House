@@ -9,6 +9,7 @@ import {
 } from "@/lib/featured-projects";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { isSafeHttpUrl } from "@/lib/url-validation";
+import { recordActivityEvent } from "@/lib/social";
 
 const MAX_BLURB = 400;
 
@@ -102,6 +103,14 @@ export async function POST(req: NextRequest) {
       status === 409 ? "That repository is already featured" : error.message;
     return NextResponse.json({ error: message }, { status });
   }
+
+  // Awaited, not fire-and-forget: a serverless function can be frozen as
+  // soon as it responds. recordActivityEvent never throws.
+  await recordActivityEvent(session.githubId, {
+    type: "featured_project_added",
+    title: repoName,
+    body: repoName,
+  });
 
   return NextResponse.json({ entry: rowToFeaturedProject(data) }, { status: 201 });
 }

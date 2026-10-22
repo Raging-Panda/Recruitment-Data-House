@@ -98,11 +98,26 @@ export async function getFollowingFeed(viewerId: string, limit = 30): Promise<Ac
   }));
 }
 
-export async function giveKudos(fromId: string, eventId: string): Promise<void> {
-  const { error } = await getSupabaseAdmin()
+/** Returns the milestone's owner and type when this gives `fromId`'s kudos
+ * for the first time, or null when they'd already given it (a re-click). */
+export async function giveKudos(
+  fromId: string,
+  eventId: string
+): Promise<{ ownerId: string; type: string } | null> {
+  const supabase = getSupabaseAdmin();
+  const { data: inserted, error } = await supabase
     .from("kudos")
-    .upsert({ from_id: fromId, event_id: eventId }, { onConflict: "from_id,event_id" });
+    .upsert({ from_id: fromId, event_id: eventId }, { onConflict: "from_id,event_id", ignoreDuplicates: true })
+    .select("id");
   if (error) throw new Error(error.message);
+  if (!inserted || inserted.length === 0) return null;
+
+  const { data: event } = await supabase
+    .from("activity_events")
+    .select("owner_id, type")
+    .eq("id", eventId)
+    .maybeSingle();
+  return event ? { ownerId: event.owner_id as string, type: event.type as string } : null;
 }
 
 export async function removeKudos(fromId: string, eventId: string): Promise<void> {

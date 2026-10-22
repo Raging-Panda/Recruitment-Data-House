@@ -19,6 +19,7 @@ const TYPE_ICON: Record<NotificationType, ComponentType<{ size?: number }>> = {
   interview_proposed: CalendarIcon,
   interview_booked: CalendarIcon,
   interview_cancelled: CalendarIcon,
+  kudos_received: StarIcon,
 };
 
 export function NotificationsPanel() {

@@ -115,4 +115,10 @@ export const RATE_LIMITS = {
   // guessing one hopeless while leaving real users room for typos.
   totpPerUser: { limit: 6, windowSeconds: 15 * 60 },
   registerPerIp: { limit: 5, windowSeconds: 60 * 60 },
+  // One call returns the whole public directory, so a real integration
+  // needs a handful of requests a minute, not hundreds.
+  publicApiPerKey: { limit: 60, windowSeconds: 60 },
+  // Used as a dedupe, not a throttle: one kudos notification per giver per
+  // milestone per day, so toggling kudos off and on can't spam the owner.
+  kudosNotifyPerEvent: { limit: 1, windowSeconds: 24 * 60 * 60 },
 } satisfies Record<string, RateLimitRule>;
