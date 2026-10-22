@@ -78,6 +78,16 @@ linking required; true virtualization of the premium recruiter Directory
 and Projects page — only the new public Directory got the lighter-weight
 windowed treatment.
 
+**Update (2026-10-15 backlog audit):** three of those deferrals have since
+shipped — GraphQL batching ("Fewer GitHub round-trips"), interview
+scheduling (the booking-link version; live free/busy sync is still
+parked), and virtualization of the recruiter Directory and Projects
+page. Every sprint feature above is now marked on its own entry below,
+including the gaps a code audit found (several shipped thinner than the
+original idea). Feed, Open Roles, Messages, Interviews and Growth
+Olympics are all hidden when `NEXT_PUBLIC_V1_MODE` is set (Feed, Roles
+and Growth 404).
+
 ## Requested
 
 - **Skill tests** — ✅ shipped as a lightweight, in-house MCQ version
@@ -153,7 +163,10 @@ windowed treatment.
   Recruiter Tools section (`/dashboard/recruiter/*`) rather than being
   open to every signed-in dev — see "Recruiter Tools is now a separate
   premium section" below. Still open: no verification-status filter
-  yet (waiting on the candidate-verification layer from `PLAN.md`).
+  yet. The badge layer it was waiting on now exists
+  (`lib/verification.ts`, see "Verification badges" below), so this is
+  buildable; `lib/directory-filters.ts` still only filters by search,
+  location, language, minimum score and availability.
 - **Profile view counter** — ✅ shipped (page-hit version): opening a
   developer's directory entry records a real `profile_views` row
   (self-views excluded), and the Analytics screen's "Profile Views"
@@ -161,7 +174,9 @@ windowed treatment.
   instead of the derived placeholder. Still open: the sustained
   scroll/dwell signal — this only counts a view on page open, not
   engaged reading time.
-- **SSO login with Google or GitHub** — 🟡 partially shipped. GitHub
+- **SSO login with Google or GitHub** — ✅ shipped (both providers real
+  and verified, account linking done — see the updates at the end of
+  this entry). GitHub
   OAuth was already wired in code; it just needed real credentials
   (`GITHUB_CLIENT_ID`/`SECRET` from a GitHub OAuth App) — those are
   now in this environment's `.env.local`, not something a future
@@ -454,10 +469,11 @@ windowed treatment.
   through to a live fetch and repopulates the row; any Supabase error
   degrades to a live fetch rather than breaking the page. Demo/test
   accounts bypass the cache entirely since they never hit GitHub.
-  Still open: no manual "refresh now" action yet, and this is still
-  per-request REST calls on a miss rather than GraphQL batching (see
-  "Fewer GitHub round-trips" below) — the cache reduces call *volume*,
-  it doesn't reduce the cost of a single cold fetch.
+  Still open: no manual "refresh now" action yet (expiry is time-based
+  only: hub data 10 min, timeline 30 min, heatmap 6 h). The other gap
+  this note used to list — a cold miss costing ~30 REST calls — is
+  closed: GraphQL batching has since shipped (see "Fewer GitHub
+  round-trips" below), so a miss is now one request.
 - **Recruiter-side profile engagement dashboard** — ✅ shipped: a new
   "Engagement" tab in Recruiter Tools (`/dashboard/recruiter/engagement`,
   `lib/recruiter-engagement.ts`) is the inverse of the candidate's own
@@ -508,10 +524,12 @@ windowed treatment.
   caught in live verification: the first read after a hide was stale).
   `PUT /api/admin/profiles/[githubId]` is 403 for non-admins. Verified
   end to end against real Supabase (review, hide, unhide, unreview,
-  empty-update 400). **Still open:** a report-abuse flow (users flagging
-  profiles), a review queue for flagged items, referral-fraud/duplicate-
-  account detection, an audit log beyond the `updated_by` column, and a
-  sidebar link for admins (reached by URL today).
+  empty-update 400). **Update 2026-10-21:** admins now get an "Admin"
+  sidebar link (decided server-side in the dashboard layout from the same
+  allowlist; non-admins and the demo account never see it). **Still
+  open:** a report-abuse flow (users flagging profiles), a review queue
+  for flagged items, referral-fraud/duplicate-account detection, and an
+  audit log beyond the `updated_by` column.
 
 ## North star: the best way to be known as a developer
 
@@ -575,17 +593,41 @@ sharing). These items close that gap. Roughly ordered by leverage.
   company-domain email verification (or the eventual third-party
   employment check from `PLAN.md`), and badge it "Verified employer"
   so the experience section isn't purely self-asserted.
-- **Signed profile snapshot** — a tamper-evident, dated attestation
-  (signed JSON + matching PDF) of a developer's fingerprint/verified
-  skills at a point in time, verifiable against an IPSkill public key.
-  Lets a profile carry weight even when pasted somewhere IPSkill
-  doesn't control. Extends the existing PDF export.
-- **Credibility-weighted endorsements** — weight an endorsement by the
-  endorser's own verified standing (verified identity, own fingerprint
-  strength, whether they actually share repo history with the
-  endorsee) rather than counting all endorsements equally, so the
-  signal resists reciprocal-endorsement gaming. Surface "endorsed by N
-  developers, M of them verified."
+- **Signed profile snapshot** — 🟡 partially shipped. A
+  "download signed snapshot" button on the dashboard Profile page hits
+  `GET /api/profile/attestation` (signed JSON, `lib/attestation.ts`);
+  anyone can check one at the public `POST
+  /api/profile/attestation/verify`. **Bug fixed 2026-10-15:** the
+  signature used to be computed over `JSON.stringify(payload,
+  Object.keys(payload).sort())`, and that replacer array also filters
+  *nested* keys, so the skill fingerprint was signed as `{}` — its
+  values could be edited without breaking verification. It now signs a
+  canonical JSON with keys sorted at every depth. Verified locally:
+  untouched, JSON-round-tripped and key-reordered snapshots verify; an
+  edited fingerprint value, an edited overall score, an extra
+  fingerprint key and a wrong signature are all rejected. Snapshots
+  downloaded before the fix no longer verify (by design — their
+  fingerprint was never protected); re-download to get a valid one.
+  **Still open:** it's HMAC-SHA256
+  over `NEXTAUTH_SECRET`, not a public-key signature, so only IPSkill's
+  server can verify it and rotating the secret invalidates every
+  snapshot ever issued; and the PDF export carries no signature (the
+  original idea was a matching signed PDF).
+  Original idea: a tamper-evident, dated attestation (signed JSON +
+  matching PDF) of a developer's fingerprint/verified skills at a point
+  in time, verifiable against an IPSkill public key, so a profile
+  carries weight even when pasted somewhere IPSkill doesn't control.
+- **Credibility-weighted endorsements** — 🟡 partially shipped.
+  `components/endorsement-list.tsx` sorts endorsements by the
+  endorser's own overall score (`lib/endorsements.ts`), badges endorsers
+  scoring 85%+, and shows "N endorsements, M from 85%+ scoring
+  developers". **Still open:** the other two factors the original idea
+  named — verified identity (`profile_verifications` from migration
+  0013 now exists but isn't used here) and shared repo history with the
+  endorsee — and the "M of them verified" wording that depends on them.
+  Original idea: weight an endorsement by the endorser's own verified
+  standing rather than counting all endorsements equally, so the signal
+  resists reciprocal-endorsement gaming.
 
 ### Narrative & the whole developer
 
@@ -667,12 +709,16 @@ sharing). These items close that gap. Roughly ordered by leverage.
   skills, 2 GitHub, 3 certifications, 3 roles): compact rows read as a
   tight cluster, spine entries keep full legibility, nothing overlaps
   as kinds interleave chronologically. Nothing else open here.
-- **Beyond GitHub: writing, talks, packages, OSS** — structured slots
-  for blog posts, conference talks, published packages (npm/PyPI/
-  crates/NuGet), and notable OSS contributions to repos the developer
-  doesn't own, so the profile covers the whole footprint rather than
-  just personal-repo activity. Directly widens who the product is
-  credible for (many strong devs have thin personal GitHubs).
+- **Beyond GitHub: writing, talks, packages, OSS** — ✅ shipped. An
+  `ExternalLinksManager` on the dashboard Profile page
+  (`lib/external-links.ts`, `/api/external-links` + `[id]`,
+  `external_links` table from migration 0003) with four kinds —
+  `writing`, `talk`, `package`, `oss` — capped at 10 links, http(s)
+  only, shown on the dashboard profile and the public `/u/[handle]`
+  page. Still open: not shown on the recruiter Directory detail page,
+  and no reordering. Original idea: structured slots so the profile
+  covers the whole footprint, not just personal-repo activity (many
+  strong devs have thin personal GitHubs).
 - **"Currently" block** — ✅ shipped as part of the "Authored About /
   narrative layer" item above: a 140-char, inline-editable line on the
   Profile page, persisted to `candidate_profile.currently` and stamped
@@ -709,12 +755,22 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ### Network effects & staying power
 
-- **Follow / developer activity feed** — let developers follow each
-  other and see a feed of followed devs' milestones (shipped a
-  release, passed a verified skill, big fingerprint jump). Turns
-  IPSkill from a résumé host you visit once into a place developers
-  come back to — the thing that actually makes it "where developers
-  are."
+- **Follow / developer activity feed** — 🟡 shipped. `lib/social.ts`,
+  `/api/social/follow` (POST/DELETE) and `/dashboard/feed` (last 30
+  events from people you follow). Events actually recorded: a verified
+  skill-test pass, a certification added, an endorsement received.
+  **Update 2026-10-21:** the Follow button is now on the public
+  `/u/[handle]` profile for any signed-in viewer (not yourself, not the
+  demo account; hidden in v1 like the Feed) — before, it was only on the
+  Premium Recruiter-gated Directory detail page, so most developers
+  couldn't follow anyone. Verified against a local PostgREST stand-in:
+  follow and unfollow persist across reloads, a Google-only account can
+  follow, and it's absent for anonymous visitors, your own profile and
+  the demo account. **Still open:** no Follow on the public
+  `/directory` cards; no release or fingerprint-jump events; the feed
+  has a "featured a project" label that nothing ever records. Original idea: a feed of
+  followed devs' milestones that turns IPSkill into a place developers
+  come back to.
 - **Open peer endorsements** — ✅ shipped: the vanity public profile
   (`/u/[handle]`) now renders the same `EndorsementForm` the recruiter-
   gated Directory detail page uses, so any signed-in dev viewing
@@ -732,17 +788,25 @@ sharing). These items close that gap. Roughly ordered by leverage.
   form, submitting a real endorsement persisted it and it rendered
   immediately on the public profile (confirmed in-browser), self-
   endorse 400s, demo 403s. Test data cleaned up afterward.
-- **Team / organisation pages** — a company page that groups its
-  engineers' profiles, so an eng-led org can bring its whole team on
-  at once (and show off its bench). A natural top-of-funnel for
-  bulk sign-ups and, later, for employer branding as a paid feature.
-- **Milestone kudos** — lightweight reactions/congrats on a
-  developer's public milestones, feeding the activity feed and giving
-  a low-effort reason to engage with someone else's profile.
-- **Trending developers** — a public "fastest-growing this month" /
-  "developer spotlight" surface (shares the month-over-month
-  snapshotting that Growth Olympics needs), giving strong-but-unknown
-  developers a discovery path and the platform fresh public content.
+- **Team / organisation pages** — ✅ shipped (minimal). Public
+  `/team/[company]` lists public profiles whose self-entered `company`
+  (Public Identity card) matches case-insensitively
+  (`getPublicDirectoryEntriesByCompany` in `lib/directory.ts`); hidden
+  profiles are excluded. Still open: the company field is unverified
+  free text with exact matching only, and nothing in the app links to
+  `/team/...` yet. Original idea: a company page grouping its engineers
+  — top-of-funnel for bulk sign-ups and, later, paid employer branding.
+- **Milestone kudos** — ✅ shipped. `/api/social/kudos` (give, or
+  remove with `remove: true`) and `KudosButton` on Feed items, one per
+  person per event, with a count (`kudos` table, migration 0003). Still
+  open: the owner isn't notified, and can't see kudos they've received
+  (kudos only exist on Feed items, so they reach as far as following
+  does — see "Follow / developer activity feed").
+- **Trending developers** — ✅ shipped. `getPublicTrendingDevelopers()`
+  in `lib/growth.ts` reuses the Growth Olympics score and shows the top
+  5 public profiles with positive growth as chips on `/directory`.
+  Note: the `score_snapshots` it reads get a row on every directory
+  sync, with no throttling or scheduled job.
 
 ### Distribution & portability
 
@@ -849,10 +913,12 @@ sharing). These items close that gap. Roughly ordered by leverage.
   unread count, mark-one/mark-all as read, and click-to-navigate.
   Notifications are generated by genuine events (adding experience,
   adding a certification, completing a skill test) rather than
-  fabricated activity. Still open: no notifications yet for things
-  outside the candidate's own actions (e.g. a recruiter viewing their
-  profile), since there's no recruiter-side activity to notify about
-  until that half of the platform exists.
+  fabricated activity. **Update:** recruiter-side events now notify too
+  (shipped with push notifications, below): a first-time profile view
+  ("Someone viewed your profile", viewer stays anonymous), being added
+  to a shortlist, a new message, and interview requests/bookings. Still
+  open: profile views are only recorded from the recruiter Directory
+  detail page, so visits to the public `/u/[handle]` page don't count.
 
 ## Performance
 
@@ -993,9 +1059,16 @@ sharing). These items close that gap. Roughly ordered by leverage.
 
 ## New features
 
-- **Real in-app messaging** — build out the Messages tab (currently a
-  stub) so recruiters and candidates can actually talk without
-  leaving the platform.
+- **Real in-app messaging** — ✅ shipped. Two-way threads
+  (`lib/messaging.ts`, `/api/messages/conversations`,
+  `/api/messages/[conversationId]` + `/respond`, `/dashboard/messages`,
+  native mobile screens via `/api/mobile/messages/*`), 2000-char
+  messages, in-app + push notification per message. Migration 0005 adds
+  a candidate setting: "open" (anyone can message) or "request" (a new
+  conversation is pending until accepted; decline deletes it). Still
+  open: the only "Message" button is on the Premium Recruiter-gated
+  Directory detail page, so candidates can't start a conversation, and
+  the web thread has no polling/realtime refresh.
 - **Push notifications (mobile)** — ✅ shipped: a new `push_tokens`
   table + `lib/push-notifications.ts` (register/unregister, send via
   Expo's push API) wired into the single choke point every existing
@@ -1095,48 +1168,65 @@ sharing). These items close that gap. Roughly ordered by leverage.
   the real PDF bytes for the demo account, confirmed a valid `%PDF`
   header, and inspected the rendered page directly — correct layout,
   correct data, one page.
-- **Role/job matching module** — connect candidate profiles to open
-  client roles from the core ATS/CRM (once built) and surface match
-  scores based on the skill fingerprint.
+- **Role/job matching module** — 🟡 minimal version shipped. An "Open
+  Roles" page (`/dashboard/roles`, `lib/job-roles.ts`, `/api/job-roles`)
+  lists roles sorted by match: for each required skill, the candidate's
+  fingerprint value ÷ the required value (capped at 1), averaged into a
+  percentage. `GET` is public; `POST` needs Premium Recruiter. Still
+  open: no UI for creating a role (API only), roles have no owner, and
+  there's still no core ATS/CRM to source client roles from.
 - **Free vs. Premium tiers** — 🟡 partially shipped: the mechanism now
   exists as a `plan` column (`free` | `premium_dev` |
   `premium_recruiter`, `lib/premium.ts`'s `getPlan()`) plus a self-serve
   `/api/premium/upgrade` stub, and Recruiter Tools
   (Directory/Shortlists/Compare) is the first feature actually gated
   behind it (`premium_recruiter` specifically) — see "Recruiter Tools
-  is now a separate premium section" above. The `premium_dev` tier
-  exists in the schema and the test-plan toggle but isn't wired to any
-  gated feature yet. Still needed: real subscription billing (Stripe
-  is already available as a connector but not yet authorized in this
-  environment) to replace the upgrade stub, a concrete feature split
-  for what `premium_dev` actually unlocks (skill tests, PDF export,
-  Growth Olympics eligibility, etc. — still aren't gated by anything),
-  and a real checkout/plan-selection flow to replace the current
-  one-directional "Upgrade Now" button.
-- **Growth Olympics** — a monthly competition among premium users:
-  whoever shows the biggest skill-fingerprint/activity growth over
-  the month wins a prize (e.g. a R1000 Takealot voucher). Needs
-  month-over-month snapshotting of each user's fingerprint/activity
-  so "growth" is measurable, a leaderboard, a defined growth metric
-  (which is fairest — overall score delta? weighted by category?),
-  anti-gaming safeguards (e.g. against padding commit counts), and a
-  way to actually fulfil the prize each month.
-- **Referral program** — give existing users a personal referral
-  link/code; when a referred candidate signs up (and maybe hits a
-  milestone, like completing verification or connecting GitHub), both
-  sides get a reward — e.g. free months of premium, or entries toward
-  Growth Olympics. Needs referral attribution tracking, fraud/abuse
-  limits (self-referrals, throwaway accounts), and a rewards ledger
-  per user.
-- **AI-generated candidate summary** — auto-generate a short,
-  natural-language blurb from a candidate's GitHub signals ("Backend
-  developer, 5 years active, strong in Go and Postgres, consistent
-  weekly contributor") so recruiters can skim faster than reading raw
-  stats.
-- **Async video intro** — let candidates attach a short (60–90s)
-  self-recorded intro video to their profile, giving recruiters a
-  sense of communication style and personality alongside the
-  code-derived signals.
+  is now a separate premium section" above. **Update:** Premium
+  Recruiter now also gates creating interview requests and job roles,
+  and `premium_dev` gates exactly one thing: Growth Olympics
+  (`hasPremiumDevAccess` in `lib/plan.ts`). Still needed: real
+  subscription billing (Stripe) — `/api/premium/upgrade` still just
+  sets the plan with no payment — a real checkout/plan-selection flow
+  to replace the one-directional "Upgrade Now" button, and a decision
+  on what else `premium_dev` unlocks (skill tests, PDF export, etc. are
+  still ungated).
+- **Growth Olympics** — 🟡 leaderboard shipped, prizes not.
+  `/dashboard/growth` + `getGrowthLeaderboard()` in `lib/growth.ts`, a
+  30-day window over `score_snapshots`. Growth points = overall-score
+  change + 10 × new roles + 8 × new certifications + 6 × completed
+  skill-test attempts. Gated by `premium_dev` (free users see
+  `GrowthUpgradeCta`). **Still open:** nothing awards or fulfils the
+  "monthly prize" the upgrade box promises; anti-gaming is just that
+  weighting; the skill-test term counts any completed attempt, not
+  only passes; and anyone with snapshots appears on the board, not
+  only Premium Dev users. Original idea: a monthly competition among
+  premium users with a real prize (e.g. a R1000 Takealot voucher).
+- **Referral program** — 🟡 partially shipped. `lib/referrals.ts`,
+  `/api/referrals` (get-or-create an 8-character code plus a signup
+  count) and a `ReferralCard` sharing `/login?ref=CODE`. Self-referral
+  is blocked and each account can only be referred once (plus the
+  general 5-signups-per-IP-per-hour limit). **Still open:** attribution
+  only happens on email/password signup (`/api/auth/register`) —
+  GitHub/Google/LinkedIn signups aren't attributed — and there's no
+  rewards ledger (`referrals.rewarded` is never written), so neither
+  side actually gets anything yet.
+- **AI-generated candidate summary** — ✅ shipped, rule-based rather
+  than an LLM call: `generateCandidateSummary` in
+  `lib/candidate-summary.ts` builds a one-line blurb from a tier
+  (Strong 85+, Solid 65+, otherwise Developing), the top two skill
+  areas, the top two languages and the overall score. Shown only on
+  the recruiter Directory detail page.
+- **Async video intro** — ✅ shipped (link version). Migration 0004
+  adds `video_intro_url` (a link, not an upload — there's no storage
+  bucket), edited from the Public Identity card on the Profile page.
+  **Update 2026-10-21:** a "▶ Watch video intro" link
+  (`components/video-intro-link.tsx`) now shows on `/u/[handle]`, the
+  `/p/[token]` share link and the recruiter Directory detail page — it
+  used to appear only in the owner's own editor. It re-checks the scheme
+  at render, so a non-http(s) value stored before the save route
+  validated it never renders as a link (verified with a
+  `javascript:` fixture on all three pages). Still open: not on mobile,
+  and no real uploads/embedded player.
 - **Interview scheduling / calendar sync** — ✅ shipped, the "booking
   link" version rather than live free/busy sync (that needs its own
   Calendar-scoped OAuth app per provider — parked, same reasoning as
@@ -1172,9 +1262,14 @@ sharing). These items close that gap. Roughly ordered by leverage.
 - **Salary/market-rate insights** — show a rough market rate range
   for a candidate's skill level and region, sourced from aggregated
   placement data over time, to help both sides set expectations early.
-- **Public API for enterprise clients** — a scoped, authenticated API
-  so larger clients can pull verified candidate/profile data into
-  their own ATS instead of using the IPSkill UI directly.
+- **Public API for enterprise clients** — ✅ shipped (one endpoint).
+  `GET /api/public/v1/directory` with `Authorization: Bearer ipsk_...`
+  returns public profiles only (handle, name, headline, location,
+  score, languages, availability, profile URL). Keys are managed from
+  an API Keys card (`lib/api-keys.ts`, `/api/api-keys` + `[id]`):
+  24 random bytes, stored only as a SHA-256 hash, shown once,
+  revocable. Still open: no per-key scopes, no rate limiting, and any
+  signed-in user with an email can create keys (no plan check).
 - **Migrate skill tests to a third-party vendor** — once the app is
   earning revenue, replace/extend the in-house MCQ tests with a real
   proctored coding-assessment provider (CodeSignal, HackerRank for
@@ -1182,3 +1277,37 @@ sharing). These items close that gap. Roughly ordered by leverage.
   anti-cheating. Design it as a provider interface behind the
   existing `/api/skill-tests` routes so the in-house tests and a
   vendor can coexist during the transition, rather than a rip-and-replace.
+
+## Security & ops hardening
+
+- **Rate limiting on auth** — ✅ shipped. A database attempt log
+  (`db/migrations/0014_rate_limits.sql`, `lib/rate-limit.ts`) caps
+  login at 10 per email and 30 per IP per 15 min (in the `credentials`
+  provider and `/api/auth/login-check`), 2FA codes at 6 per user per
+  15 min, and signup at 5 per IP per hour (`/api/auth/register`). The
+  form says "too many attempts" rather than "incorrect password".
+- **Error monitoring (Sentry)** — ✅ shipped, inert until a DSN is set.
+  `apps/web/sentry.{client,server,edge}.config.ts` do nothing unless
+  `NEXT_PUBLIC_SENTRY_DSN` is set; errors only (no performance
+  tracing), personal data scrubbed by `lib/sentry-scrub.ts`, and
+  server-side console errors are captured so NextAuth failures reach
+  Sentry. Still open: create the Sentry project and set the DSN (plus
+  `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` for readable stack
+  traces) on Vercel.
+- **Only offer sign-in methods that are configured** — ✅ shipped.
+  `lib/auth.ts` registers Google and LinkedIn only when their client id
+  and secret are set, and the login card hides their buttons otherwise
+  (it used to show buttons that dead-ended at `OAuthSignin`); the false
+  "Signed in with X" toast no longer fires when the URL carries
+  `?error=`, and a signed-in visitor hitting `/login` is sent to the
+  dashboard. Re-checked locally on 2026-10-15 with placeholder OAuth
+  ids: GitHub/Google/LinkedIn buttons each hand off to the right
+  provider with the right callback URL and scopes, and the demo and
+  dev-only test sign-ins (GitHub/Google/LinkedIn-shaped) land on the
+  right profile view and sign out cleanly. **Fixed 2026-10-21:** email
+  sign-up used to show Supabase's raw error (e.g. "TypeError: fetch
+  failed") when the database was unreachable; `/api/auth/register` now
+  returns a friendly "couldn't create your account right now" message
+  and logs the real error server-side (which Sentry's console capture
+  picks up), and a duplicate-email insert race returns the normal 409
+  "already exists" instead of a 500.

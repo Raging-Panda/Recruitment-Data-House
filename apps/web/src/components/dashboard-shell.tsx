@@ -13,12 +13,14 @@ export function DashboardShell({
   userImage,
   plan,
   showPlanToggle,
+  showAdminLink,
   children,
 }: {
   userName: string;
   userImage?: string;
   plan: Plan;
   showPlanToggle: boolean;
+  showAdminLink: boolean;
   children: ReactNode;
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -45,6 +47,7 @@ export function DashboardShell({
         userName={userName}
         plan={plan}
         showPlanToggle={showPlanToggle}
+        showAdminLink={showAdminLink}
         isOpen={isSidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

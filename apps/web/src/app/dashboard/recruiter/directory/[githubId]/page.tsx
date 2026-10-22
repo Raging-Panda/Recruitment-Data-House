@@ -24,6 +24,8 @@ import { ProposeInterviewForm } from "@/components/propose-interview-form";
 import { isFollowing } from "@/lib/social";
 import { generateCandidateSummary } from "@/lib/candidate-summary";
 import { V1_MODE } from "@/lib/v1-mode";
+import { getPublicIdentitySafe } from "@/lib/public-identity";
+import { VideoIntroLink } from "@/components/video-intro-link";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
 
 export default async function DirectoryProfilePage({
@@ -79,6 +81,7 @@ export default async function DirectoryProfilePage({
 
   const skillProofs = await getSkillProofsForSafe(entry.githubId);
   const featuredProjects = await getFeaturedProjectsSafe(entry.githubId);
+  const { videoIntroUrl } = await getPublicIdentitySafe(entry.githubId);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -119,6 +122,7 @@ export default async function DirectoryProfilePage({
               )}
             </p>
           )}
+          <VideoIntroLink url={videoIntroUrl} />
         </div>
         <div className="flex flex-col items-center gap-3">
           <ScoreRing score={entry.overallScore} label="Overall Score" />

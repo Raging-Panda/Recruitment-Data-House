@@ -27,6 +27,7 @@ import {
   BellIcon,
   SearchIcon,
   CalendarIcon,
+  EyeIcon,
 } from "./icons";
 
 const ALL_NAV_ITEMS = [
@@ -52,22 +53,29 @@ const ALL_NAV_ITEMS = [
 
 const NAV_ITEMS = ALL_NAV_ITEMS.filter((item) => !(V1_MODE && item.v1 === false));
 
+// Only offered to the ADMIN_GITHUB_IDS allowlist (decided server-side in the
+// dashboard layout); the page itself still 404s for anyone else.
+const ADMIN_NAV_ITEM = { href: "/dashboard/admin", label: "Admin", icon: EyeIcon };
+
 export function Sidebar({
   userName,
   plan,
   showPlanToggle,
+  showAdminLink,
   isOpen,
   onClose,
 }: {
   userName: string;
   plan: Plan;
   showPlanToggle: boolean;
+  showAdminLink: boolean;
   isOpen: boolean;
   onClose: () => void;
 }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const darkMode = theme === "dark";
+  const navItems = showAdminLink ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <>
@@ -104,7 +112,7 @@ export function Sidebar({
           </div>
 
           <nav className="mt-8 flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = pathname === item.href;
               const Icon = item.icon;
               return (

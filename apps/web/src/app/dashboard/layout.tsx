@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { getPlan } from "@/lib/premium";
 import { isTestAccount } from "@/lib/test-mode";
+import { isAdmin } from "@/lib/admin";
 import { DashboardShell } from "@/components/dashboard-shell";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       userImage={session.user?.image ?? undefined}
       plan={plan}
       showPlanToggle={isTestAccount(session.githubId)}
+      showAdminLink={isAdmin(session.githubId)}
     >
       {children}
     </DashboardShell>
