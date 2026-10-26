@@ -13,6 +13,7 @@ import type { SkillTestSubmitResult } from "@ipskill/shared";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createNotification } from "@/lib/notifications";
 import { recordActivityEvent } from "@/lib/social";
+import { afterResponse } from "@/lib/after-response";
 
 export async function POST(req: NextRequest, { params }: { params: { attemptId: string } }) {
   const session = await getServerSession(authOptions);
@@ -93,18 +94,18 @@ export async function POST(req: NextRequest, { params }: { params: { attemptId: 
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  void createNotification(session.githubId, {
+  afterResponse(createNotification(session.githubId, {
     type: "skill_test_completed",
     title: `Scored ${percentage}% on ${templateRow.title}`,
     body: expired ? "Submitted after time ran out" : null,
     link: "/dashboard/skills",
-  });
+  }));
   if (percentage >= VERIFIED_SKILL_THRESHOLD) {
-    void recordActivityEvent(session.githubId, {
+    afterResponse(recordActivityEvent(session.githubId, {
       type: "skill_test_completed",
       title: templateRow.title,
       body: `Scored ${percentage}%`,
-    });
+    }));
   }
 
   const result: SkillTestSubmitResult = {

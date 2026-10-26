@@ -9,6 +9,7 @@ import {
   isParticipant,
   getConversationMeta,
 } from "@/lib/messaging";
+import { afterResponse } from "@/lib/after-response";
 
 export async function GET(_req: NextRequest, { params }: { params: { conversationId: string } }) {
   const session = await getServerSession(authOptions);
@@ -19,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: { conversatio
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   const messages = await getMessages(params.conversationId).catch(() => []);
-  void markConversationRead(params.conversationId, session.githubId);
+  afterResponse(markConversationRead(params.conversationId, session.githubId));
   return NextResponse.json({ messages });
 }
 

@@ -5,6 +5,7 @@ import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { getPlan, hasRecruiterAccess } from "@/lib/premium";
 import { createInterviewRequest, listInterviewsFor, MAX_PROPOSED_SLOTS } from "@/lib/interviews";
 import { createNotification } from "@/lib/notifications";
+import { afterResponse } from "@/lib/after-response";
 
 const MIN_DURATION = 15;
 const MAX_DURATION = 180;
@@ -68,12 +69,12 @@ export async function POST(req: NextRequest) {
       Math.round(durationMinutes),
       parsedSlots.map((d: Date) => d.toISOString())
     );
-    void createNotification(candidateGithubId, {
+    afterResponse(createNotification(candidateGithubId, {
       type: "interview_proposed",
       title: "Interview requested",
       body: `A recruiter proposed ${parsedSlots.length === 1 ? "a time" : `${parsedSlots.length} times`} for "${title}".`,
       link: "/dashboard/interviews",
-    });
+    }));
     return NextResponse.json({ interview }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });

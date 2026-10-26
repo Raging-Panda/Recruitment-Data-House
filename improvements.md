@@ -1311,6 +1311,18 @@ sharing). These items close that gap. Roughly ordered by leverage.
   Sentry. Still open: create the Sentry project and set the DSN (plus
   `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` for readable stack
   traces) on Vercel.
+- **Background work survives on Vercel** — ✅ shipped 2026-10-26. 23
+  places ran side work without waiting for it (`void createNotification(...)`,
+  feed events, push sends, marking messages read, profile views, the
+  Profile page's directory sync, referral attribution, rate-limit
+  cleanup). Vercel can freeze a function as soon as it responds, so that
+  work could be silently lost there. All now go through
+  `lib/after-response.ts`'s `afterResponse()`, which hands the promise to
+  `waitUntil` from `@vercel/functions` (a no-op off Vercel) and logs any
+  rejection so Sentry sees it. Verified with a stand-in for Vercel's
+  request context: an endorsement and a certification each hand off 3
+  tasks (notification, push send, feed event), adding experience 2, a
+  control request 0, and every task settles.
 - **Only offer sign-in methods that are configured** — ✅ shipped.
   `lib/auth.ts` registers Google and LinkedIn only when their client id
   and secret are set, and the login card hides their buttons otherwise

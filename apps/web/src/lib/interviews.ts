@@ -1,6 +1,7 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { createNotification } from "@/lib/notifications";
+import { afterResponse } from "@/lib/after-response";
 export { MAX_PROPOSED_SLOTS } from "@/lib/interview-constants";
 
 export type InterviewStatus = "pending" | "booked" | "cancelled";
@@ -153,12 +154,12 @@ export async function bookInterviewAndNotify(
   const booked = await bookInterviewSlot(id, candidateId, slot).catch(() => null);
   if (!booked) return { ok: false, reason: "no_longer_open" };
 
-  void createNotification(booked.recruiterId, {
+  afterResponse(createNotification(booked.recruiterId, {
     type: "interview_booked",
     title: "Interview booked",
     body: `Your interview request "${booked.title}" was booked.`,
     link: "/dashboard/interviews",
-  });
+  }));
 
   return { ok: true, interview: booked };
 }
@@ -178,12 +179,12 @@ export async function cancelInterviewAndNotify(
   if (!cancelled) return null;
 
   const otherParty = cancelled.recruiterId === viewerId ? cancelled.candidateId : cancelled.recruiterId;
-  void createNotification(otherParty, {
+  afterResponse(createNotification(otherParty, {
     type: "interview_cancelled",
     title: "Interview cancelled",
     body: `"${cancelled.title}" was cancelled.`,
     link: "/dashboard/interviews",
-  });
+  }));
 
   return cancelled;
 }

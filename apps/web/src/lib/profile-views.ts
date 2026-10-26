@@ -1,6 +1,7 @@
 import type { ProfileViewStats } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { createNotification } from "@/lib/notifications";
+import { afterResponse } from "@/lib/after-response";
 
 /**
  * Best-effort — a Supabase hiccup here shouldn't break loading the profile
@@ -32,12 +33,12 @@ export async function recordProfileView(
       viewer_github_id: viewerGithubId,
     });
     if (isNewViewer) {
-      void createNotification(viewedGithubId, {
+      afterResponse(createNotification(viewedGithubId, {
         type: "profile_viewed",
         title: "Someone viewed your profile",
         body: "A recruiter checked out your IPSkill profile.",
         link: "/dashboard/analytics",
-      });
+      }));
     }
   } catch {
     // view counts are a nice-to-have, not worth failing the page over

@@ -1,6 +1,7 @@
 import type { NotificationItem, NotificationType } from "@ipskill/shared";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { sendExpoPushNotification } from "@/lib/push-notifications";
+import { afterResponse } from "@/lib/after-response";
 
 export interface NotificationRow {
   id: string;
@@ -49,5 +50,5 @@ export async function createNotification(
   // Every existing notification trigger already funnels through here, so
   // this is the one place a mobile push send needs to be wired in rather
   // than touching each call site individually.
-  void sendExpoPushNotification(githubId, notification);
+  afterResponse(sendExpoPushNotification(githubId, notification));
 }

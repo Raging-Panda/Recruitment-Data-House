@@ -7,6 +7,7 @@ import type {
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { notifySavedSearchMatches } from "@/lib/saved-searches";
 import { getHiddenIdsSafe } from "@/lib/verification";
+import { afterResponse } from "@/lib/after-response";
 
 export interface DirectoryRow {
   github_id: string;
@@ -132,22 +133,23 @@ export async function syncDirectoryProfile(
         await supabase.from("directory_profiles").upsert(baseRow);
       }
     }
-    void notifySavedSearchMatches(entry);
+    afterResponse(notifySavedSearchMatches(entry));
     // One point-in-time score sample per sync — Growth Olympics and
     // "trending developers" both compute a delta over these rather than
     // needing a cron job. A few extra rows per profile visit is cheap;
     // deliberately no de-dupe/throttle here, simplicity over storage.
     //
-    // Genuinely awaited, not "void"'d like notifySavedSearchMatches above —
+    // Genuinely awaited, not handed to afterResponse like
+    // notifySavedSearchMatches above —
     // supabase-js query builders are lazy thenables that only actually
     // dispatch their fetch() when something calls .then()/awaits them;
     // `void builder.insert(...)` discards the *result* of constructing the
     // request but never triggers it, so the row silently never gets
-    // written. (notifySavedSearchMatches is safe to void because it's a
+    // written. (notifySavedSearchMatches is safe to hand off because it's a
     // real async function that awaits its own Supabase calls internally —
-    // the bug is specific to voiding a raw query-builder chain directly.)
-    // syncDirectoryProfile itself is already called fire-and-forget from
-    // its caller, so awaiting here doesn't block anything upstream.
+    // the bug is specific to discarding a raw query-builder chain directly.)
+    // syncDirectoryProfile itself already runs after the response from its
+    // caller, so awaiting here doesn't block anything upstream.
     await supabase.from("score_snapshots").insert({ owner_id: githubId, overall_score: profile.overallScore });
   } catch {
     // directory freshness is a nice-to-have side effect, not worth failing the profile page over

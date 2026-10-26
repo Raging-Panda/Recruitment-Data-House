@@ -9,6 +9,7 @@ import {
 } from "@/lib/messaging";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getDirectoryEntry } from "@/lib/directory";
+import { afterResponse } from "@/lib/after-response";
 
 export async function GET(req: NextRequest, { params }: { params: { conversationId: string } }) {
   const githubId = await resolveMobileGithubId(req);
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: { conversation
     getConversationMeta(params.conversationId),
     otherId ? getDirectoryEntry(otherId).catch(() => null) : Promise.resolve(null),
   ]);
-  void markConversationRead(params.conversationId, githubId);
+  afterResponse(markConversationRead(params.conversationId, githubId));
 
   return NextResponse.json({
     messages,
