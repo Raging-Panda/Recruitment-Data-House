@@ -13,6 +13,8 @@ import { DirectMessagesCard } from "@/components/direct-messages-card";
 import { TwoFactorCard } from "@/components/two-factor-card";
 import { getTotpStatus } from "@/lib/two-factor";
 import { V1_MODE } from "@/lib/v1-mode";
+import { getPlan } from "@/lib/premium";
+import { hasRecruiterAccess } from "@/lib/plan";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -25,10 +27,11 @@ export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
   const primaryProvider = primaryProviderOf(session!);
-  const [linked, messagePreference, totpStatus] = await Promise.all([
+  const [linked, messagePreference, totpStatus, plan] = await Promise.all([
     getLinkedAccountsSafe(session!.githubId!),
     getMessagePreference(session!.githubId!),
     getTotpStatus(session!.githubId!),
+    getPlan(session!.githubId),
   ]);
 
   return (
@@ -64,7 +67,7 @@ export default async function SettingsPage() {
           ))}
         {!V1_MODE && <DirectMessagesCard initialPreference={messagePreference} isDemo={isDemo} />}
         {!V1_MODE && <ReferralCard />}
-        <ApiKeysCard isDemo={isDemo} />
+        <ApiKeysCard isDemo={isDemo} canCreate={hasRecruiterAccess(plan)} />
       </div>
     </div>
   );
