@@ -12,6 +12,7 @@ interface OptionRow {
   title: string;
   stack: string;
   is_active: boolean;
+  level_order: number | null;
 }
 
 /**
@@ -27,7 +28,7 @@ interface OptionRow {
 export async function getSkillTestOptions(): Promise<SkillTestOption[]> {
   const { data, error } = await getSupabaseAdmin()
     .from("skill_test_templates")
-    .select("slug, title, stack, is_active");
+    .select("slug, title, stack, is_active, level_order");
 
   if (error) throw new Error(error.message);
 
@@ -40,7 +41,13 @@ export async function getSkillTestOptions(): Promise<SkillTestOption[]> {
 
   return [...byStack.entries()]
     .map(([stack, templates]) => {
-      const active = templates.find((t) => t.is_active) ?? null;
+      // Link the stack's entry point: a standalone test if one is active,
+      // otherwise its lowest active level. Any higher level would open on a
+      // test that's locked until the levels below it are passed.
+      const active =
+        templates
+          .filter((t) => t.is_active)
+          .sort((a, b) => (a.level_order ?? 0) - (b.level_order ?? 0))[0] ?? null;
       return {
         stack,
         isAvailable: Boolean(active),

@@ -36,7 +36,12 @@ export default async function SkillsPage() {
     const supabase = getSupabaseAdmin();
     const isDemo = isDemoAccount(session!.githubId);
     const [{ data: templateRows }, attemptRows] = await Promise.all([
-      supabase.from("skill_test_templates").select("*, skill_test_questions(count)").eq("is_active", true).order("stack"),
+      supabase
+        .from("skill_test_templates")
+        .select("*, skill_test_questions(count)")
+        .eq("is_active", true)
+        .order("stack")
+        .order("level_order", { ascending: true, nullsFirst: true }),
       isDemo
         ? Promise.resolve({ data: [] as AttemptRow[] })
         : supabase.from("skill_test_attempts").select("*").eq("github_id", session!.githubId!).order("started_at", { ascending: false }),

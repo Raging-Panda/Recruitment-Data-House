@@ -109,12 +109,38 @@ and Growth 404).
   replaced by their leveled equivalents, so Verified Skills isn't
   empty in the meantime. Next step: author real questions per
   tier/skill, then flip `is_active` on as each is ready.
+  **Update 2026-10-26 — JavaScript written** (migration
+  `0015_javascript_skill_tests.sql`, live once applied): 122 questions
+  across the 9 levels, about twice each level's target so a retake draws
+  a different random subset, climbing from types and operators up to the
+  event loop, prototypes, coercion, structured cloning and module live
+  bindings. The bank lives in `db/skill-tests/javascript.mjs`, and
+  `db/skill-tests/build.mjs` generates the migration: it runs every
+  computable answer in Node and refuses to build on a mismatch (114 of
+  122 are checked this way; the other 8 are conceptual), checks structure
+  (4 distinct one-line choices, no duplicate questions, at least 2x
+  target per level), and spreads correct answers evenly across positions
+  A–D. The migration activates the 9 levels and retires JavaScript
+  Fundamentals as planned above (no one had attempted it in production).
+  Two ordering bugs the activation would have exposed were fixed
+  alongside: the Skills page and `/api/skill-tests` now order by
+  `level_order` within a stack (Postgres returns rows in no fixed order),
+  and the Profile modal links a stack's entry level instead of whichever
+  active template came back first, which could have been a locked
+  Advanced 3. Verified locally: the migration applies cleanly (and
+  idempotently) on Postgres via PGlite after 0012; through the app, a
+  Beginner 1 attempt serves 5 questions from its bank and scores 100%
+  when answered from the key, Beginner 2 stays locked until then,
+  Advanced 3 serves 9, and the levels list in order even when the
+  database returns rows backwards. Next: the other 15 stacks, same
+  tooling — one bank file each.
 - **"Get More Verified Skills" entry point on Profile** — ✅ shipped:
   a "Verified Skills" card on the Profile page with a button that
   opens a modal listing every stack in `skill_test_templates`
   (`lib/skill-test-options.ts` groups all 16 by stack, active or not).
   Stacks with a live test (currently JavaScript, Python, SQL) are
-  clickable and jump straight to `/dashboard/skills/tests/[slug]`;
+  clickable and jump straight to `/dashboard/skills/tests/[slug]` — for a
+  leveled stack, its entry level (see the update above);
   the other 13 — scaffolded per the difficulty-tier item above but with
   no question content yet — show as disabled "Coming soon" rather than
   being hidden, so the modal doubles as an honest preview of what's
