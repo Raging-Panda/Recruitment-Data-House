@@ -27,6 +27,7 @@ import { V1_MODE } from "@/lib/v1-mode";
 import { getPublicIdentitySafe } from "@/lib/public-identity";
 import { VideoIntroLink } from "@/components/video-intro-link";
 import type { DirectoryEntry, Endorsement } from "@ipskill/shared";
+import { afterResponse } from "@/lib/after-response";
 
 export default async function DirectoryProfilePage({
   params,
@@ -56,7 +57,7 @@ export default async function DirectoryProfilePage({
       entry = null;
     }
     if (entry) {
-      void recordProfileView(githubId, viewerGithubId);
+      afterResponse(recordProfileView(githubId, viewerGithubId));
       try {
         endorsements = await getEndorsementsFor(githubId);
       } catch {

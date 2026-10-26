@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash } from "crypto";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { afterResponse } from "@/lib/after-response";
 
 export interface RateLimitRule {
   /** Attempts allowed inside the window; the (limit + 1)th is refused. */
@@ -56,12 +57,14 @@ export async function hitRateLimit(key: string, rule: RateLimitRule): Promise<Ra
         .gte("created_at", since);
       if (!countError && typeof dbCount === "number") count = Math.max(count, dbCount);
       if (Math.random() < 0.02) {
-        void Promise.resolve(
-          supabase
-            .from("rate_limit_events")
-            .delete()
-            .lt("created_at", new Date(now - 86_400_000).toISOString())
-        ).catch(() => undefined);
+        afterResponse(
+          Promise.resolve(
+            supabase
+              .from("rate_limit_events")
+              .delete()
+              .lt("created_at", new Date(now - 86_400_000).toISOString())
+          ).catch(() => undefined)
+        );
       }
     }
   } catch {

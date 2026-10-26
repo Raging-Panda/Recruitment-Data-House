@@ -13,6 +13,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getDirectoryEntry } from "@/lib/directory";
 import { MessageThread } from "@/components/message-thread";
 import { V1_MODE } from "@/lib/v1-mode";
+import { afterResponse } from "@/lib/after-response";
 
 export default async function ConversationPage({ params }: { params: { id: string } }) {
   if (V1_MODE) notFound();
@@ -35,7 +36,7 @@ export default async function ConversationPage({ params }: { params: { id: strin
   const isPendingOnThem = meta?.status === "pending" && !isPendingOnMe;
 
   const messages = await getMessages(params.id).catch(() => []);
-  void markConversationRead(params.id, session!.githubId!);
+  afterResponse(markConversationRead(params.id, session!.githubId!));
 
   return (
     <div className="mx-auto max-w-2xl">

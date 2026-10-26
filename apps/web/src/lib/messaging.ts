@@ -2,6 +2,7 @@ import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getMessagePreference } from "@/lib/message-preference";
 import { createNotification } from "@/lib/notifications";
+import { afterResponse } from "@/lib/after-response";
 
 function canonicalPair(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
@@ -179,12 +180,12 @@ export async function sendMessageAndNotify(
     .maybeSingle();
   const recipient = convo?.participant_a === senderId ? convo?.participant_b : convo?.participant_a;
   if (recipient) {
-    void createNotification(recipient, {
+    afterResponse(createNotification(recipient, {
       type: "message_received",
       title: "New message",
       body: body.length > 140 ? `${body.slice(0, 140)}…` : body,
       link: `/dashboard/messages/${conversationId}`,
-    });
+    }));
   }
 
   return message;

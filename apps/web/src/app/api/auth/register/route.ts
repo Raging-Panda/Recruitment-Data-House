@@ -4,6 +4,7 @@ import { hashPassword } from "@/lib/password";
 import { attributeReferral } from "@/lib/referrals";
 import { LOCAL_ID_PREFIX } from "@/lib/local-account";
 import { clientIp, hitRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { afterResponse } from "@/lib/after-response";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
   }
 
   const ref = typeof body?.ref === "string" ? body.ref.trim() : "";
-  if (ref) void attributeReferral(ref, `${LOCAL_ID_PREFIX}${created.id}`);
+  if (ref) afterResponse(attributeReferral(ref, `${LOCAL_ID_PREFIX}${created.id}`));
 
   return NextResponse.json({ success: true }, { status: 201 });
 }

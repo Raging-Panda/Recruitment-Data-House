@@ -46,6 +46,7 @@ import { SkillProofsManager } from "@/components/skill-proofs-manager";
 import { getSkillProofsForSafe } from "@/lib/skill-proofs";
 import type { ContributionDay, Endorsement, WorkExperience, Certification } from "@ipskill/shared";
 import { buildVerifiedSkillMilestones, type VerifiedSkillMilestone } from "@/lib/skill-tests";
+import { afterResponse } from "@/lib/after-response";
 
 const EMPTY_LINK_STATUS: PublicProfileLinkStatus = {
   token: null,
@@ -257,7 +258,7 @@ export default async function ProfilePage() {
     endorsements = DEMO_ENDORSEMENTS[session!.githubId!] ?? [];
     linkStatus = DEMO_PUBLIC_LINK_STATUS;
   } else if (!isTestAccount(session!.githubId)) {
-    void syncDirectoryProfile(
+    afterResponse(syncDirectoryProfile(
       session!.githubId!,
       displayName,
       profile,
@@ -266,7 +267,7 @@ export default async function ProfilePage() {
       aboutAuthored,
       identity,
       { text: override?.currently ?? null, updatedAt: override?.currentlyUpdatedAt ?? null }
-    );
+    ));
     try {
       endorsements = await getEndorsementsFor(session!.githubId!);
     } catch {

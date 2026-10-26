@@ -6,6 +6,7 @@ import { rowToCertification } from "@/lib/certifications";
 import { demoWriteBlockedResponse, isDemoAccount } from "@/lib/demo-mode";
 import { createNotification } from "@/lib/notifications";
 import { recordActivityEvent } from "@/lib/social";
+import { afterResponse } from "@/lib/after-response";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -63,13 +64,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  void createNotification(session.githubId, {
+  afterResponse(createNotification(session.githubId, {
     type: "certification_added",
     title: "Certification added",
     body: name,
     link: "/dashboard/certifications",
-  });
-  void recordActivityEvent(session.githubId, { type: "certification_added", title: name });
+  }));
+  afterResponse(recordActivityEvent(session.githubId, { type: "certification_added", title: name }));
 
   return NextResponse.json({ entry: rowToCertification(data) }, { status: 201 });
 }
