@@ -18,7 +18,10 @@ export async function GET() {
         .from("skill_test_templates")
         .select("*, skill_test_questions(count)")
         .eq("is_active", true)
-        .order("stack", { ascending: true }),
+        .order("stack", { ascending: true })
+        // Levels in ladder order (standalone tests first) — without this the
+        // order within a stack is whatever Postgres returns.
+        .order("level_order", { ascending: true, nullsFirst: true }),
       supabase
         .from("skill_test_attempts")
         .select("*")
