@@ -5,6 +5,7 @@ import { attributeReferral } from "@/lib/referrals";
 import { LOCAL_ID_PREFIX } from "@/lib/local-account";
 import { clientIp, hitRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { afterResponse } from "@/lib/after-response";
+import { isEmailLoginEnabled } from "@/lib/email-login";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -27,6 +28,7 @@ function accountCreationFailed(stage: string, err: { message: string }) {
  * right after a 201, same two-step shape NextAuth's own examples use.
  */
 export async function POST(req: NextRequest) {
+  if (!isEmailLoginEnabled()) return NextResponse.json({ error: "Not found" }, { status: 404 });
   // Signup is free to call, so without a cap it is a spam/enumeration
   // tool (the 409 below confirms which emails already have accounts).
   const limit = await hitRateLimit(`register:ip:${clientIp(req.headers)}`, RATE_LIMITS.registerPerIp);

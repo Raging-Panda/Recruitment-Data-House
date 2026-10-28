@@ -17,6 +17,7 @@ import { verifyPassword } from "./password";
 import { LOCAL_ID_PREFIX } from "./local-account";
 import { verifyTotpOrBackupCode } from "./two-factor";
 import { clientIp, hashKeyPart, hitRateLimit, RATE_LIMITS, resetRateLimit } from "./rate-limit";
+import { isEmailLoginEnabled } from "./email-login";
 
 interface LinkedInOIDCProfile {
   sub: string;
@@ -84,6 +85,70 @@ function LinkedInProvider(options: {
   };
 }
 
+// Real email/password accounts (users table, apps/web/src/lib/password.ts
+// for hashing). Same "second-class citizen" status as Google — a regular
+// account has no GitHub token and gets the ThinProfile / ConnectGithubPrompt
+// treatment (lib/github-connection.ts) until account linking exists.
+// Registration is a separate step: POST /api/auth/register, then the
+// client calls signIn("credentials", ...) itself.
+const emailPasswordProvider = CredentialsProvider({
+  id: "credentials",
+  name: "Email",
+  credentials: {
+    email: { label: "Email", type: "email" },
+    password: { label: "Password", type: "password" },
+    // Only present once the login form's own pre-check (POST
+    // /api/auth/login-check) says the account has 2FA enabled — but
+    // that pre-check is just a UX hint, not a trust boundary. This
+    // authorize() re-verifies the password AND the code independently
+    // below, so a forged/skipped pre-check can't bypass 2FA.
+    totpCode: { label: "Authenticator code", type: "text" },
+  },
+  async authorize(credentials, req) {
+    const email = credentials?.email?.trim().toLowerCase();
+    if (!email || !credentials?.password) return null;
+
+    // Throttle before touching the DB or hashing anything. Two buckets: per
+    // email (stops guessing one account from many IPs) and per IP (stops
+    // one machine sweeping many accounts). Thrown rather than returned
+    // null so the form can say "too many attempts" instead of lying with
+    // "incorrect password".
+    const emailKey = `login:email:${hashKeyPart(email)}`;
+    const [byEmail, byIp] = await Promise.all([
+      hitRateLimit(emailKey, RATE_LIMITS.loginPerEmail),
+      hitRateLimit(`login:ip:${clientIp(req?.headers ?? {})}`, RATE_LIMITS.loginPerIp),
+    ]);
+    if (byEmail.limited || byIp.limited) throw new Error("RateLimited");
+
+    const { data: user, error } = await getSupabaseAdmin()
+      .from("users")
+      .select("id, email, password_hash, display_name, totp_enabled")
+      .eq("email", email)
+      .maybeSingle();
+    if (error || !user) return null;
+    if (!verifyPassword(credentials.password, user.password_hash)) return null;
+
+    if (user.totp_enabled) {
+      // Own, tighter bucket keyed on the account (not the IP, which an
+      // attacker controls): a 6-digit code is only safe if guesses are scarce.
+      const totpKey = `totp:user:${user.id}`;
+      const totp = await hitRateLimit(totpKey, RATE_LIMITS.totpPerUser);
+      if (totp.limited) throw new Error("RateLimited");
+      const code = credentials?.totpCode?.trim();
+      if (!code || !(await verifyTotpOrBackupCode(user.id, code))) return null;
+      await resetRateLimit(totpKey);
+    }
+    await resetRateLimit(emailKey);
+
+    return {
+      id: `${LOCAL_ID_PREFIX}${user.id}`,
+      name: user.display_name ?? user.email,
+      email: user.email,
+      image: null,
+    };
+  },
+});
+
 const providers: NextAuthOptions["providers"] = [
   GitHubProvider({
     clientId: process.env.GITHUB_CLIENT_ID ?? "",
@@ -114,69 +179,6 @@ const providers: NextAuthOptions["providers"] = [
   // Same second-class-citizen status as Google — no GitHub token, so
   // ThinProfile / ConnectGithubPrompt again. See the LinkedInProvider
   // comment above for why this isn't next-auth's built-in provider.
-  // Real email/password accounts (users table, apps/web/src/lib/password.ts
-  // for hashing). Same "second-class citizen" status as Google — a regular
-  // account has no GitHub token and gets the ThinProfile / ConnectGithubPrompt
-  // treatment (lib/github-connection.ts) until account linking exists.
-  // Registration is a separate step: POST /api/auth/register, then the
-  // client calls signIn("credentials", ...) itself.
-  CredentialsProvider({
-    id: "credentials",
-    name: "Email",
-    credentials: {
-      email: { label: "Email", type: "email" },
-      password: { label: "Password", type: "password" },
-      // Only present once the login form's own pre-check (POST
-      // /api/auth/login-check) says the account has 2FA enabled — but
-      // that pre-check is just a UX hint, not a trust boundary. This
-      // authorize() re-verifies the password AND the code independently
-      // below, so a forged/skipped pre-check can't bypass 2FA.
-      totpCode: { label: "Authenticator code", type: "text" },
-    },
-    async authorize(credentials, req) {
-      const email = credentials?.email?.trim().toLowerCase();
-      if (!email || !credentials?.password) return null;
-
-      // Throttle before touching the DB or hashing anything. Two buckets: per
-      // email (stops guessing one account from many IPs) and per IP (stops
-      // one machine sweeping many accounts). Thrown rather than returned
-      // null so the form can say "too many attempts" instead of lying with
-      // "incorrect password".
-      const emailKey = `login:email:${hashKeyPart(email)}`;
-      const [byEmail, byIp] = await Promise.all([
-        hitRateLimit(emailKey, RATE_LIMITS.loginPerEmail),
-        hitRateLimit(`login:ip:${clientIp(req?.headers ?? {})}`, RATE_LIMITS.loginPerIp),
-      ]);
-      if (byEmail.limited || byIp.limited) throw new Error("RateLimited");
-
-      const { data: user, error } = await getSupabaseAdmin()
-        .from("users")
-        .select("id, email, password_hash, display_name, totp_enabled")
-        .eq("email", email)
-        .maybeSingle();
-      if (error || !user) return null;
-      if (!verifyPassword(credentials.password, user.password_hash)) return null;
-
-      if (user.totp_enabled) {
-        // Own, tighter bucket keyed on the account (not the IP, which an
-        // attacker controls): a 6-digit code is only safe if guesses are scarce.
-        const totpKey = `totp:user:${user.id}`;
-        const totp = await hitRateLimit(totpKey, RATE_LIMITS.totpPerUser);
-        if (totp.limited) throw new Error("RateLimited");
-        const code = credentials?.totpCode?.trim();
-        if (!code || !(await verifyTotpOrBackupCode(user.id, code))) return null;
-        await resetRateLimit(totpKey);
-      }
-      await resetRateLimit(emailKey);
-
-      return {
-        id: `${LOCAL_ID_PREFIX}${user.id}`,
-        name: user.display_name ?? user.email,
-        email: user.email,
-        image: null,
-      };
-    },
-  }),
   // Public, always-on proof-of-concept login — a fully populated fixture
   // profile anyone evaluating the product can see without a real GitHub
   // account. Deliberately not gated behind ALLOW_TEST_LOGIN like the dev
@@ -201,6 +203,9 @@ const providers: NextAuthOptions["providers"] = [
     },
   }),
 ];
+
+// Email/password: off until reset and verification exist — see lib/email-login.ts.
+if (isEmailLoginEnabled()) providers.push(emailPasswordProvider);
 
 // Google and LinkedIn are only registered when their credentials exist.
 // Registered with empty ids they still show up in /api/auth/providers, so

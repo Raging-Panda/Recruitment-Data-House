@@ -14,7 +14,7 @@ import { TwoFactorCard } from "@/components/two-factor-card";
 import { getTotpStatus } from "@/lib/two-factor";
 import { V1_MODE } from "@/lib/v1-mode";
 import { getPlan } from "@/lib/premium";
-import { hasRecruiterAccess } from "@/lib/plan";
+import { hasRecruiterAccess, PLAN_LABELS } from "@/lib/plan";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -68,6 +68,14 @@ export default async function SettingsPage() {
         {!V1_MODE && <DirectMessagesCard initialPreference={messagePreference} isDemo={isDemo} />}
         {!V1_MODE && <ReferralCard />}
         <ApiKeysCard isDemo={isDemo} canCreate={hasRecruiterAccess(plan)} />
+        <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <h3 className="text-sm font-semibold text-heading">Account</h3>
+          <p className="mt-1 text-xs text-text-muted">
+            Plan: {PLAN_LABELS[plan]}. Quote your account ID when asking the IPSkill team for access
+            to a paid plan.
+          </p>
+          <code className="mt-2 block select-all break-all text-sm text-heading">{session!.githubId}</code>
+        </div>
       </div>
     </div>
   );

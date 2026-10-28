@@ -10,6 +10,7 @@ import { useToast } from "./toast-provider";
 import { setPendingToast } from "@/lib/pending-toast";
 import { PLAN_LABELS, type Plan } from "@/lib/plan";
 import { V1_MODE } from "@/lib/v1-mode";
+import { RequestAccess } from "./request-access";
 import {
   HomeIcon,
   PersonIcon,
@@ -62,6 +63,7 @@ export function Sidebar({
   plan,
   showPlanToggle,
   showAdminLink,
+  accountId,
   isOpen,
   onClose,
 }: {
@@ -69,6 +71,7 @@ export function Sidebar({
   plan: Plan;
   showPlanToggle: boolean;
   showAdminLink: boolean;
+  accountId: string;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -137,7 +140,7 @@ export function Sidebar({
         <div className="flex flex-col gap-4">
           {showPlanToggle && <TestPlanToggle currentPlan={plan} />}
 
-          <RecruiterToolsCard plan={plan} onNavigate={onClose} />
+          <RecruiterToolsCard plan={plan} accountId={accountId} onNavigate={onClose} />
 
           <button
             onClick={toggleTheme}
@@ -173,16 +176,19 @@ export function Sidebar({
 /**
  * Entry point for Recruiter Tools (Directory/Shortlists/Compare) —
  * deliberately not a normal nav item, since that section is a separate,
- * premium-gated space rather than part of the standard dev profile. Doubles
- * as the account's upgrade CTA until real billing exists: "Upgrade Now"
- * self-serves straight to the premium_recruiter plan via /api/premium/upgrade
- * (premium_dev alone wouldn't unlock this section).
+ * premium-gated space rather than part of the standard dev profile. Without
+ * the plan it shows how to request access: plans are granted by an admin
+ * until billing exists (see RequestAccess).
  */
-function RecruiterToolsCard({ plan, onNavigate }: { plan: Plan; onNavigate: () => void }) {
-  const router = useRouter();
-  const showToast = useToast();
-  const [isUpgrading, setIsUpgrading] = useState(false);
-
+function RecruiterToolsCard({
+  plan,
+  accountId,
+  onNavigate,
+}: {
+  plan: Plan;
+  accountId: string;
+  onNavigate: () => void;
+}) {
   if (plan === "premium_recruiter") {
     return (
       <Link
@@ -199,36 +205,17 @@ function RecruiterToolsCard({ plan, onNavigate }: { plan: Plan; onNavigate: () =
     );
   }
 
-  async function handleUpgrade() {
-    setIsUpgrading(true);
-    try {
-      const res = await fetch("/api/premium/upgrade", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to upgrade");
-      showToast("Upgraded — Recruiter Tools unlocked");
-      onNavigate();
-      router.push("/dashboard/recruiter");
-      router.refresh();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to upgrade", "error");
-    } finally {
-      setIsUpgrading(false);
-    }
-  }
-
   return (
     <div className="rounded-xl border border-surface-border bg-surface p-4">
       <p className="text-sm font-semibold text-heading">Recruiter Tools</p>
       <p className="mt-1 text-xs text-text-secondary">
-        Unlock the Directory, shortlists, and candidate comparison — Premium only.
+        The Directory, shortlists, and candidate comparison — Premium Recruiter only.
       </p>
-      <button
-        onClick={handleUpgrade}
-        disabled={isUpgrading}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-      >
-        {isUpgrading ? "Upgrading…" : "Upgrade Now"} <ArrowRightIcon size={14} />
-      </button>
+      <RequestAccess
+        plan="premium_recruiter"
+        accountId={accountId}
+        buttonClassName="mt-3 flex w-full items-center justify-center rounded-full bg-primary-gradient py-2 text-xs font-semibold text-white transition hover:opacity-90"
+      />
     </div>
   );
 }

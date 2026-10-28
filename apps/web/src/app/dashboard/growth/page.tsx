@@ -27,7 +27,7 @@ export default async function GrowthOlympicsPage() {
       </p>
 
       {!eligible ? (
-        <GrowthUpgradeCta />
+        <GrowthUpgradeCta accountId={session!.githubId!} />
       ) : (
         <>
           {myRank >= 0 && (

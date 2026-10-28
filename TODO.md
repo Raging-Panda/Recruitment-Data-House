@@ -31,7 +31,15 @@ agent session (dashboard-only steps, secrets, etc.). Distinct from
     are set)
   - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (Supabase dashboard →
     Project Settings → API → service_role — must be pasted in by hand)
+  - `ADMIN_GITHUB_IDS` — your own account ID (Settings → Account shows
+    it), comma-separated for more than one. Admins get Admin → Plans,
+    which is now the only way to give someone a paid plan
+  - `NEXT_PUBLIC_CONTACT_EMAIL` — where "Request access" emails go.
+    Without it the paywalls only show the person's account ID. It's baked
+    in at build time, so redeploy after setting it
   - Leave `ALLOW_TEST_LOGIN` unset (never `true` on a real deployment)
+  - Leave `ENABLE_EMAIL_LOGIN` unset until password reset and email
+    verification exist
 - [ ] **Register the production callback URLs** on the existing apps
   (both allow several, so keep the localhost ones):
   - Google OAuth client → Authorized redirect URIs:
@@ -47,3 +55,7 @@ agent session (dashboard-only steps, secrets, etc.). Distinct from
   projects (`ipskill`, `ipskill-diag`, `ipskill-web`), and check whether
   `recruitment-data-house` (which served the per-deployment link tested on
   2026-10-15) is a duplicate of `recruitment-data-house-web`.
+- [ ] **Grant paid plans by hand** — there's no billing yet, so Premium
+  Recruiter / Premium Dev are invite-only. When a "Request access" email
+  arrives, open Admin → Plans, paste the account ID from the email and
+  pick the plan (Free revokes it).

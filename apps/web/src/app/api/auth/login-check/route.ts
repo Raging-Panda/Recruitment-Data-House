@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { verifyPassword } from "@/lib/password";
 import { clientIp, hashKeyPart, hitRateLimit, RATE_LIMITS, resetRateLimit } from "@/lib/rate-limit";
+import { isEmailLoginEnabled } from "@/lib/email-login";
 
 function tooManyAttempts(retryAfterSeconds: number) {
   return NextResponse.json(
@@ -20,6 +21,7 @@ function tooManyAttempts(retryAfterSeconds: number) {
  * real check.
  */
 export async function POST(req: NextRequest) {
+  if (!isEmailLoginEnabled()) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body?.password === "string" ? body.password : "";

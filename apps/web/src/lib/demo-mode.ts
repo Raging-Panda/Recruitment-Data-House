@@ -6,8 +6,7 @@ import { NextResponse } from "next/server";
  * clicked by anyone evaluating the product, so it's a real credentials login
  * rather than an env-gated fixture.
  */
-export const DEMO_EMAIL = "admin@admin.com";
-export const DEMO_PASSWORD = "1234";
+export { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-credentials";
 export const DEMO_GITHUB_ID = "900000002";
 export const DEMO_ACCESS_TOKEN = "demo-mode";
 
