@@ -11,6 +11,7 @@ import { ReferralCard } from "@/components/referral-card";
 import { ApiKeysCard } from "@/components/api-keys-card";
 import { DirectMessagesCard } from "@/components/direct-messages-card";
 import { TwoFactorCard } from "@/components/two-factor-card";
+import { DeleteAccountCard } from "@/components/delete-account-card";
 import { getTotpStatus } from "@/lib/two-factor";
 import { V1_MODE } from "@/lib/v1-mode";
 import { getPlan } from "@/lib/premium";
@@ -76,6 +77,7 @@ export default async function SettingsPage() {
           </p>
           <code className="mt-2 block select-all break-all text-sm text-heading">{session!.githubId}</code>
         </div>
+        <DeleteAccountCard isDemo={isDemo} />
       </div>
     </div>
   );
