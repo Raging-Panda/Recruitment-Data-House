@@ -59,3 +59,20 @@ agent session (dashboard-only steps, secrets, etc.). Distinct from
   Recruiter / Premium Dev are invite-only. When a "Request access" email
   arrives, open Admin → Plans, paste the account ID from the email and
   pick the plan (Free revokes it).
+- [ ] **Publish the Google OAuth consent screen** — Google Cloud →
+  IPSkill project → Google Auth Platform → Branding: set the privacy
+  policy link to `https://ipskill.blacklinetech.co.za/privacy` and the
+  terms link to `https://ipskill.blacklinetech.co.za/terms` (once the
+  domain is live), then Audience → Publish app. Until it's published,
+  only listed test users can sign in with Google.
+- [ ] **Accept the data processing agreements** for Supabase and Vercel
+  (both offer one in their dashboards/legal pages). The privacy policy
+  says data sent to them outside South Africa is covered by agreements
+  like these, as POPIA section 72 requires.
+- [ ] **Have a lawyer read `/privacy` and `/terms`** — they were drafted
+  to match what the app actually does, not reviewed by a lawyer.
+- [ ] **Register yourself as Information Officer** with the Information
+  Regulator (inforegulator.org.za → eServices). The privacy policy names
+  the owner of Blackline Technology as Information Officer; POPIA
+  requires that person to be registered before the app processes
+  personal information.

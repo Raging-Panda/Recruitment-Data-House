@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { LoginCard } from "@/components/login-card";
 import { FingerprintPattern } from "@/components/fingerprint-pattern";
+import { PublicFooter } from "@/components/public-chrome";
 
 export default async function LoginPage() {
   // A signed-in visitor has no reason to see the login form. This matters
@@ -15,11 +16,14 @@ export default async function LoginPage() {
   if (session?.githubId) redirect("/dashboard/profile");
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
-      <FingerprintPattern />
-      <div className="relative">
-        <LoginCard />
-      </div>
-    </main>
+    <div className="flex min-h-screen flex-col bg-background">
+      <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-10">
+        <FingerprintPattern />
+        <div className="relative">
+          <LoginCard />
+        </div>
+      </main>
+      <PublicFooter />
+    </div>
   );
 }
