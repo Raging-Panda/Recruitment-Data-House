@@ -7,6 +7,7 @@ import { buildDemoDeveloperHubData } from "@/lib/demo-data";
 import { V1_MODE } from "@/lib/v1-mode";
 import { PublicFooter, PublicHeader } from "@/components/public-chrome";
 import { DemoButton } from "@/components/demo-button";
+import { PendingToastOnMount } from "@/components/pending-toast-on-mount";
 import { FingerprintPattern } from "@/components/fingerprint-pattern";
 import { ScoreRing } from "@/components/score-ring";
 import { SkillRadarChartLazy } from "@/components/skill-radar-chart-lazy";
@@ -73,6 +74,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PendingToastOnMount />
       <PublicHeader />
 
       <main>
