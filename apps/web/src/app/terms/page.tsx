@@ -82,9 +82,9 @@ export default function TermsPage() {
 
       <h2>8. Ending your account</h2>
       <p>
-        You can stop using IPSkill at any time and ask us to delete your account by emailing {email}. We may suspend or
-        close an account that breaks these terms or puts other people at risk, and will tell you why unless the law or
-        safety prevents it.
+        You can stop using IPSkill at any time and delete your account from Settings (or ask us to, at {email}). We
+        may suspend or close an account that breaks these terms or puts other people at risk, and will tell you why
+        unless the law or safety prevents it.
       </p>
 
       <h2>9. Our responsibility to you</h2>

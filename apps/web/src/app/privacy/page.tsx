@@ -152,8 +152,10 @@ export default function PrivacyPage() {
         <li>Information copied from GitHub: refreshed as you use IPSkill and deleted with your account.</li>
         <li>Sign-in attempt records: about a day.</li>
         <li>
-          When you ask us to delete your account, we delete your personal information within 30 days, except anything
-          the law requires us to keep.
+          When you delete your account (Settings → Delete account), your profile and everything you added are deleted
+          straight away, along with your conversations, for both people in them. If you ask us by email instead, we do
+          it within 30 days. Notifications already sent to other people, such as &quot;you were endorsed&quot;, stay in
+          their inbox.
         </li>
       </ul>
 
@@ -170,7 +172,7 @@ export default function PrivacyPage() {
       <ul>
         <li>ask what personal information we hold about you and get a copy of it;</li>
         <li>correct it (most of it you can edit yourself in IPSkill);</li>
-        <li>ask us to delete it, or to close your account;</li>
+        <li>delete your account yourself from Settings, or ask us to delete your information;</li>
         <li>object to us using it, including for the Recruiter Directory;</li>
         <li>withdraw any consent you gave.</li>
       </ul>

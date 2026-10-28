@@ -1419,5 +1419,22 @@ sharing). These items close that gap. Roughly ordered by leverage.
   the signed-in redirect, dark and light themes, and no sideways
   overflow at phone width (which caught a real bug: the hero spilled
   off-screen on phones). **Still open:** have a lawyer review both
-  documents; until self-serve account deletion ships, the policy
-  tells people to email for deletion.
+  documents.
+- **Delete my account** — ✅ shipped 2026-10-28. Settings → Delete
+  account (type DELETE to confirm) calls `DELETE /api/account`, which
+  removes every row tied to the account across 30 tables
+  (`lib/account-deletion.ts`), then signs the person out to the home page
+  with a confirmation toast. Conversations go for both people in them;
+  other people's follows, endorsements, shortlist and saved-search
+  entries pointing at the account go too. The deletes run in phases with
+  the profile itself last, and each is idempotent, so a failure part-way
+  leaves the account in place and retrying finishes it. The demo account
+  can't be deleted. Checked with Playwright against a stand-in that
+  mirrors the real foreign keys (cascades, and the one that blocks
+  deleting a referral code still in use): 34 rows across every table go,
+  other people's rows stay, the public profile 404s, signing in again
+  starts fresh, and an email/password account's login row goes too.
+  **Still open:** notifications already sent to other people (e.g. "you
+  were endorsed") stay in their inbox, and the GitHub app authorisation
+  isn't revoked on GitHub's side (the person can remove it in GitHub
+  settings).
