@@ -83,7 +83,7 @@ export const DEMO_FEATURED_PROJECTS: FeaturedProject[] = [
 ];
 
 /**
- * Fixture data for the public "admin@admin.com" demo account — a fully
+ * Fixture data for the public demo account — a fully
  * populated, presentable profile for showing the product to prospects
  * without needing a real GitHub login. Shaped exactly like the real
  * GitHub-derived data so every page renders as it would for a genuine

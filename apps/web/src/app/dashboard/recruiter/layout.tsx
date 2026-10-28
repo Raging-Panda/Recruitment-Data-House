@@ -20,7 +20,7 @@ export default async function RecruiterLayout({ children }: { children: ReactNod
   if (!hasRecruiterAccess(plan)) {
     return (
       <div className="mx-auto max-w-6xl">
-        <RecruiterPaywall />
+        <RecruiterPaywall accountId={session?.githubId ?? ""} />
       </div>
     );
   }

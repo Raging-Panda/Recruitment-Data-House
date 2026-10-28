@@ -30,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       plan={plan}
       showPlanToggle={isTestAccount(session.githubId)}
       showAdminLink={isAdmin(session.githubId)}
+      accountId={session.githubId!}
     >
       {children}
     </DashboardShell>

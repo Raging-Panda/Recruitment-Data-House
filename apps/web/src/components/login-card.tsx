@@ -7,11 +7,10 @@ import { IPSkillLogo } from "./ipskill-logo";
 import { ArrowRightIcon } from "./icons";
 import { useToast } from "./toast-provider";
 import { setPendingToast, consumePendingToast } from "@/lib/pending-toast";
+import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo-credentials";
 
 const TOO_MANY_ATTEMPTS = "Too many attempts. Please wait a few minutes and try again.";
 
-const DEMO_EMAIL = "admin@admin.com";
-const DEMO_PASSWORD = "1234";
 
 const AUTH_INPUT_CLASS =
   "w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none";
@@ -21,7 +20,7 @@ export function LoginCard() {
   const showToast = useToast();
   const [testLoginAvailable, setTestLoginAvailable] = useState(false);
   // null until /api/auth/providers answers, so the optional buttons don't flash in and out.
-  const [optionalProviders, setOptionalProviders] = useState<{ google: boolean; linkedin: boolean } | null>(null);
+  const [optionalProviders, setOptionalProviders] = useState<{ google: boolean; linkedin: boolean; email: boolean } | null>(null);
   const [demoEmail, setDemoEmail] = useState(DEMO_EMAIL);
   const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
   const [demoError, setDemoError] = useState<string | null>(null);
@@ -52,11 +51,15 @@ export function LoginCard() {
       .then((res) => res.json())
       .then((providers) => {
         setTestLoginAvailable(Boolean(providers?.["test-account"]));
-        setOptionalProviders({ google: Boolean(providers?.google), linkedin: Boolean(providers?.linkedin) });
+        setOptionalProviders({
+          google: Boolean(providers?.google),
+          linkedin: Boolean(providers?.linkedin),
+          email: Boolean(providers?.credentials),
+        });
       })
       .catch(() => {
         setTestLoginAvailable(false);
-        setOptionalProviders({ google: false, linkedin: false });
+        setOptionalProviders({ google: false, linkedin: false, email: false });
       });
   }, []);
 
@@ -248,7 +251,7 @@ export function LoginCard() {
         </button>
         )}
 
-        {authMode === "closed" && (
+        {optionalProviders?.email && authMode === "closed" && (
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -413,14 +416,14 @@ export function LoginCard() {
           type="email"
           value={demoEmail}
           onChange={(e) => setDemoEmail(e.target.value)}
-          placeholder="admin@admin.com"
+          placeholder={DEMO_EMAIL}
           className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
         />
         <input
           type="password"
           value={demoPassword}
           onChange={(e) => setDemoPassword(e.target.value)}
-          placeholder="1234"
+          placeholder={DEMO_PASSWORD}
           className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
         />
         {demoError && <p className="text-xs text-accent-red">{demoError}</p>}

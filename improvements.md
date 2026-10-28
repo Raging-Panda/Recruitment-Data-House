@@ -259,7 +259,15 @@ and Growth 404).
   real UI/API against Supabase: signup → write (Currently) → log out →
   log back in with the same password → data persists under the same
   identity; duplicate email correctly 409s; wrong password correctly
-  401s. Test rows cleaned up afterward.
+  401s. Test rows cleaned up afterward. **Turned off for launch
+  2026-10-28:** there's no password reset (a forgotten password locks
+  the account) and no email verification (anyone can register someone
+  else's address), so the `credentials` provider is only registered when
+  `ENABLE_EMAIL_LOGIN=true` (`lib/email-login.ts`). With it unset the
+  Log in / Sign up buttons are hidden and `/api/auth/register` and
+  `/api/auth/login-check` 404. Production had no email accounts when it
+  was switched off. Turn it back on once reset and verification emails
+  exist.
 - **LinkedIn login** — ✅ shipped, same "second-class citizen" tier as
   Google/regular login (`ThinProfile`, `ConnectGithubPrompt`, PDF
   400s, `linkedin:<sub>` identity in the existing `github_id`
@@ -402,6 +410,10 @@ and Growth 404).
   (a stub — swapping in real billing is exactly the "Free vs. Premium
   tiers" item further down). The demo account is always
   `premium_recruiter` (public showcase always shows the full product).
+  **Update 2026-10-28:** the self-serve stub is gone — it let anyone
+  open the Directory and browse every candidate for free. The paywall,
+  sidebar card and Growth Olympics box now say "Request access" instead
+  (see "Free vs. Premium tiers").
 - **Test-only plan toggle** — ✅ shipped: the dev-only test account
   (`ALLOW_TEST_LOGIN`) gets a "Test Plan" widget in the sidebar with
   three buttons — Free / Premium Dev / Premium Recruiter — calling a
@@ -552,7 +564,10 @@ and Growth 404).
   end to end against real Supabase (review, hide, unhide, unreview,
   empty-update 400). **Update 2026-10-21:** admins now get an "Admin"
   sidebar link (decided server-side in the dashboard layout from the same
-  allowlist; non-admins and the demo account never see it). **Still
+  allowlist; non-admins and the demo account never see it). **Update
+  2026-10-28:** a **Plans** section grants or revokes paid plans by
+  account ID and lists every paid account (see "Free vs. Premium
+  tiers"). **Still
   open:** a report-abuse flow (users flagging profiles), a review queue
   for flagged items, referral-fraud/duplicate-account detection, and an
   audit log beyond the `updated_by` column.
@@ -1216,12 +1231,21 @@ sharing). These items close that gap. Roughly ordered by leverage.
   is now a separate premium section" above. **Update:** Premium
   Recruiter now also gates creating interview requests and job roles,
   and `premium_dev` gates exactly one thing: Growth Olympics
-  (`hasPremiumDevAccess` in `lib/plan.ts`). Still needed: real
-  subscription billing (Stripe) — `/api/premium/upgrade` still just
-  sets the plan with no payment — a real checkout/plan-selection flow
-  to replace the one-directional "Upgrade Now" button, and a decision
-  on what else `premium_dev` unlocks (skill tests, PDF export, etc. are
-  still ungated).
+  (`hasPremiumDevAccess` in `lib/plan.ts`). **Update 2026-10-28:**
+  paid plans are invite-only until billing exists. `/api/premium/upgrade`
+  (which set the plan with no payment) is deleted, and every "Upgrade
+  Now" button is now a **Request access** link (`RequestAccess`): a
+  `mailto:` to `NEXT_PUBLIC_CONTACT_EMAIL` pre-filled with the plan and
+  the person's account ID, or, with no address set, just the account ID
+  to quote. Settings shows the plan and account ID too. An admin grants
+  or revokes a plan from Admin → Plans (`PUT /api/admin/plans`: admins
+  only, validates the account ID format and plan, refuses the demo
+  account). Verified locally: the old route 404s, all three paywalls
+  link to the right plan with the right ID, a granted plan unlocks
+  Recruiter Tools, and a non-admin gets 403. Still needed: real
+  subscription billing (Stripe) with a checkout to replace Request
+  access, and a decision on what else `premium_dev` unlocks (skill
+  tests, PDF export, etc. are still ungated).
 - **Growth Olympics** — 🟡 leaderboard shipped, prizes not.
   `/dashboard/growth` + `getGrowthLeaderboard()` in `lib/growth.ts`, a
   30-day window over `score_snapshots`. Growth points = overall-score
@@ -1366,3 +1390,15 @@ sharing). These items close that gap. Roughly ordered by leverage.
   and logs the real error server-side (which Sentry's console capture
   picks up), and a duplicate-email insert race returns the normal 409
   "already exists" instead of a 500.
+- **Launch lock-down** — ✅ shipped 2026-10-28. Three things that were
+  fine for a demo but not for strangers: (1) anyone could give
+  themselves Premium Recruiter for free and browse every candidate —
+  plans are now admin-granted (see "Free vs. Premium tiers"); (2) the
+  demo login was `admin@admin.com` / `1234`, which reads like a real
+  admin account — now `demo@ipskill.example` / `view-demo`
+  (`lib/demo-credentials.ts`; `.example` is a reserved domain, so it
+  can't belong to anyone, and the demo account is still read-only);
+  (3) email/password sign-up is off until password reset and email
+  verification exist (see "Regular (email/password) login"). Checked
+  with Playwright against a local stand-in: 22 checks with email
+  sign-in off, 4 with it on.
