@@ -1,4 +1,4 @@
-export type ButtonVariant = "primary" | "white" | "ghost" | "danger" | "subtle";
+export type ButtonVariant = "primary" | "white" | "ghost" | "outline" | "danger" | "subtle";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
@@ -8,6 +8,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-primary-gradient text-white hover:opacity-90",
   white: "border border-gray-200 bg-white text-gray-900 hover:bg-gray-100",
   ghost: "border border-surface-border bg-surface/60 text-text-secondary hover:text-heading",
+  outline: "border border-primary/40 text-primary hover:bg-primary/10",
   danger: "bg-accent-red/15 text-accent-red hover:bg-accent-red/25",
   subtle: "bg-surface text-text-secondary hover:text-heading",
 };

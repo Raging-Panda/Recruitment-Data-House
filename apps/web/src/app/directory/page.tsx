@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { getPublicDirectoryEntries } from "@/lib/directory";
 import { getPublicTrendingDevelopers } from "@/lib/growth";
 import { IPSkillLogo } from "@/components/ipskill-logo";
 import { PagedDirectoryGrid } from "@/components/paged-directory-grid";
+import { PublicFooter } from "@/components/public-chrome";
 
 export const metadata = { title: "Developer Directory — IPSkill" };
 // Unauthenticated route — see the same note on app/u/[handle]/page.tsx.
@@ -20,12 +22,12 @@ export default async function PublicDirectoryPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex items-center gap-2">
+    <div className="flex min-h-screen flex-col bg-background">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+        <Link href="/" className="flex w-fit items-center gap-2">
           <IPSkillLogo size={28} />
           <span className="text-sm font-extrabold text-heading">IPSkill</span>
-        </div>
+        </Link>
         <h1 className="mt-6 text-2xl font-bold text-heading">Developer Directory</h1>
         <p className="mt-1 text-sm text-text-secondary">
           Developers who've made their IPSkill profile public. {entries.length} listed.
@@ -54,6 +56,7 @@ export default async function PublicDirectoryPage() {
           </p>
         )}
       </div>
+      <PublicFooter />
     </div>
   );
 }
