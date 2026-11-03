@@ -7,8 +7,8 @@ export { PLAN_LABELS, hasRecruiterAccess } from "@/lib/plan";
 
 /**
  * There's no payment processor wired up yet, so this is a plain `plan`
- * column on candidate_profile. Real accounts self-serve to
- * "premium_recruiter" via /api/premium/upgrade; the dev-only test account
+ * column on candidate_profile. Admins grant plans from Admin → Plans
+ * (/api/admin/plans); there's no self-serve upgrade. The dev-only test account
  * can additionally cycle through all three tiers via /api/premium/set-plan
  * for QA, since ALLOW_TEST_LOGIN needs to exercise every gate without real
  * GitHub OAuth or billing.
