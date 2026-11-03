@@ -1402,3 +1402,22 @@ sharing). These items close that gap. Roughly ordered by leverage.
   verification exist (see "Regular (email/password) login"). Checked
   with Playwright against a local stand-in: 22 checks with email
   sign-in off, 4 with it on.
+- **Public landing page, privacy policy and terms** — ✅ shipped
+  2026-10-28. `/` used to be just the login card; it's now a landing
+  page for signed-out visitors (signed-in ones still go straight to
+  their profile): what IPSkill does, an example profile drawn from the
+  demo persona, how it works, a section for recruiters, and a **View
+  the demo** button that signs straight into the demo. The skill-tests
+  card hides in V1 mode, like the rest of that feature. `/privacy`
+  (written for POPIA) and `/terms` name Blackline Technology as the
+  operator; the company details live in `lib/legal.ts`. The privacy
+  policy says plainly that GitHub sign-ins are listed in the Recruiter
+  Directory even when the public page is off. Both pages are linked
+  from a shared footer (landing, login, Discover, legal pages), the
+  login card ("By continuing you agree to…") and the sitemap. Checked
+  with Playwright: 30 checks covering content, links, the demo button,
+  the signed-in redirect, dark and light themes, and no sideways
+  overflow at phone width (which caught a real bug: the hero spilled
+  off-screen on phones). **Still open:** have a lawyer review both
+  documents; until self-serve account deletion ships, the policy
+  tells people to email for deletion.

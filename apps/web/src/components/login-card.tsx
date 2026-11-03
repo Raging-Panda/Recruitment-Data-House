@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { IPSkillLogo } from "./ipskill-logo";
 import { ArrowRightIcon } from "./icons";
 import { useToast } from "./toast-provider";
@@ -404,6 +405,18 @@ export function LoginCard() {
           </button>
         )}
       </div>
+
+      <p className="mt-4 text-xs text-text-muted">
+        By continuing you agree to the{" "}
+        <Link href="/terms" className="underline hover:text-heading">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline hover:text-heading">
+          Privacy Policy
+        </Link>
+        .
+      </p>
 
       <div className="mt-6 flex items-center gap-3 text-[11px] uppercase tracking-widest text-text-muted">
         <div className="h-px flex-1 bg-surface-border" />
