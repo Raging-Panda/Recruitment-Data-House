@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
 /**
- * A public, always-on "proof of concept" account — unlike the ALLOW_TEST_LOGIN
- * bypass (dev-only, hidden unless explicitly enabled), this is meant to be
- * clicked by anyone evaluating the product, so it's a real credentials login
- * rather than an env-gated fixture.
+ * The old public "proof of concept" account. Its login (the demo-account
+ * provider and the login page's demo form) was removed before launch, so
+ * nobody can sign in as it any more; these guards and the fixture data in
+ * demo-data.ts are what's left of it.
  */
-export { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-credentials";
 export const DEMO_GITHUB_ID = "900000002";
 export const DEMO_ACCESS_TOKEN = "demo-mode";
 

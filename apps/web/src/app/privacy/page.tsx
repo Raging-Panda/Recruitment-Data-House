@@ -78,7 +78,7 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>To connect developers with recruiters</strong> (our legitimate interest, and the reason IPSkill
-          exists): letting approved recruiters find and contact developers, as described in section 4.
+          exists): letting approved recruiters find and contact developers, as described in section 5.
         </li>
         <li>
           <strong>To keep IPSkill safe</strong> (legitimate interest): limiting sign-in attempts, moderating profiles
@@ -87,7 +87,21 @@ export default function PrivacyPage() {
       </ul>
       <p>We do not sell personal information, and we do not use advertising or tracking cookies.</p>
 
-      <h2>4. Who can see your information</h2>
+      <h2>4. Your consent</h2>
+      <p>
+        When you sign in, we ask you to tick a box confirming that you are 18 or older, that you agree to our{" "}
+        <Link href="/terms">terms</Link>, and that you consent to us processing your personal information as this
+        policy describes. We keep a record of when you gave that consent and which version of this policy it covered.
+        If we change what we ask you to consent to, we ask you again before you can carry on using IPSkill.
+      </p>
+      <p>
+        Giving consent is your choice, but IPSkill can&apos;t work without processing your information, so you
+        can&apos;t use it without consenting. You can withdraw your consent at any time by deleting your account
+        (Settings → Delete account) or by emailing {email}. Withdrawing it doesn&apos;t affect what we did with your
+        information before you withdrew.
+      </p>
+
+      <h2>5. Who can see your information</h2>
       <ul>
         <li>
           <strong>Anyone, if you switch on your public page.</strong> Your profile is then shown at your own link,
@@ -115,7 +129,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>5. Service providers and transfers outside South Africa</h2>
+      <h2>6. Service providers and transfers outside South Africa</h2>
       <p>We use these providers to run IPSkill. They process information on our behalf and only for that purpose:</p>
       <ul>
         <li>
@@ -140,16 +154,18 @@ export default function PrivacyPage() {
         requires.
       </p>
 
-      <h2>6. Cookies and browser storage</h2>
+      <h2>7. Cookies and browser storage</h2>
       <p>
-        We only use the cookies needed to keep you signed in and protect sign-in forms, plus browser storage for small
+        We only use the cookies needed to keep you signed in, protect sign-in forms and carry your consent tick box
+        through sign-in (deleted after an hour at most), plus browser storage for small
         preferences such as light or dark mode. There are no analytics or advertising cookies.
       </p>
 
-      <h2>7. How long we keep it</h2>
+      <h2>8. How long we keep it</h2>
       <ul>
         <li>Your profile and what you add: for as long as you have an account.</li>
         <li>Information copied from GitHub: refreshed as you use IPSkill and deleted with your account.</li>
+        <li>The record of your consent: for as long as you have an account.</li>
         <li>Sign-in attempt records: about a day.</li>
         <li>
           When you delete your account (Settings → Delete account), your profile and everything you added are deleted
@@ -159,7 +175,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>8. How we protect it</h2>
+      <h2>9. How we protect it</h2>
       <p>
         All traffic is encrypted. The database can only be reached by our own servers, never directly from a browser.
         You sign in through GitHub, Google or LinkedIn, so we never see your password for those accounts, and repeated
@@ -167,14 +183,14 @@ export default function PrivacyPage() {
         tell you and the Information Regulator as POPIA requires.
       </p>
 
-      <h2>9. Your rights</h2>
+      <h2>10. Your rights</h2>
       <p>Under POPIA you can:</p>
       <ul>
         <li>ask what personal information we hold about you and get a copy of it;</li>
         <li>correct it (most of it you can edit yourself in IPSkill);</li>
         <li>delete your account yourself from Settings, or ask us to delete your information;</li>
         <li>object to us using it, including for the Recruiter Directory;</li>
-        <li>withdraw any consent you gave.</li>
+        <li>withdraw your consent (see section 4).</li>
       </ul>
       <p>
         Email {email} and we will reply within 30 days. If you are not happy with our answer, you can complain to the
@@ -185,16 +201,17 @@ export default function PrivacyPage() {
         ).
       </p>
 
-      <h2>10. Age</h2>
+      <h2>11. Age</h2>
       <p>IPSkill is for people aged 18 and over. We do not knowingly collect information about children.</p>
 
-      <h2>11. Changes to this policy</h2>
+      <h2>12. Changes to this policy</h2>
       <p>
         We will update the date at the top whenever this policy changes, and tell you in IPSkill before a change that
-        affects how your information is used or shared takes effect.
+        affects how your information is used or shared takes effect. If the change affects what you consented to, we
+        ask for your consent again.
       </p>
 
-      <h2>12. Contact</h2>
+      <h2>13. Contact</h2>
       <p>
         {COMPANY_NAME}, {COMPANY_ADDRESS}. Information Officer: {email}.
       </p>

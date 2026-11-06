@@ -54,6 +54,7 @@ const PHASES: Rows[][] = [
     ["github_data_cache", "github_id"],
     ["linked_accounts", "owner_id"],
     ["profile_verifications", "github_id"],
+    ["privacy_consents", "owner_id"],
   ],
   [
     ["directory_profiles", "github_id"],

@@ -3,12 +3,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { IPSkillLogo } from "./ipskill-logo";
 import { ArrowRightIcon } from "./icons";
 import { useToast } from "./toast-provider";
+import { ConsentCheckbox } from "./consent-checkbox";
 import { setPendingToast, consumePendingToast } from "@/lib/pending-toast";
-import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo-credentials";
+import { rememberConsent } from "@/lib/consent-cookie";
 
 const TOO_MANY_ATTEMPTS = "Too many attempts. Please wait a few minutes and try again.";
 
@@ -22,10 +22,8 @@ export function LoginCard() {
   const [testLoginAvailable, setTestLoginAvailable] = useState(false);
   // null until /api/auth/providers answers, so the optional buttons don't flash in and out.
   const [optionalProviders, setOptionalProviders] = useState<{ google: boolean; linkedin: boolean; email: boolean } | null>(null);
-  const [demoEmail, setDemoEmail] = useState(DEMO_EMAIL);
-  const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
-  const [demoError, setDemoError] = useState<string | null>(null);
-  const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
+  const [consented, setConsented] = useState(false);
+  const [consentError, setConsentError] = useState(false);
 
   const [authMode, setAuthMode] = useState<"closed" | "login" | "signup">("closed");
   const [refCode, setRefCode] = useState("");
@@ -45,6 +43,12 @@ export function LoginCard() {
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get("ref");
     if (ref) setRefCode(ref);
+  }, []);
+
+  // A box ticked on an earlier visit, maybe by someone else on this
+  // browser, mustn't count for this sign-in.
+  useEffect(() => {
+    rememberConsent(false);
   }, []);
 
   useEffect(() => {
@@ -86,6 +90,25 @@ export function LoginCard() {
     if (pending) showToast(pending.message, pending.variant);
   }, [showToast]);
 
+  function setConsent(given: boolean) {
+    setConsented(given);
+    rememberConsent(given);
+    if (given) setConsentError(false);
+  }
+
+  // Every way in goes through this: an account may only be created or
+  // signed into with the POPIA box ticked. lib/auth.ts records the consent
+  // from the cookie once the sign-in completes.
+  function ifConsented(action: () => void) {
+    return () => {
+      if (!consented) {
+        setConsentError(true);
+        return;
+      }
+      action();
+    };
+  }
+
   function signInWithGithub() {
     setPendingToast("Signed in with GitHub");
     signIn("github", { callbackUrl: "/dashboard/profile" });
@@ -101,26 +124,12 @@ export function LoginCard() {
     signIn("linkedin", { callbackUrl: "/dashboard/profile" });
   }
 
-  async function handleDemoSubmit(e: FormEvent) {
-    e.preventDefault();
-    setDemoError(null);
-    setIsSubmittingDemo(true);
-    const res = await signIn("demo-account", {
-      email: demoEmail,
-      password: demoPassword,
-      redirect: false,
-    });
-    setIsSubmittingDemo(false);
-    if (res?.error) {
-      setDemoError("Invalid demo credentials.");
-    } else {
-      setPendingToast("Viewing the demo profile");
-      router.push("/dashboard/profile");
-    }
-  }
-
   async function handleAuthSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!consented) {
+      setConsentError(true);
+      return;
+    }
     setAuthError(null);
     setIsSubmittingAuth(true);
     try {
@@ -217,9 +226,13 @@ export function LoginCard() {
         Unique Skills, Perfect Match.
       </p>
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="mt-8">
+        <ConsentCheckbox checked={consented} onChange={setConsent} showError={consentError} />
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3">
         <button
-          onClick={signInWithGithub}
+          onClick={ifConsented(signInWithGithub)}
           className="flex items-center justify-center gap-2 rounded-full bg-primary-gradient px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
           Get Started <ArrowRightIcon size={16} />
@@ -227,7 +240,7 @@ export function LoginCard() {
 
         {optionalProviders?.google && (
         <button
-          onClick={signInWithGoogle}
+          onClick={ifConsented(signInWithGoogle)}
           title="Your fingerprint, projects, and heatmap come from GitHub — Google gets you a lighter profile for now — connect GitHub afterward from Settings"
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
@@ -236,7 +249,7 @@ export function LoginCard() {
         )}
 
         <button
-          onClick={signInWithGithub}
+          onClick={ifConsented(signInWithGithub)}
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
           <GithubMark /> Continue with GitHub
@@ -244,7 +257,7 @@ export function LoginCard() {
 
         {optionalProviders?.linkedin && (
         <button
-          onClick={signInWithLinkedIn}
+          onClick={ifConsented(signInWithLinkedIn)}
           title="Your fingerprint, projects, and heatmap come from GitHub — LinkedIn gets you a lighter profile for now — connect GitHub afterward from Settings"
           className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
         >
@@ -255,23 +268,23 @@ export function LoginCard() {
         {optionalProviders?.email && authMode === "closed" && (
           <div className="flex gap-2">
             <button
-              onClick={() => {
+              onClick={ifConsented(() => {
                 setAuthMode("login");
                 setAuthError(null);
                 setNeedsTotp(false);
                 setTotpCode("");
-              }}
+              })}
               className="flex-1 rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
             >
               Log in
             </button>
             <button
-              onClick={() => {
+              onClick={ifConsented(() => {
                 setAuthMode("signup");
                 setAuthError(null);
                 setNeedsTotp(false);
                 setTotpCode("");
-              }}
+              })}
               className="flex-1 rounded-full border border-surface-border bg-surface/60 px-4 py-3 text-sm font-medium text-text-secondary transition hover:text-heading"
             >
               Sign up
@@ -378,7 +391,7 @@ export function LoginCard() {
 
         {testLoginAvailable && (
           <button
-            onClick={signInAsTestUser}
+            onClick={ifConsented(signInAsTestUser)}
             className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
           >
             Continue as Test User (dev only)
@@ -387,7 +400,7 @@ export function LoginCard() {
 
         {testLoginAvailable && (
           <button
-            onClick={signInAsTestGoogleUser}
+            onClick={ifConsented(signInAsTestGoogleUser)}
             title="Simulates a Google sign-in with no GitHub connection — no real Google app needed"
             className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
           >
@@ -397,7 +410,7 @@ export function LoginCard() {
 
         {testLoginAvailable && (
           <button
-            onClick={signInAsTestLinkedInUser}
+            onClick={ifConsented(signInAsTestLinkedInUser)}
             title="Simulates a LinkedIn sign-in with no GitHub connection — no real LinkedIn app needed"
             className="rounded-full border border-dashed border-accent-green/50 px-4 py-3 text-sm font-medium text-accent-green transition hover:bg-accent-green/10"
           >
@@ -405,52 +418,6 @@ export function LoginCard() {
           </button>
         )}
       </div>
-
-      <p className="mt-4 text-xs text-text-muted">
-        By continuing you agree to the{" "}
-        <Link href="/terms" className="underline hover:text-heading">
-          Terms
-        </Link>{" "}
-        and{" "}
-        <Link href="/privacy" className="underline hover:text-heading">
-          Privacy Policy
-        </Link>
-        .
-      </p>
-
-      <div className="mt-6 flex items-center gap-3 text-[11px] uppercase tracking-widest text-text-muted">
-        <div className="h-px flex-1 bg-surface-border" />
-        View a demo profile
-        <div className="h-px flex-1 bg-surface-border" />
-      </div>
-
-      <form onSubmit={handleDemoSubmit} className="mt-4 flex flex-col gap-2 text-left">
-        <input
-          type="email"
-          value={demoEmail}
-          onChange={(e) => setDemoEmail(e.target.value)}
-          placeholder={DEMO_EMAIL}
-          className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
-        />
-        <input
-          type="password"
-          value={demoPassword}
-          onChange={(e) => setDemoPassword(e.target.value)}
-          placeholder={DEMO_PASSWORD}
-          className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-heading focus:border-primary focus:outline-none"
-        />
-        {demoError && <p className="text-xs text-accent-red">{demoError}</p>}
-        <button
-          type="submit"
-          disabled={isSubmittingDemo}
-          className="rounded-full border border-primary/40 px-4 py-3 text-sm font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
-        >
-          {isSubmittingDemo ? "Loading demo…" : "View Demo Profile"}
-        </button>
-        <p className="text-center text-xs text-text-muted">
-          Prefilled with the public demo login — a fully populated proof-of-concept profile.
-        </p>
-      </form>
     </div>
   );
 }
