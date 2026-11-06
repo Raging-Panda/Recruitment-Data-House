@@ -6,6 +6,7 @@ import { getCandidateProfileOverrideSafe } from "@/lib/candidate-profile";
 import { getPlan } from "@/lib/premium";
 import { isTestAccount } from "@/lib/test-mode";
 import { isAdmin } from "@/lib/admin";
+import { needsConsent } from "@/lib/consent";
 import { DashboardShell } from "@/components/dashboard-shell";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -15,6 +16,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // lib/github-connection.ts for where the accessToken distinction matters.
   if (!session || !session.githubId) {
     redirect("/login");
+  }
+  // Anyone signed in without a POPIA consent on record for the current
+  // policy version — accounts from before the tick box existed, or a
+  // sign-in that skipped the login page — consents on /consent first.
+  if (await needsConsent(session.githubId!)) {
+    redirect("/consent");
   }
 
   const [override, plan] = await Promise.all([
