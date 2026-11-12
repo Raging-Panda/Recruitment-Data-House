@@ -67,6 +67,13 @@ export default function PrivacyPage() {
           If you use the IPSkill mobile app and allow notifications, your device&apos;s push notification token.
         </li>
         <li>Technical error reports when something breaks, with personal details removed before they are sent.</li>
+        <li>
+          When anyone visits the IPSkill website, signed in or not: which page was shown, the name of the site that
+          linked to it, any campaign tags in the link, whether the device is a computer, phone or tablet, the country
+          the visit came from, and an anonymous code that changes every day. We don&apos;t store your IP address, and
+          the code can&apos;t be traced back to you or used to link your visits from one day to the next. If your
+          browser sends a Do Not Track or Global Privacy Control signal, we don&apos;t count your visit.
+        </li>
       </ul>
 
       <h2>3. Why we use it</h2>
@@ -83,6 +90,10 @@ export default function PrivacyPage() {
         <li>
           <strong>To keep IPSkill safe</strong> (legitimate interest): limiting sign-in attempts, moderating profiles
           and fixing errors.
+        </li>
+        <li>
+          <strong>To improve IPSkill</strong> (legitimate interest): counting website visits to see which pages are
+          used and how people find us.
         </li>
       </ul>
       <p>We do not sell personal information, and we do not use advertising or tracking cookies.</p>
@@ -158,7 +169,8 @@ export default function PrivacyPage() {
       <p>
         We only use the cookies needed to keep you signed in, protect sign-in forms and carry your consent tick box
         through sign-in (deleted after an hour at most), plus browser storage for small
-        preferences such as light or dark mode. There are no analytics or advertising cookies.
+        preferences such as light or dark mode. There are no analytics or advertising cookies: counting website
+        visits uses no cookies or browser storage at all.
       </p>
 
       <h2>8. How long we keep it</h2>
@@ -167,6 +179,7 @@ export default function PrivacyPage() {
         <li>Information copied from GitHub: refreshed as you use IPSkill and deleted with your account.</li>
         <li>The record of your consent: for as long as you have an account.</li>
         <li>Sign-in attempt records: about a day.</li>
+        <li>Website visit records: about 13 months.</li>
         <li>
           When you delete your account (Settings → Delete account), your profile and everything you added are deleted
           straight away, along with your conversations, for both people in them. If you ask us by email instead, we do

@@ -7,7 +7,7 @@
 export const COMPANY_NAME = "Blackline Technology";
 export const COMPANY_ADDRESS = "Brackenfell, Western Cape, 7560, South Africa";
 export const LEGAL_EMAIL = "emilem364@gmail.com";
-export const LEGAL_UPDATED = "6 November 2026";
+export const LEGAL_UPDATED = "12 November 2026";
 
 /**
  * Which version of the privacy policy a POPIA consent covers — stored with
