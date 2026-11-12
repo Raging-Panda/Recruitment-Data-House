@@ -26,6 +26,12 @@ export function getSupabaseAdmin(): SupabaseClient {
     );
   }
 
-  client = createClient(url, key, { auth: { persistSession: false } });
+  client = createClient(url, key, {
+    auth: { persistSession: false },
+    // Next keeps fetch() responses in its Data Cache, which on Vercel
+    // outlives deploys. Database reads must always be live, or a profile
+    // that was deleted, made private or taken down keeps showing publicly.
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
+  });
   return client;
 }
