@@ -10,14 +10,13 @@ import {
   TEST_GOOGLE_ID,
   TEST_LINKEDIN_ID,
 } from "./test-mode";
-import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_ACCESS_TOKEN, DEMO_GITHUB_ID } from "./demo-mode";
-import { DEMO_DISPLAY_NAME } from "./demo-data";
 import { getSupabaseAdmin } from "./supabase";
 import { verifyPassword } from "./password";
 import { LOCAL_ID_PREFIX } from "./local-account";
 import { verifyTotpOrBackupCode } from "./two-factor";
 import { clientIp, hashKeyPart, hitRateLimit, RATE_LIMITS, resetRateLimit } from "./rate-limit";
 import { isEmailLoginEnabled } from "./email-login";
+import { recordConsentFromCookie } from "./consent";
 
 interface LinkedInOIDCProfile {
   sub: string;
@@ -179,29 +178,6 @@ const providers: NextAuthOptions["providers"] = [
   // Same second-class-citizen status as Google — no GitHub token, so
   // ThinProfile / ConnectGithubPrompt again. See the LinkedInProvider
   // comment above for why this isn't next-auth's built-in provider.
-  // Public, always-on proof-of-concept login — a fully populated fixture
-  // profile anyone evaluating the product can see without a real GitHub
-  // account. Deliberately not gated behind ALLOW_TEST_LOGIN like the dev
-  // bypass below, since this is meant to be used by prospects, not just us.
-  CredentialsProvider({
-    id: "demo-account",
-    name: "Demo Account",
-    credentials: {
-      email: { label: "Email", type: "email" },
-      password: { label: "Password", type: "password" },
-    },
-    async authorize(credentials) {
-      if (credentials?.email === DEMO_EMAIL && credentials?.password === DEMO_PASSWORD) {
-        return {
-          id: DEMO_GITHUB_ID,
-          name: DEMO_DISPLAY_NAME,
-          email: DEMO_EMAIL,
-          image: "https://i.pravatar.cc/300?img=47",
-        };
-      }
-      return null;
-    },
-  }),
 ];
 
 // Email/password: off until reset and verification exist — see lib/email-login.ts.
@@ -328,9 +304,10 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "test-linkedin-account") {
         token.githubId = TEST_LINKEDIN_ID;
       }
-      if (account?.provider === "demo-account") {
-        token.accessToken = DEMO_ACCESS_TOKEN;
-        token.githubId = DEMO_GITHUB_ID;
+      // `account` is only present on the sign-in itself, so this runs once
+      // per sign-in rather than on every session read.
+      if (account && token.githubId) {
+        await recordConsentFromCookie(token.githubId as string);
       }
       return token;
     },

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getLinkedAccountsSafe, type LinkProvider } from "@/lib/linked-accounts";
@@ -16,6 +17,8 @@ import { getTotpStatus } from "@/lib/two-factor";
 import { V1_MODE } from "@/lib/v1-mode";
 import { getPlan } from "@/lib/premium";
 import { hasRecruiterAccess, PLAN_LABELS } from "@/lib/plan";
+import { getConsentedAt } from "@/lib/consent";
+import { LEGAL_EMAIL } from "@/lib/legal";
 
 function primaryProviderOf(session: { accessToken?: string; githubId?: string }): LinkProvider | "local" {
   if (session.accessToken) return "github";
@@ -28,11 +31,12 @@ export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   const isDemo = isDemoAccount(session!.githubId);
   const primaryProvider = primaryProviderOf(session!);
-  const [linked, messagePreference, totpStatus, plan] = await Promise.all([
+  const [linked, messagePreference, totpStatus, plan, consentedAt] = await Promise.all([
     getLinkedAccountsSafe(session!.githubId!),
     getMessagePreference(session!.githubId!),
     getTotpStatus(session!.githubId!),
     getPlan(session!.githubId),
+    getConsentedAt(session!.githubId!).catch(() => null),
   ]);
 
   return (
@@ -76,6 +80,24 @@ export default async function SettingsPage() {
             to a paid plan.
           </p>
           <code className="mt-2 block select-all break-all text-sm text-heading">{session!.githubId}</code>
+        </div>
+        <div className="rounded-2xl border border-surface-border bg-background-elevated p-5">
+          <h3 className="text-sm font-semibold text-heading">Privacy (POPIA)</h3>
+          <p className="mt-1 text-xs text-text-muted">
+            {consentedAt
+              ? `On ${new Date(consentedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} you consented`
+              : "You consented"}{" "}
+            to IPSkill processing your personal information as the{" "}
+            <Link href="/privacy" className="underline hover:text-heading">
+              Privacy Policy
+            </Link>{" "}
+            describes. To get a copy of your information, correct it, object to how it&apos;s used or withdraw your
+            consent, email{" "}
+            <a href={`mailto:${LEGAL_EMAIL}`} className="underline hover:text-heading">
+              {LEGAL_EMAIL}
+            </a>
+            . Deleting your account below also withdraws it.
+          </p>
         </div>
         <DeleteAccountCard isDemo={isDemo} />
       </div>

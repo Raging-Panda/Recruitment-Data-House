@@ -6,7 +6,6 @@ import { buttonClass } from "@/lib/button-styles";
 import { buildDemoDeveloperHubData } from "@/lib/demo-data";
 import { V1_MODE } from "@/lib/v1-mode";
 import { PublicFooter, PublicHeader } from "@/components/public-chrome";
-import { DemoButton } from "@/components/demo-button";
 import { PendingToastOnMount } from "@/components/pending-toast-on-mount";
 import { FingerprintPattern } from "@/components/fingerprint-pattern";
 import { ScoreRing } from "@/components/score-ring";
@@ -94,7 +93,6 @@ export default async function HomePage() {
                 <Link href="/login" className={buttonClass("primary", "lg", "px-6")}>
                   Get started
                 </Link>
-                <DemoButton className={buttonClass("outline", "lg", "px-6")} />
               </div>
             </div>
 
@@ -124,7 +122,7 @@ export default async function HomePage() {
                   ))}
                 </div>
               </div>
-              <p className="mt-3 text-center text-xs text-text-muted">An example profile, from the demo.</p>
+              <p className="mt-3 text-center text-xs text-text-muted">An example profile.</p>
             </div>
           </div>
         </section>

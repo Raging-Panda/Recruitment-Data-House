@@ -31,7 +31,7 @@ export default function TermsPage() {
       <p>
         You own what you add to IPSkill: your profile text, work history, certifications, project descriptions,
         messages and so on. You give us permission to store it, show it to the people your settings allow (see section
-        4 of the <Link href="/privacy">Privacy Policy</Link>) and copy it as needed to run IPSkill. That permission
+        5 of the <Link href="/privacy">Privacy Policy</Link>) and copy it as needed to run IPSkill. That permission
         ends when you delete the content or your account.
       </p>
       <p>
