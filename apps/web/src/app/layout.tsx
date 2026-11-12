@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { colors, lightColors, hexToRgbTriplet } from "@ipskill/shared";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/session-provider-wrapper";
+import { SiteVisitTracker } from "@/components/site-visit-tracker";
 import { ThemeProvider, ThemeFlashGuard } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
 import { getSiteUrl } from "@/lib/site-url";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <SessionProviderWrapper>{children}</SessionProviderWrapper>
           </ToastProvider>
         </ThemeProvider>
+        <SiteVisitTracker />
       </body>
     </html>
   );
